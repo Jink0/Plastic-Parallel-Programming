@@ -21,31 +21,6 @@ struct threadDataStruct {
    T3 (*function)(T1, vector<T2>&);
 };
 
-template <typename T1, typename T2, typename T3>
-class threadDataClass {
-   private:
-      int threadId;
-
-      int startIndex;
-      int numTasks;
-
-      vector<T1>& input1;
-      vector<T2>& input2;
-      vector<T3>& output;
-      T3 (*function)(T1, T2);
-
-   public:
-      threadDataClass(int id, int start, int tasks, vector<T1>& in1, vector<T2>& in2, vector<T3>& out, T3 (*func)(T1, T2))
-         : threadId(id)
-         , startIndex(start)
-         , numTasks(tasks)
-         , input1(in1)
-         , input2(in2)
-         , output(out)
-         , function(func)
-      { }
-};
-
 // Test function for map array. Returns sum of the product of val with each number in vect
 double testFunction(int val, vector<int>& vect)
 {
@@ -59,17 +34,17 @@ double testFunction(int val, vector<int>& vect)
 
 template <typename T1, typename T2, typename T3>
 // void mapArrayThreadTemplate(T3 (function)(T1, vector<T2>&), vector<T1>& input1, vector<T2>& input2, vector<T3>& output, int startIndex, int numTasks)
-void *mapArrayThread(void *threadarg)
+void *mapArrayThread(void *threadData)
 {
-   struct threadDataStruct<T1, T2, T3> *myData;
+   // struct threadDataStruct<T1, T2, T3> *data = (threadDataStruct<T1, T2, T3>) threadData;
+   
+   int id = threadData->threadId;
 
-   myData = (struct threadDataStruct<T1, T2, T3> *) threadarg;
+   // cout << "Thread data:\n" << data->threadId << endl << data->startIndex << endl << data->numTasks << endl << data->input1[3] << endl << data->input2[3] << endl << data->output[3] << endl;
 
-   cout << "Thread data:\n" << myData->threadId << endl << myData->startIndex << endl << myData->numTasks << endl << myData->input1[3] << endl << myData->input2[3] << endl << myData->output[3] << endl;
-
-   for (int i = 0; i < myData->numTasks; i++) {
-      myData->output[myData->startIndex + i] = function(myData->input1[i], myData->input2);
-   }
+   // for (int i = 0; i < data->numTasks; i++) {
+   //    data->output[data->startIndex + i] = function(data->input1[i], data->input2);
+   // }
 }
 
 template <typename T1, typename T2, typename T3>
@@ -81,29 +56,29 @@ void mapArray(T3 (function)(T1, vector<T2>&), vector<T1>& input1, vector<T2>& in
    int extra = input1.size() % NUM_THREADS;
 
    pthread_t threads[NUM_THREADS];
-   struct threadDataStruct<T1, T2, T3> *threadData[NUM_THREADS];
+   // struct threadDataStruct<T1, T2, T3> *threadData[NUM_THREADS];
+   struct threadDataStruct<T1, T2, T3> *threadData;
+
+   threadData->threadId = 1;
+
    int rc;
 
    for(int i = 0; i < NUM_THREADS; i++) {
       cout <<"main() : creating thread, " << i << endl;
-      threadData[i]->threadId = i;
-      threadData[i]->startIndex = 0;
-      threadData[i]->numTasks = input1.size();
-      threadData[i]->input1 = input1;
-      threadData[i]->input2 = input2;
-      threadData[i]->output = output;
-      threadData[i]->function = function;
 
-      rc = pthread_create(&threads[i], NULL, mapArrayThread, threadData[i]);
+      // threadData[i]->threadId = i;
+      // threadData.push_back(threadDataClass<T1, T2, T3>(i, 0, input1.size(), input1, input2, output, function));
+
+      rc = pthread_create(&threads[i], NULL, mapArrayThread<T1, T2, T3>, (void*) &threadData);
       if (rc){
          cout << "Error:unable to create thread," << rc << endl;
          exit(-1);
       }
    }
 
-   for (int i = 0; i < input1.size(); i++) {
-      output[i] = function(input1[i], input2);
-   }
+   // for (int i = 0; i < input1.size(); i++) {
+   //    output[i] = function(input1[i], input2);
+   // }
 }
  
 int main()
