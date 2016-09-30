@@ -14,8 +14,8 @@ using namespace std;
  *  Macro definition for user functions. The definition expands as a struct which can be used when 
  *  creating new patterns. Note - \ lets you continue a statement onto the next line, so we can 
  *  write #define statements on multiple lines like this.
- *
  */
+
 #define USER_FUNCTION(name, inType1, in1, inType2, in2, outType, func)\
 struct name\
 {\
@@ -34,8 +34,8 @@ struct name\
 /* 
  *  A quick test function for map array. Returns sum of the product of val with each number in vect,
  *  produces a perfectly balanced workload.
- *
  */
+
 USER_FUNCTION(testFunction, int, i1, int, i2, int, 
 
               int output = 2;
@@ -47,26 +47,15 @@ USER_FUNCTION(testFunction, int, i1, int, i2, int,
 
 
 
-/*!
- *  \class MapArray
+/*  A class representing the MapArray skeleton.
  *
- *  \brief A class representing the MapArray skeleton.
- *
- *  This class defines the MapArray skeleton. MapArray is yet another variant of Map.
- *  It produces a result (vector/matrix) from either two input objects (vector/matrix)
- *  where each element of the result, is a
- *   function of the corresponding element of the second input (vector/matrix),
- *  and any number of elements from the first input (vector). This means that at each call to the user defined function, which is
- *  done for each element in input two, all elements from input one can be accessed.
- *  Once instantiated, it is meant to be used as a function and therefore overloading
- *  \p operator(). There are a few overloaded variants of this operator. One using containers as inputs and the other using
- *  iterators to define a range of elements.
- *
- *  If a certain backend is to be used, functions with the same interface as \p operator() but by the names \p CPU, \p CU,
- *  \p CL, \p OMP exists for CPU, CUDA, OpenCL and OpenMP respectively.
- *
- *  The MapArray skeleton also includes a pointer to an Environment which includes the devices available to execute on.
+ *  This class implements the mapArray pattern. MapArray is a variant of Map. It produces a result 
+ *  vector from two input vectors where each element of the result is a function of the 
+ *  corresponding element of the first input, and any number of elements from the second input. 
+ *  This means that at each call to the user defined function, which is done for each element in 
+ *  input one, all elements from input two can be accessed.
  */
+
 template <typename MapArrayFunc>
 class MapArray
 {
@@ -101,21 +90,16 @@ public:
    template <typename Input1Iterator, typename Input2Iterator, typename OutputIterator>
    void execute(Input1Iterator input1Begin, Input1Iterator input1End, Input2Iterator input2Begin, Input2Iterator input2End, OutputIterator outputBegin)
     {
-      //Make sure we are properly synched with device data
-      // input1Begin.getParent().updateHost();
-      // input2Begin.getParent().updateHost();
-
-      // outputBegin.getParent().invalidateDeviceData();
 
       for(; input1Begin != input1End; ++input1Begin, ++outputBegin)
       {
-          outputBegin(0) = m_mapArrayFunc->function(&input1Begin(0), input2Begin(0));
+          // outputBegin(0) = m_mapArrayFunc->function(&input1Begin(0), input2Begin(0));
+        int t = 1;
+        int* tp = &t;
+          // m_mapArrayFunc->function(*tp, *tp);
       }
     }
 };
-
-// template <typename MapArrayFunc>
-// void MapArray<MapArrayFunc>::begin(vector<T>& input1, vector<T>& input2, vector<T>& output) {
 
 
 
