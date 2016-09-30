@@ -16,16 +16,16 @@ using namespace std;
  *  write #define statements on multiple lines like this.
  *
  */
-#define USER_FUNCTION(name, inType1, in1, inType2, in2, outType, function)\
+#define USER_FUNCTION(name, inType1, in1, inType2, in2, outType, func)\
 struct name\
 {\
     typedef inType1 IT1;\
     typedef inType2 IT2;\
     typedef outType OT;\
     \
-    inline outType execute(inType1 in1, vector<inType2>& in2)\
+    inline outType function(inType1 in1, vector<inType2>& in2)\
     {\
-        function\
+        func\
     }\
 };
 
@@ -38,25 +38,14 @@ struct name\
  */
 USER_FUNCTION(testFunction, int, i1, int, i2, int, 
 
-              int output = 0;
+              int output = 2;
 
-              for (vector<int>::const_iterator i = i2.begin(); i != i2.end(); ++i)
-                output += i1 * *i;
+              // for (vector<int>::const_iterator i = i2.begin(); i != i2.end(); ++i)
+                // output += i1 * *i;
 
               return output;)
 
-// template <typename T1, typename T2, typename T3>
-struct threadDataStruct {
-   int threadId;
 
-   int startIndex;
-   int numTasks;
-   // it1 test;
-
-   // vector<it1> *input1;
-   // vector<IT2> *input2;
-   // vector<OT> *output;
-};
 
 /*!
  *  \class MapArray
@@ -83,20 +72,123 @@ class MapArray
 {
 
 public:
-   MapArray(MapArrayFunc* mapArrayFunc);
+   MapArray(MapArrayFunc* mapArrayFunc)
+   {
+    m_mapArrayFunc = mapArrayFunc;
+   };
 
-   ~MapArray();
+   ~MapArray()
+   {
+    delete m_mapArrayFunc;
+   };
 
 private:
    MapArrayFunc* m_mapArrayFunc;
 
 public:
    template <typename T>
-   void OMP(vector<T>& input1, vector<T>& input2, vector<T>& output);
+   void execute(vector<T>& input1, vector<T>& input2, vector<T>& output) 
+   {
+      if(input2.size() != output.size())
+      {  
+        output.clear();
+        output.resize(input2.size());
+      }
+
+      execute(input1.begin(), input1.end(), input2.begin(), input2.end(), output.begin());
+    };
 
    template <typename Input1Iterator, typename Input2Iterator, typename OutputIterator>
-   void OMP(Input1Iterator input1Begin, Input1Iterator input1End, Input2Iterator input2Begin, Input2Iterator input2End, OutputIterator outputBegin);
+   void execute(Input1Iterator input1Begin, Input1Iterator input1End, Input2Iterator input2Begin, Input2Iterator input2End, OutputIterator outputBegin)
+    {
+      //Make sure we are properly synched with device data
+      // input1Begin.getParent().updateHost();
+      // input2Begin.getParent().updateHost();
+
+      // outputBegin.getParent().invalidateDeviceData();
+
+      for(; input1Begin != input1End; ++input1Begin, ++outputBegin)
+      {
+          outputBegin(0) = m_mapArrayFunc->function(&input1Begin(0), input2Begin(0));
+      }
+    }
 };
+
+// template <typename MapArrayFunc>
+// void MapArray<MapArrayFunc>::begin(vector<T>& input1, vector<T>& input2, vector<T>& output) {
+
+
+
+int main()
+{
+   // Test input vectors
+   vector<int> input1;
+   vector<int> input2;
+
+   // Push values onto the vectors
+   for (int i = 0; i < 13; i++) {
+      input1.push_back(i);
+      input2.push_back(i);
+   }
+
+   // Create output vector
+   vector<int> output(input1.size());
+
+   // Run mapArray
+   // mapArray(input1, input2, testFunction, output);
+
+   // Print input/output vectors
+   for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
+      cout << *i << ' ';
+
+   cout << endl;
+
+   for (vector<int>::const_iterator i = input2.begin(); i != input2.end(); ++i)
+      cout << *i << ' ';
+
+   cout << endl;
+
+   for (vector<int>::const_iterator i = output.begin(); i != output.end(); ++i)
+      cout << *i << ' ';
+
+    struct testFunction testStruct;
+    vector<int> testVect;
+
+    // int o = testStruct.execute(1, testVect);
+
+    // cout << endl << endl << "Testing: " << o;
+
+    MapArray<testFunction> testMapArray(new testFunction);
+
+    testMapArray.execute(input1, input2, output);
+
+   return 0;
+}
+
+
+
+
+
+
+
+
+// template <typename T1, typename T2, typename T3>
+// struct threadDataStruct {
+//    int threadId;
+
+//    int startIndex;
+//    int numTasks;
+//    it1 test;
+
+//    vector<it1> *input1;
+//    vector<IT2> *input2;
+//    vector<OT> *output;
+// };
+
+
+
+
+
 
 // template <typename T1, typename T2, typename T3>
 // void *mapArrayThread(void *threadData)
@@ -161,45 +253,3 @@ public:
 //    }
 //    pthread_exit(NULL);
 // }
-
-int main()
-{
-   // Test input vectors
-   vector<int> input1;
-   vector<int> input2;
-
-   // Push values onto the vectors
-   for (int i = 0; i < 13; i++) {
-      input1.push_back(i);
-      input2.push_back(i);
-   }
-
-   // Create output vector
-   vector<double> output(input1.size());
-
-   // Run mapArray
-   // mapArray(input1, input2, testFunction, output);
-
-   // Print input/output vectors
-   for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
-      cout << *i << ' ';
-
-   cout << endl;
-
-   for (vector<int>::const_iterator i = input2.begin(); i != input2.end(); ++i)
-      cout << *i << ' ';
-
-   cout << endl;
-
-   for (vector<double>::const_iterator i = output.begin(); i != output.end(); ++i)
-      cout << *i << ' ';
-
-    struct testFunction testStruct;
-    vector<int> testVect;
-
-    int o = testStruct.execute(1, testVect);
-
-    cout << endl << endl << "Testing: " << o;
-
-   return 0;
-}
