@@ -59,6 +59,8 @@ USER_FUNCTION(testFunction, int, i1, int, i2, int,
 template <typename MapArrayFunc>
 class MapArray
 {
+private:
+   MapArrayFunc* m_mapArrayFunc;
 
 public:
    MapArray(MapArrayFunc* mapArrayFunc)
@@ -71,10 +73,6 @@ public:
     delete m_mapArrayFunc;
    };
 
-private:
-   MapArrayFunc* m_mapArrayFunc;
-
-public:
    template <typename T>
    void execute(vector<T>& input1, vector<T>& input2, vector<T>& output) 
    {
@@ -90,13 +88,18 @@ public:
    template <typename Input1Iterator, typename Input2Iterator, typename OutputIterator>
    void execute(Input1Iterator input1Begin, Input1Iterator input1End, Input2Iterator input2Begin, Input2Iterator input2End, OutputIterator outputBegin)
     {
+      vector<int> test;
+      m_mapArrayFunc->function(0,test);
 
       for(; input1Begin != input1End; ++input1Begin, ++outputBegin)
       {
-          // outputBegin(0) = m_mapArrayFunc->function(&input1Begin(0), input2Begin(0));
+        int in = *input1Begin;
+        m_mapArrayFunc->function(1, &input2Begin(0));
+          // outputBegin(0) = m_mapArrayFunc->function(input1Begin(0), &input2Begin(0));
         int t = 1;
         int* tp = &t;
           // m_mapArrayFunc->function(*tp, *tp);
+        // cout << input1Begin(0);
       }
     }
 };
@@ -119,7 +122,9 @@ int main()
    vector<int> output(input1.size());
 
    // Run mapArray
-   // mapArray(input1, input2, testFunction, output);
+   MapArray<testFunction> testMapArray(new testFunction);
+
+   testMapArray.execute(input1, input2, output);
 
    // Print input/output vectors
    for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
@@ -134,17 +139,6 @@ int main()
 
    for (vector<int>::const_iterator i = output.begin(); i != output.end(); ++i)
       cout << *i << ' ';
-
-    struct testFunction testStruct;
-    vector<int> testVect;
-
-    // int o = testStruct.execute(1, testVect);
-
-    // cout << endl << endl << "Testing: " << o;
-
-    MapArray<testFunction> testMapArray(new testFunction);
-
-    testMapArray.execute(input1, input2, output);
 
    return 0;
 }
