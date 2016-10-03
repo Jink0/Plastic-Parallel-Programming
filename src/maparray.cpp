@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
+#include <unistd.h>
 using namespace std;
 
 #define DEBUG
@@ -61,13 +62,15 @@ struct thread_data
 template <typename Input1Iterator, typename T, typename OutputIterator>
 void *mapArrayThread(void *threadarg)
 {
-   // struct thread_data<Input1Iterator, T, OutputIterator> *my_data;
+   struct thread_data<Input1Iterator, T, OutputIterator> *my_data;
 
-   // sleep(1);
+   sleep(1);
 
-   // my_data = (struct thread_data<Input1Iterator, T, OutputIterator> *) threadarg;
+   my_data = (struct thread_data<Input1Iterator, T, OutputIterator> *) threadarg;
 
-   // cout << "[Thread " << my_data->threadId << "] Hello!" << endl;
+   cout << "[Thread " << my_data->threadId << "] Hello!" << endl;
+
+    // *outputBegin = m_mapArrayFunc->function(*input1Begin,input2);
 
    pthread_exit(NULL);
 }
@@ -115,31 +118,46 @@ public:
    template <typename Input1Iterator, typename T, typename OutputIterator>
    void execute(Input1Iterator input1Begin, Input1Iterator input1End, vector<T>& input2, OutputIterator outputBegin)
     {
-      int rc;
       pthread_t threads[NUM_THREADS];
+      pthread_attr_t attr;
+      int rc;
+      void *status;
+
       struct thread_data<Input1Iterator, T, OutputIterator> thread_data_array[NUM_THREADS];
 
-      for (int i = 0; i < NUM_THREADS; i++) 
+      /* Initialize and set thread detached attribute */
+      pthread_attr_init(&attr);
+      pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+      for (long i = 0; i < NUM_THREADS; i++) 
       {
         thread_data_array[i].threadId = i;
         thread_data_array[i].input1Begin = input1Begin;
         thread_data_array[i].input1End = input1End;
         // thread_data_array[i].input2 = *input2;
         thread_data_array[i].outputBegin = outputBegin;
-      // }
 
-      // for (; input1Begin != input1End; ++input1Begin, ++outputBegin)
-      // {
         cout << "Creating thread " << i << endl;
-        rc = pthread_create(&threads[i], NULL, mapArrayThread<Input1Iterator, T, OutputIterator>, (void *) &thread_data_array[i]);
+        rc = pthread_create(&threads[i], &attr, mapArrayThread<Input1Iterator, T, OutputIterator>, (void *) &thread_data_array[i]);
 
-        // *outputBegin = m_mapArrayFunc->function(*input1Begin,input2);
+        if (rc)
+        {
+          cout << "ERROR; return code from pthread_create() is " << rc << endl;
+          exit(-1);
+        }
+      }
 
-        // if (rc)
-        // {
-        //   printf("ERROR; return code from pthread_create() is %d\n", rc);
-        //   exit(-1);
-        // }
+          /* Free attribute and wait for the other threads */
+      pthread_attr_destroy(&attr);
+      for (long i = 0; i < NUM_THREADS; i++) 
+      {
+        rc = pthread_join(threads[i], &status);
+        if (rc) 
+        {
+          cout << "ERROR; return code from pthread_join() is " << rc << endl;
+          exit(-1);
+        }
+        cout << "Main: completed join with thread " << i << endl;
       }
 
     }
