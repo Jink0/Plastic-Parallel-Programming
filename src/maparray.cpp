@@ -93,8 +93,8 @@ public:
 
       for(; input1Begin != input1End; ++input1Begin, ++outputBegin)
       {
-        int in = *input1Begin;
-        m_mapArrayFunc->function(1, &input2Begin(0));
+        // int in = *input1Begin;
+        // m_mapArrayFunc->function(1, &input2Begin(0));
           // outputBegin(0) = m_mapArrayFunc->function(input1Begin(0), &input2Begin(0));
         int t = 1;
         int* tp = &t;
