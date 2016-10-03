@@ -39,7 +39,7 @@ DEBUG=ON
 # 	   -Wmissing-prototypes -Wmissing-declarations -I$(INCLUDE_DIR) $(DEBUG) -pthread
 # LIBS=-lzmq -lm
 
-CPPFLAGS += -pthread
+CPPFLAGS += -Wall -pthread -std=c++11
 
 
 # -include $(DEPENDENCY_FILE)
