@@ -6,7 +6,7 @@
 using namespace std;
 
 #define DEBUG
-#define NUM_THREADS 5
+#define NUM_THREADS 8
 
 
 
@@ -46,6 +46,33 @@ USER_FUNCTION(testFunction, int, i1, int, i2, int,
               return output;)
 
 
+template <typename Input1Iterator, typename T, typename OutputIterator>
+struct thread_data
+{
+   int  threadId;
+
+   Input1Iterator input1Begin;
+   Input1Iterator input1End;
+   // T *input2;
+   OutputIterator outputBegin;
+};
+
+
+template <typename Input1Iterator, typename T, typename OutputIterator>
+void *mapArrayThread(void *threadarg)
+{
+   // struct thread_data<Input1Iterator, T, OutputIterator> *my_data;
+
+   // sleep(1);
+
+   // my_data = (struct thread_data<Input1Iterator, T, OutputIterator> *) threadarg;
+
+   // cout << "[Thread " << my_data->threadId << "] Hello!" << endl;
+
+   pthread_exit(NULL);
+}
+
+
 
 /*  A class representing the MapArray skeleton.
  *
@@ -82,26 +109,39 @@ public:
         output.resize(input2.size());
       }
 
-      execute(input1.begin(), input1.end(), input2.begin(), input2.end(), output.begin());
+      execute(input1.begin(), input1.end(), input2, output.begin());
     };
 
-   template <typename Input1Iterator, typename Input2Iterator, typename OutputIterator>
-   void execute(Input1Iterator input1Begin, Input1Iterator input1End, Input2Iterator input2Begin, Input2Iterator input2End, OutputIterator outputBegin)
+   template <typename Input1Iterator, typename T, typename OutputIterator>
+   void execute(Input1Iterator input1Begin, Input1Iterator input1End, vector<T>& input2, OutputIterator outputBegin)
     {
-      vector<int> test;
-      m_mapArrayFunc->function(0,test);
+      int rc;
+      pthread_t threads[NUM_THREADS];
+      struct thread_data<Input1Iterator, T, OutputIterator> thread_data_array[NUM_THREADS];
 
-      for(; input1Begin != input1End; ++input1Begin, ++outputBegin)
+      for (int i = 0; i < NUM_THREADS; i++) 
       {
-        // int in = *input1Begin;
-        // m_mapArrayFunc->function(1, &input2Begin(0));
-          // outputBegin(0) = m_mapArrayFunc->function(input1Begin(0), &input2Begin(0));
-        int t = 1;
-        int* tp = &t;
-          // m_mapArrayFunc->function(*tp, *tp);
-        // cout << input1Begin(0);
-        
+        thread_data_array[i].threadId = i;
+        thread_data_array[i].input1Begin = input1Begin;
+        thread_data_array[i].input1End = input1End;
+        // thread_data_array[i].input2 = *input2;
+        thread_data_array[i].outputBegin = outputBegin;
+      // }
+
+      // for (; input1Begin != input1End; ++input1Begin, ++outputBegin)
+      // {
+        cout << "Creating thread " << i << endl;
+        rc = pthread_create(&threads[i], NULL, mapArrayThread<Input1Iterator, T, OutputIterator>, (void *) &thread_data_array[i]);
+
+        // *outputBegin = m_mapArrayFunc->function(*input1Begin,input2);
+
+        // if (rc)
+        // {
+        //   printf("ERROR; return code from pthread_create() is %d\n", rc);
+        //   exit(-1);
+        // }
       }
+
     }
 };
 
