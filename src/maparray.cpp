@@ -173,12 +173,12 @@ public:
       // thread_data_array[i].input2 = *input2;
       thread_data_array[i].outputBegin = outputBegin;
 
-      cout << "Creating thread " << i << endl;
+      print("Creating thread ", i , "\n");
       rc = pthread_create(&threads[i], &attr, mapArrayThread<Input1Iterator, T, OutputIterator>, (void *) &thread_data_array[i]);
 
       if (rc)
       {
-        cout << "ERROR; return code from pthread_create() is " << rc << endl;
+        print("ERROR; return code from pthread_create() is ", rc, "\n");
         exit(-1);
       }
     }
@@ -190,10 +190,10 @@ public:
       rc = pthread_join(threads[i], &status);
       if (rc)
       {
-        cout << "ERROR; return code from pthread_join() is " << rc << endl;
+        print("ERROR; return code from pthread_join() is ", rc, "\n");
         exit(-1);
       }
-      cout << "Main: completed join with thread " << i << endl;
+      print("Main: completed join with thread ", i, "\n");
     }
 
   }
@@ -223,106 +223,17 @@ int main()
 
   // Print input/output vectors
   for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
-    cout << *i << ' ';
+    print(*i, ' ');
 
-  cout << endl;
+  print("\n");
 
   for (vector<int>::const_iterator i = input2.begin(); i != input2.end(); ++i)
-    cout << *i << ' ';
+    print(*i, ' ');
 
-  cout << endl;
+  print("\n");
 
   for (vector<int>::const_iterator i = output.begin(); i != output.end(); ++i)
-    cout << *i << ' ';
+    print(*i, ' ');
 
   return 0;
 }
-
-
-
-
-
-
-
-
-// template <typename T1, typename T2, typename T3>
-// struct threadDataStruct {
-//    int threadId;
-
-//    int startIndex;
-//    int numTasks;
-//    it1 test;
-
-//    vector<it1> *input1;
-//    vector<IT2> *input2;
-//    vector<OT> *output;
-// };
-
-
-
-
-
-
-// template <typename T1, typename T2, typename T3>
-// void *mapArrayThread(void *threadData)
-// {
-//    // struct threadDataStruct<T1, T2, T3> *data = (struct threadDataStruct<T1, T2, T3> *) threadData;
-//    struct threadDataStruct *data = (struct threadDataStruct *) threadData;
-
-//    cout << "[User Thread " << data->threadId << "]: " << endl << "startIndex: " << data->startIndex << endl << "numTasks: " << data->numTasks << endl;
-
-//    for (int i = 0; i < data->numTasks; i++) {
-//       // data->output[data->startIndex + i] = testFunction(data->input1[i], data->input2);
-//    }
-
-//    pthread_exit(NULL);
-// }
-
-// template <typename T1, typename T2, typename T3>
-// void mapArray(vector<T1>& input1, vector<T2>& input2, T3 (function)(T1, vector<T2>&), vector<T3>& output)
-// {
-//    assert(input1.size() == output.size() && "Input1 and output array sizes must be equal!");
-
-//    int base  = input1.size() / NUM_THREADS;
-//    int extra = input1.size() % NUM_THREADS;
-//    int baseTotal = 0;
-
-//    pthread_t threads[NUM_THREADS];
-//    // struct threadDataStruct<T1, T2, T3> threadData[NUM_THREADS];
-//    struct threadDataStruct threadData[NUM_THREADS];
-
-//    for (int i = 0; i < NUM_THREADS; i++ ) {
-//       // Writing data to pass to thread
-//       threadData[i].threadId   = i;
-//       threadData[i].startIndex = baseTotal;
-
-//       if (extra > 0) {
-//          threadData[i].numTasks = base + 1;
-//          extra--;
-//       } else {
-//          threadData[i].numTasks = base;
-//       }
-
-//       baseTotal += threadData[i].numTasks;
-
-//       // threadData[i].input1     = &input1;
-
-//       // int test = input1[0];
-
-//       // threadData[i].input2     = &input2;
-//       // threadData[i].function   = function;
-//       // threadData[i].output     = &output;
-
-//       cout << "[User Program_]: Creating thread " << i << endl;
-
-//       // Create our thread, and pass a pointer to it's threadDataStruct
-//       int err = pthread_create(&threads[i], NULL, mapArrayThread<T1, T2, T3>, (void *)&threadData[i]);
-
-//       // Checking for errors creating the thread
-//       if (err) {
-//          cout << "Error:unable to create thread, " << err << endl;
-//          exit(-1);
-//       }
-//    }
-//    pthread_exit(NULL);
-// }
