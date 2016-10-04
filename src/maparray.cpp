@@ -95,36 +95,36 @@ struct thread_data
 };
 
 
-template <typename in1, typename in2, typename out>
-void *mapArrayThread(void *threadarg)
-{
-  sleep(1);
+// template <typename in1, typename in2, typename out>
+// void *mapArrayThread(void *threadarg)
+// {
+//   sleep(1);
 
-  struct thread_data<in1, in2, out> *my_data;
+//   struct thread_data<in1, in2, out> *my_data;
 
-  my_data = (struct thread_data<in1, in2, out> *) threadarg;
+//   my_data = (struct thread_data<in1, in2, out> *) threadarg;
 
-  print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->input1End - my_data->input1Begin, 
-        " tasks\n");
+//   print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->input1End - my_data->input1Begin,
+//         " tasks\n");
 
-  for (; my_data->input1Begin != my_data->input1End; ++my_data->input1Begin, ++my_data->outputBegin) 
-  {
-    // my_data->outputBegin = m_mapArrayFunc->function(my_data->input1Begin, my_data->input2);
-  }
+//   for (; my_data->input1Begin != my_data->input1End; ++my_data->input1Begin, ++my_data->outputBegin)
+//   {
+//     // my_data->outputBegin = m_mapArrayFunc->function(my_data->input1Begin, my_data->input2);
+//   }
 
-  // m_mapArrayFunc->function(0, my_data->input2);
+//   // m_mapArrayFunc->function(0, my_data->input2);
 
-  pthread_exit(NULL);
-}
+//   pthread_exit(NULL);
+// }
 
 
 
-/*  
+/*
  *  A class representing the MapArray skeleton.
  *
  *  This class implements the mapArray pattern. MapArray is a variant of Map. It produces a result vector from two input
- *  vectors where each element of the result is a function of the corresponding element of the first input, and any 
- *  number of elements from the second input. This means that at each call to the user defined function, which is done 
+ *  vectors where each element of the result is a function of the corresponding element of the first input, and any
+ *  number of elements from the second input. This means that at each call to the user defined function, which is done
  *  for each element in input one, all elements from input two can be accessed.
  */
 
@@ -147,8 +147,32 @@ public:
 
 
 
+  template <typename in1, typename in2, typename out>
+  static void *mapArrayThread(void *threadarg)
+  {
+    sleep(1);
+
+    struct thread_data<in1, in2, out> *my_data;
+
+    my_data = (struct thread_data<in1, in2, out> *) threadarg;
+
+    print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->input1End - my_data->input1Begin,
+          " tasks\n");
+
+    for (; my_data->input1Begin != my_data->input1End; ++my_data->input1Begin, ++my_data->outputBegin)
+    {
+      // my_data->outputBegin = m_mapArrayFunc->function(my_data->input1Begin, my_data->input2);
+    }
+
+    // MapArray.m_mapArrayFunc->function(0, my_data->input2);
+
+    pthread_exit(NULL);
+  }
+
+
+
   /*
-   *  
+   *
    */
 
   template <typename in1, typename in2, typename out>
@@ -166,7 +190,7 @@ public:
 
 
   /*
-   *  
+   *
    */
 
   template <typename in1, typename in2, typename out>
@@ -245,7 +269,7 @@ int main()
   // Push values onto the vectors
   for (int i = 0; i < 13; i++) {
     input1.push_back(i);
-    input2.push_back(i);
+    input2.push_back(i * 2);
   }
 
   // Create output vector
