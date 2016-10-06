@@ -10,10 +10,11 @@
 #include <unistd.h> // For sleep()
 using namespace std;
 
-#define DEBUG
-#define NUM_THREADS 8
 
 
+/*
+ *  Mutexed print function
+ */
 
 std::ostream&
 print_one(std::ostream& os)
@@ -48,215 +49,186 @@ print(const Args& ...args)
 
 
 /*
- *  Macro definition for user functions. The definition expands as a struct which can be used when
- *  creating new patterns. Note - \ lets you continue a statement onto the next line, so we can
- *  write #define statements on multiple lines like this.
+ *  Data struct to pass to each thread
+ *
+ *  int                            threadId                           - Integer ID of the thread
+ *  typename vector<in1>::iterator in1Begin                           - Where to begin in input1
+ *  typename vector<in1>::iterator in1End                             - Where to end in input1
+ *  vector<in2>                    input2                             - Pointer to vector input2
+ *  out                            (*userFunction) (in1, vector<in2>) - User function pointer to a function which takes 
+ *                                                                      (in1, vector<in2>) and returns an out type
+ *  typename vector<out>::iterator outBegin                           - Where to start in output
  */
-
-#define USER_FUNCTION(name, inType1, in1, inType2, in2, outType, func)\
-struct name\
-{\
-    typedef inType1 IT1;\
-    typedef inType2 IT2;\
-    typedef outType OT;\
-    \
-    inline outType function(inType1 in1, vector<inType2>& in2)\
-    {\
-        func\
-    }\
-};
-
-
-
-/*
- *  A quick test function for map array. Returns sum of the product of val with each number in vect,
- *  produces a perfectly balanced workload.
- */
-
-USER_FUNCTION(testFunction, int, i1, int, i2, int,
-
-              int output = 2;
-
-              // for (vector<int>::const_iterator i = i2.begin(); i != i2.end(); ++i)
-              // output += i1 * *i;
-
-              return output;)
-
 
 template <typename in1, typename in2, typename out>
 struct thread_data
 {
   int  threadId;
 
-  in1 input1Begin;
-  in1 input1End;
+  typename vector<in1>::iterator in1Begin;
+  typename vector<in1>::iterator in1End;
+
   vector<in2> input2;
-  out outputBegin;
+
+  out (*userFunction) (in1, vector<in2>);
+
+  typename vector<out>::iterator outBegin;
 };
-
-
-// template <typename in1, typename in2, typename out>
-// void *mapArrayThread(void *threadarg)
-// {
-//   sleep(1);
-
-//   struct thread_data<in1, in2, out> *my_data;
-
-//   my_data = (struct thread_data<in1, in2, out> *) threadarg;
-
-//   print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->input1End - my_data->input1Begin,
-//         " tasks\n");
-
-//   for (; my_data->input1Begin != my_data->input1End; ++my_data->input1Begin, ++my_data->outputBegin)
-//   {
-//     // my_data->outputBegin = m_mapArrayFunc->function(my_data->input1Begin, my_data->input2);
-//   }
-
-//   // m_mapArrayFunc->function(0, my_data->input2);
-
-//   pthread_exit(NULL);
-// }
 
 
 
 /*
- *  A class representing the MapArray skeleton.
+ *  Function to start each thread of mapArray on
  *
- *  This class implements the mapArray pattern. MapArray is a variant of Map. It produces a result vector from two input
- *  vectors where each element of the result is a function of the corresponding element of the first input, and any
- *  number of elements from the second input. This means that at each call to the user defined function, which is done
- *  for each element in input one, all elements from input two can be accessed.
+ *  void *threadarg - Pointer to thread_data structure
  */
 
-template <typename MapArrayFunc>
-class MapArray
+template <typename in1, typename in2, typename out>
+void *mapArrayThread(void *threadarg)
 {
-private:
-  MapArrayFunc* m_mapArrayFunc;
+  // Sleeping for a second just creates nicer, ordered text output
+  sleep(1);
 
-public:
-  MapArray(MapArrayFunc* mapArrayFunc)
+  // Pointer to store personal data
+  struct thread_data<in1, in2, out> *my_data;
+  my_data = (struct thread_data<in1, in2, out> *) threadarg;
+
+  // Print starting parameters
+  print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->in1End - my_data->in1Begin, " tasks\n");
+
+  // Run between iterator ranges, stepping through input1 and output vectors
+  for (; my_data->in1Begin != my_data->in1End; ++my_data->in1Begin, ++my_data->outBegin)
   {
-    m_mapArrayFunc = mapArrayFunc;
-  };
-
-  ~MapArray()
-  {
-    delete m_mapArrayFunc;
-  };
-
-
-
-  template <typename in1, typename in2, typename out>
-  static void *mapArrayThread(void *threadarg)
-  {
-    sleep(1);
-
-    struct thread_data<in1, in2, out> *my_data;
-
-    my_data = (struct thread_data<in1, in2, out> *) threadarg;
-
-    print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->input1End - my_data->input1Begin,
-          " tasks\n");
-
-    for (; my_data->input1Begin != my_data->input1End; ++my_data->input1Begin, ++my_data->outputBegin)
-    {
-      // my_data->outputBegin = m_mapArrayFunc->function(my_data->input1Begin, my_data->input2);
-    }
-
-    // MapArray.m_mapArrayFunc->function(0, my_data->input2);
-
-    pthread_exit(NULL);
+    // Run user function
+    *(my_data->outBegin) = my_data->userFunction(*(my_data->in1Begin), my_data->input2);
   }
 
+  pthread_exit(NULL);
+}
 
 
-  /*
-   *
-   */
 
-  template <typename in1, typename in2, typename out>
-  void execute(vector<in1>& input1, vector<in2>& input2, vector<out>& output)
+/*
+ *  Implementation of the mapArray parallel programming pattern. Currently uses all available cores and splits tasks 
+ *  evenly. If the output vector is not big enough, it will be resized
+ *
+ *  vector<in1>& input1                              - First input vector to be iterated over
+ *  vector<in2>& input2                              - Second input vector to be passed to user function
+ *  out          (*user_function) (in1, vector<in2>) - User function pointer to a function which takes 
+ *                                                     (in1, vector<in2>) and returns an out type
+ *  vector<out>& output                              - Vector to store output in
+ */
+
+template <typename in1, typename in2, typename out>
+void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output)
+{
+  // Check input sizes
+  if (input2.size() != output.size())
   {
-    if (input2.size() != output.size())
-    {
-      output.clear();
-      output.resize(input2.size());
-    }
+    // Resize output if needed
+    output.clear();
+    output.resize(input2.size());
+  }
 
-    execute(input1.begin(), input1.end(), input2, output.begin());
-  };
+  // Most portable method of retriving processor count
+  FILE * fp;
+  char result[128];
+  fp = popen("/bin/cat /proc/cpuinfo |grep -c '^processor'","r");
+  fread(result, 1, sizeof(result)-1, fp);
+  fclose(fp);
+  int num_threads = atoi(result);
 
+  // Print the number of processors we can detect
+  print("[Main] Found ", num_threads, " processors\n");
+  
+  // Thread data struct array to store data structs for each thread
+  struct thread_data<in1, in2, out> thread_data_array[num_threads];
 
+  // Calculate info for data partitioning
+  int length    = input1.size();
+  int quotient  = length / num_threads;
+  int remainder = length % num_threads;
 
-  /*
-   *
-   */
+  // Variables for iterators
+  typename vector<in1>::iterator in1Begin = input1.begin();
+  typename vector<in1>::iterator in1End;
+  typename vector<out>::iterator outBegin = output.begin();
 
-  template <typename in1, typename in2, typename out>
-  void execute(in1 input1Begin, in1 input1End, vector<in2>& input2, out outputBegin)
+  // Set thread data values
+  for (long i = 0; i < num_threads; i++)
   {
-    // Thread data struct array to store data structs for each thread
-    struct thread_data<in1, in2, out> thread_data_array[NUM_THREADS];
+    thread_data_array[i].threadId     = i;
+    thread_data_array[i].in1Begin     = in1Begin;
 
-    int length    = input1End - input1Begin;
-    int quotient  = length / NUM_THREADS;
-    int remainder = length % NUM_THREADS;
+    advance(in1Begin, quotient);
 
-    print("\nQ: ", quotient, " R: ", remainder, "\n");
+    thread_data_array[i].in1End       = in1Begin;
+    thread_data_array[i].input2       = input2;
+    thread_data_array[i].userFunction = user_function;
+    thread_data_array[i].outBegin     = outBegin;
 
-    // Set thread data values
-    for (long i = 0; i < NUM_THREADS; i++)
-    {
-      thread_data_array[i].threadId    = i;
-      thread_data_array[i].input1Begin = input1Begin;
-      thread_data_array[i].input1End   = input1Begin + quotient;
-      thread_data_array[i].input2      = input2;
-      thread_data_array[i].outputBegin = outputBegin;
+    advance(outBegin, quotient);
 
-      if (i < remainder) { thread_data_array[i].input1End++; }
-    }
-
-    pthread_t threads[NUM_THREADS];
-    pthread_attr_t attr;
-    int rc;
-
-    // Initialize and set thread detached attribute to joinable
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
-    // Create all our needed threads
-    for (long i = 0; i < NUM_THREADS; i++)
-    {
-      print("[Main] Creating thread ", i , "\n");
-
-      rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_array[i]);
-
-      if (rc)
-      {
-        // If we couldn't create a new thread, throw an error and exit
-        print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-        exit(-1);
-      }
-    }
-
-    // Free attribute and join with the other threads
-    pthread_attr_destroy(&attr);
-    for (long i = 0; i < NUM_THREADS; i++)
-    {
-      rc = pthread_join(threads[i], NULL);
-
-      if (rc)
-      {
-        // If we couldn't create a new thread, throw an error and exit
-        print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
-        exit(-1);
-      }
-
-      print("[Main] Joined with thread ", i, "\n");
+    // If we still have remainder tasks, add one to this thread
+    if (i < remainder) 
+    { 
+      thread_data_array[i].in1End++; 
+      in1Begin++;
+      outBegin++;
     }
   }
-};
+
+  // Variables for creating and managing threads
+  pthread_t threads[num_threads];
+  pthread_attr_t attr;
+  int rc;
+
+  // Initialize and set thread detached attribute to joinable
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+  // Create all our needed threads
+  for (long i = 0; i < num_threads; i++)
+  {
+    print("[Main] Creating thread ", i , "\n");
+
+    rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_array[i]);
+
+    if (rc)
+    {
+      // If we couldn't create a new thread, throw an error and exit
+      print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+      exit(-1);
+    }
+  }
+
+  // Free attribute and join with the other threads
+  pthread_attr_destroy(&attr);
+  for (long i = 0; i < num_threads; i++)
+  {
+    rc = pthread_join(threads[i], NULL);
+
+    if (rc)
+    {
+      // If we couldn't create a new thread, throw an error and exit
+      print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
+      exit(-1);
+    }
+
+    print("[Main] Joined with thread ", i, "\n");
+  }
+}
+
+
+
+/* 
+ *  Test user function, very simple. Creates a perfectly balanced workload
+ */
+
+int userFunction(int in1, vector<int> in2)
+{
+  return in1 + 10;
+}
 
 
 
@@ -267,7 +239,7 @@ int main()
   vector<int> input2;
 
   // Push values onto the vectors
-  for (int i = 0; i < 13; i++) {
+  for (int i = 0; i < 20; i++) {
     input1.push_back(i);
     input2.push_back(i * 2);
   }
@@ -275,11 +247,8 @@ int main()
   // Create output vector
   vector<int> output(input1.size());
 
-  // Create mapArray
-  MapArray<testFunction> testMapArray(new testFunction);
-
   // Start mapArray
-  testMapArray.execute(input1, input2, output);
+  map_array(input1, input2, userFunction, output);
 
   print("\n\nVector 1: \n");
 
