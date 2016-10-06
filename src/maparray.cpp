@@ -1,13 +1,9 @@
-#include <iostream>
-#include <vector>
-#include <stdlib.h>
-
-#include <assert.h> // 
-
+#include <iostream>  // cout
+#include <vector>    // Vectors
+#include <assert.h>  // Assert functions
 #include <pthread.h> // Thread and mutex functions
-#include <mutex> // std::mutex
-
-#include <unistd.h> // For sleep()
+#include <mutex>     // std::mutex
+#include <unistd.h>  // For sleep()
 using namespace std;
 
 
