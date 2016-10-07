@@ -67,6 +67,16 @@ static struct {
 
 void metrics_init(int num_threads, char *output_file)
 {
+    // Set overall start time
+    gettimeofday(&metrics.start_time, NULL);
+
+    // Reserve space for our per-thread metrics
+    metrics.thread_times = new thread_times_t[num_threads];
+
+    // Record number of threads
+    metrics.num_threads = num_threads;
+
+    // Set output stream
     if (output_file == NULL)
     {
         metrics.output_stream = stdout;
@@ -82,15 +92,6 @@ void metrics_init(int num_threads, char *output_file)
             exit(EXIT_FAILURE);
         }
     }
-
-    // Reserve space for our per-thread metrics
-    metrics.thread_times = new thread_times_t[num_threads];
-
-    // // Set overall start time
-    gettimeofday(&metrics.start_time, NULL);
-
-    // // Record number of threads
-    metrics.num_threads = num_threads;
 }
 
 
@@ -109,6 +110,15 @@ void metrics_thread_start(int thread_id)
 
     // Set work start time
     metrics.thread_times[thread_id].last_start_time = now;
+
+    // Set cumulative vals to start at 0
+    metrics.thread_times[thread_id].cumul_work_millis         = 0;
+    metrics.thread_times[thread_id].cumul_overhead_millis     = 0;
+    metrics.thread_times[thread_id].cumul_mut_blocked_millis  = 0;
+    metrics.thread_times[thread_id].cumul_wait_blocked_millis = 0;
+
+    // Set task counter to 0;
+    metrics.thread_times[thread_id].tasks_completed = 0;
 }
 
 

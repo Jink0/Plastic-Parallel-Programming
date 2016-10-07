@@ -257,7 +257,7 @@ int main()
   vector<int> input2;
 
   // Push values onto the vectors
-  for (int i = 0; i < 20; i++) {
+  for (int i = 0; i < 200000; i++) {
     input1.push_back(i);
     input2.push_back(i * 2);
   }
@@ -268,23 +268,23 @@ int main()
   // Start mapArray
   map_array(input1, input2, userFunction, output);
 
-  print("\n\nVector 1: \n");
+  // print("\n\nVector 1: \n");
 
-  // Print input/output vectors
-  for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
-    print(*i, ' ');
+  // // Print input/output vectors
+  // for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
+  //   print(*i, ' ');
 
-  print("\n\nVector 2: \n");
+  // print("\n\nVector 2: \n");
 
-  for (vector<int>::const_iterator i = input2.begin(); i != input2.end(); ++i)
-    print(*i, ' ');
+  // for (vector<int>::const_iterator i = input2.begin(); i != input2.end(); ++i)
+  //   print(*i, ' ');
 
-  print("\n\nOutput vector: \n");
+  // print("\n\nOutput vector: \n");
 
-  for (vector<int>::const_iterator i = output.begin(); i != output.end(); ++i)
-    print(*i, ' ');
+  // for (vector<int>::const_iterator i = output.begin(); i != output.end(); ++i)
+  //   print(*i, ' ');
 
-  print("\n\n");
+  // print("\n\n");
 
   return 0;
 }
