@@ -4,6 +4,8 @@
 
 #include "map_array.h"
 
+
+
 /*
  * Simulate different types of array access, reading/writing,
  * sequential vs random. Items are summed are result returned
@@ -30,6 +32,7 @@ static int get_rand(unsigned int *seed, int min, int max)
 }
 
 
+
 /*
  * Read random array elements. Use re-entrant PRNG as may be used by multiple threads at once
  */
@@ -52,9 +55,11 @@ double read_random(double *arr, int min, int max, int num)
 }
 
 
+
 /*
  * Sequentially read array
  */
+
 double read_sequential(double *arr, int min, int max) 
 {
     double sum = 0.;
@@ -68,10 +73,12 @@ double read_sequential(double *arr, int min, int max)
     return sum;
 }
 
+
+
 /*
- * Sequantially read array, however get random numbers to mimic times for
- * random access
+ * Sequantially read array, however get random numbers to mimic times for random access
  */
+
 double read_sequential_adjusted(double *arr, int min, int max) 
 {
     double sum = 0.;
@@ -91,9 +98,11 @@ double read_sequential_adjusted(double *arr, int min, int max)
 }
 
 
+
 /*
  * Write to num array elements min<=N<max
  */
+
 double write_random(double *arr, int min, int max, int num) 
 {
     int i, index;
@@ -114,6 +123,7 @@ double write_random(double *arr, int min, int max, int num)
 /*
  * Write sequentially to array entries.
  */
+
 double write_sequential(double *arr, int min, int max) 
 {
     int i;
@@ -131,6 +141,7 @@ double write_sequential(double *arr, int min, int max)
 /*
  * Write sequentially to array entries, adjusted to call RNG
  */
+
 double write_sequential_adjusted(double *arr, int min, int max) 
 {
     int i;
@@ -148,10 +159,11 @@ double write_sequential_adjusted(double *arr, int min, int max)
 }
 
 
+
 /*
- * Read and write from random array elements, each time
- * read and write from same element
+ * Read and write from random array elements, each time read and write from same element
  */
+
 double read_write_random_same(double *arr, int min, int max, int num) 
 {
     double sum = 0;
@@ -171,11 +183,10 @@ double read_write_random_same(double *arr, int min, int max, int num)
 
 
 
-
 /*
- * Read and write from random array elements, each time
- * read and write from different elements
+ * Read and write from random array elements, each time read and write from different elements
  */
+
 double read_write_random_diff(double *arr, int min, int max, int num) 
 {
     double sum = 0;
@@ -196,10 +207,10 @@ double read_write_random_diff(double *arr, int min, int max, int num)
 
 
 
-
 /*
  * Read and write to sequential array elements
  */
+
 double read_write_sequential(double *arr, int min, int max) 
 {
     int i;
@@ -219,6 +230,7 @@ double read_write_sequential(double *arr, int min, int max)
 /*
  * Read and write to sequential array elements. Adjusted to use RNG
  */
+
 double read_write_sequential_adjusted(double *arr, int min, int max) 
 {
     int i;
@@ -234,9 +246,11 @@ double read_write_sequential_adjusted(double *arr, int min, int max)
         sum += arr[i];
         arr[i] = i;
     }
-    
+
     return sum;
 }
+
+
 
 /* 
  *  Test user function, very simple. Creates a perfectly balanced workload
@@ -264,8 +278,42 @@ int main()
   // Create output vector
   vector<double> output(input1.size());
 
-  // Start mapArray
-  map_array(input1, input2, userFunction, output);
+  // // Start mapArray
+  // map_array(input1, input2, userFunction, output);
+
+  // int arr_size = 2000000; // size of array to work on
+  //   //int arr_size = 1000; // size of array to work on
+  //   int work_num = 5000; // number of tasks (each of which works on full array)
+
+
+  //   double *data = calloc(arr_size, sizeof(double));
+
+  //   int i;
+  //   for (i=0; i<arr_size; i++) {
+  //       data[i] = (double) 1./i;
+  //   }
+
+
+
+  //   // Each task puts output into array
+  //   double *output_arr = calloc(work_num, sizeof(double));
+
+
+  //   tf_context_t *tf_context = tf_init(port, output_file);
+
+  //   struct task_struct work_data[work_num];
+
+  //   // Fill out work data structure
+  //   for (i=0; i<work_num; i++) {
+  //       work_data[i].data = data;
+  //       work_data[i].size = arr_size;
+  //       work_data[i].output = &output_arr[i];
+    // }
+
+
+
+
+
 
   // print("\n\nVector 1: \n");
 
