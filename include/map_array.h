@@ -1,3 +1,6 @@
+#ifndef MAP_ARRAY_H
+#define MAP_ARRAY_H
+
 #include <iostream>  // cout
 #include <vector>    // Vectors
 #include <assert.h>  // Assert functions
@@ -7,6 +10,13 @@
 using namespace std;
 
 #include <metrics.h>
+
+
+
+/*
+ * This file contrains the definition of the map array pattern. Note - all the definitions are in the header file, as 
+ * you cannot seperate the definition of a template class from its declaration and put it inside a .cpp file
+ */
 
 
 
@@ -237,54 +247,4 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   metrics_exit();
 }
 
-
-
-/* 
- *  Test user function, very simple. Creates a perfectly balanced workload
- */
-
-int userFunction(int in1, vector<int> in2)
-{
-  return in1 + 10;
-}
-
-
-
-int main()
-{
-  // Test input vectors
-  vector<int> input1;
-  vector<int> input2;
-
-  // Push values onto the vectors
-  for (int i = 0; i < 200000; i++) {
-    input1.push_back(i);
-    input2.push_back(i * 2);
-  }
-
-  // Create output vector
-  vector<int> output(input1.size());
-
-  // Start mapArray
-  map_array(input1, input2, userFunction, output);
-
-  // print("\n\nVector 1: \n");
-
-  // // Print input/output vectors
-  // for (vector<int>::const_iterator i = input1.begin(); i != input1.end(); ++i)
-  //   print(*i, ' ');
-
-  // print("\n\nVector 2: \n");
-
-  // for (vector<int>::const_iterator i = input2.begin(); i != input2.end(); ++i)
-  //   print(*i, ' ');
-
-  // print("\n\nOutput vector: \n");
-
-  // for (vector<int>::const_iterator i = output.begin(); i != output.end(); ++i)
-  //   print(*i, ' ');
-
-  // print("\n\n");
-
-  return 0;
-}
+#endif /* MAP_ARRAY_H */
