@@ -28,22 +28,22 @@ void metrics_starting_work(int thread_id);
 void metrics_finishing_work(int thread_id);
 
 // Call before thread tries to obtain a mutex
-void metrics_locking_mutex(int thread_id);
+void metrics_pbtaining_mutex(int thread_id);
 
 // Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been 
 // blocked
-void metrics_locked_mutex(int thread_id);
+void metrics_obtained_mutex(int thread_id);
 
 // Call when blocked by the master thread. Increment overhead, as last_start_time will be reset when unblocked
-void metrics_thread_finished(int thread_id);
-
-// Call when unblocked by the master thread. Reset last_start_time
 void metrics_blocked(int thread_id);
 
-// Finalise metrics for a single thread
+// Call when unblocked by the master thread. Reset last_start_time
 void metrics_unblocked(int thread_id);
 
-// Initialise metrics for entire program
+// Finalise metrics for a single thread
+void metrics_thread_finished(int thread_id);
+
+// Finalise metrics for entire program
 void metrics_finalise(void);
 
 // Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to 

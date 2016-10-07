@@ -83,13 +83,13 @@ void metrics_init(int num_threads, char *output_file)
         }
     }
 
-    // Reserve space for our per=thread metrics
-    metrics.thread_times = calloc(num_threads, sizeof(thread_times_t));
+    // Reserve space for our per-thread metrics
+    metrics.thread_times = new thread_times_t[num_threads];
 
-    // Set overall start time
+    // // Set overall start time
     gettimeofday(&metrics.start_time, NULL);
 
-    // Record number of threads
+    // // Record number of threads
     metrics.num_threads = num_threads;
 }
 
@@ -240,7 +240,7 @@ void metrics_thread_finished(int thread_id)
 
 
 /*
- * Initialise metrics for entire program
+ * Finalise metrics for entire program
  */
 
 void metrics_finalise(void)
@@ -257,7 +257,7 @@ void metrics_finalise(void)
 
 void metrics_calc(void)
 {
-    fprintf(metrics.output_stream, "----------------------------------------------\n\n");
+    fprintf(metrics.output_stream, "\n----------------------------------------------\n\n\n");
 
     // if (metrics.finish_time.tv_sec == 0 && metrics.finish_time.tv_usec == 0) 
     // {
@@ -312,6 +312,8 @@ void metrics_calc(void)
         fprintf(metrics.output_stream, "\tSpent %f%% of the time blocked by master thread\n", 100. * ((float) time.cumul_wait_blocked_millis) / total_time);
         fprintf(metrics.output_stream, "\n\n");
     }
+
+    fprintf(metrics.output_stream, "----------------------------------------------\n");
 }
 
 

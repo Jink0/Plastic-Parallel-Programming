@@ -91,15 +91,24 @@ void *mapArrayThread(void *threadarg)
   struct thread_data<in1, in2, out> *my_data;
   my_data = (struct thread_data<in1, in2, out> *) threadarg;
 
+  // Initialise metrics
+  metrics_thread_start(my_data->threadId);
+
   // Print starting parameters
   print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->in1End - my_data->in1Begin, " tasks\n");
 
   // Run between iterator ranges, stepping through input1 and output vectors
   for (; my_data->in1Begin != my_data->in1End; ++my_data->in1Begin, ++my_data->outBegin)
   {
+    metrics_starting_work(my_data->threadId);
+    
     // Run user function
     *(my_data->outBegin) = my_data->userFunction(*(my_data->in1Begin), my_data->input2);
+
+     metrics_finishing_work(my_data->threadId);
   }
+
+  metrics_thread_finished(my_data->threadId);
 
   pthread_exit(NULL);
 }
@@ -220,6 +229,12 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
     print("[Main] Joined with thread ", i, "\n");
   }
+
+  metrics_finalise();
+
+  metrics_calc();
+
+  metrics_exit();
 }
 
 

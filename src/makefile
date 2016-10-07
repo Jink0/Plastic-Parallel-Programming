@@ -53,7 +53,7 @@ CPPFLAGS += -Wall -pthread -std=c++11 -I$(INCLUDE_DIR)
 # 	$(CC) -MM -I$(INCLUDE_DIR) $(wildcard ../src/main/*.c) > $(DEPENDENCY_FILE)
 # 	$(CC) -MM -I$(INCLUDE_DIR) $(wildcard ../src/test/*.c) >> $(DEPENDENCY_FILE)
 
-maparray: maparray.o
+maparray: maparray.o metrics.o
 	$(CXX) $(CPPFLAGS) $^ -o $(BIN_DIR)/$@ $(LIBS)
 
 clean:
