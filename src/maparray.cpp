@@ -6,6 +6,8 @@
 #include <unistd.h>  // For sleep()
 using namespace std;
 
+#include <metrics.h>
+
 
 
 /*
@@ -118,14 +120,6 @@ void *mapArrayThread(void *threadarg)
 template <typename in1, typename in2, typename out>
 void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output)
 {
-  // Check input sizes
-  if (input2.size() != output.size())
-  {
-    // Resize output if needed
-    output.clear();
-    output.resize(input2.size());
-  }
-
   // Most portable method of retriving processor count
   FILE * fp;
   char result[128];
@@ -133,6 +127,19 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   fread(result, 1, sizeof(result)-1, fp);
   fclose(fp);
   int num_threads = atoi(result);
+
+  char *output_file = NULL;
+
+  // Initialise metrics
+  metrics_init(num_threads, output_file);
+
+  // Check input sizes
+  if (input2.size() != output.size())
+  {
+    // Resize output if needed
+    output.clear();
+    output.resize(input2.size());
+  }
 
   // Print the number of processors we can detect
   print("[Main] Found ", num_threads, " processors\n");

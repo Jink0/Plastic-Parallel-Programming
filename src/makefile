@@ -1,5 +1,5 @@
 MAIN_DIR=../src
-# INCLUDE_DIR=../include
+INCLUDE_DIR=../include
 # BIN_DIR used as output directory for executables
 BIN_DIR=../bin
 # DEPENDENCY_FILE=./dependencies.d
@@ -39,7 +39,7 @@ DEBUG=ON
 # 	   -Wmissing-prototypes -Wmissing-declarations -I$(INCLUDE_DIR) $(DEBUG) -pthread
 # LIBS=-lzmq -lm
 
-CPPFLAGS += -Wall -pthread -std=c++11
+CPPFLAGS += -Wall -pthread -std=c++11 -I$(INCLUDE_DIR)
 
 
 # -include $(DEPENDENCY_FILE)
