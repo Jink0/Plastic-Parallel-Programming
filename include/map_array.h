@@ -94,9 +94,6 @@ struct thread_data
 template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
 {
-  // Sleeping for a second just creates nicer, ordered text output
-  sleep(1);
-
   // Pointer to store personal data
   struct thread_data<in1, in2, out> *my_data;
   my_data = (struct thread_data<in1, in2, out> *) threadarg;
@@ -153,12 +150,12 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   metrics_init(num_threads, output_file);
 
   // Check input sizes
-  if (input2.size() != output.size())
-  {
+  // if (input2.size() != output.size())
+  // {
     // Resize output if needed
-    output.clear();
-    output.resize(input2.size());
-  }
+    // output.clear();
+    // output.resize(input2.size());
+  // }
 
   // Print the number of processors we can detect
   print("[Main] Found ", num_threads, " processors\n");
