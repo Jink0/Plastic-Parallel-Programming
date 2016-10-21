@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 #include "map_array.h"
 
@@ -33,47 +34,9 @@ struct parameters {
 
 
 
-template <typename T>
-class EnumParser
-{
-    map <string, T> enumMap;
-public:
-    EnumParser(){};
-
-    T ParseSomeEnum(const string &value)
-    { 
-        map <string, T>::const_iterator iValue = enumMap.find(value);
-
-        if (iValue  == enumMap.end())
-        {
-            throw runtime_error("");
-        }
-
-        return iValue->second;
-    }
-};
-
-
-
-
-EnumParser<TaskSizeDist>::EnumParser()
-{
-    enumMap["Uniform"] = Uniform;
-};
-
-
-
-EnumParser<Schedule>::EnumParser()
-{
-    enumMap["Static"]             = Static;
-    enumMap["Dynamic_chunks"]     = Dynamic_chunks;
-    enumMap["Dynamic_individual"] = Dynamic_individual;
-};
-
-
 void processCommandLineArgs(int argc, char *argv[])
 {
-    for (int i = 0; i < argc; i++)
+    for (int i = 1; i < argc; i++)
     {
         std::string arg = argv[i];
 
@@ -99,23 +62,56 @@ void processCommandLineArgs(int argc, char *argv[])
         }
         else if (arg == "-tdist")
         {
-            EnumParser<TaskSizeDist> parser1;
-
             i++;
-            params.task_size_dist = parser1.ParseSomeEnum(argv[i]);
+
+            if (argv[i] == "Uniform")
+            {   
+                params.task_size_dist = Uniform;
+            }
+            else
+            {
+                print("Unrecognised argument: ", argv[i]);
+                // exit(EXIT_FAILURE);
+            }
         }
         else if (arg == "-s")
         {
-            EnumParser<Schedule> parser2;
-
             i++;
-            params.schedule = parser2.ParseSomeEnum(argv[i]);
+
+            if (strcmp(argv[i], "Static"))
+            {
+                params.schedule = Static;
+            }
+            else if (argv[i] == "Dynamic_chunks")
+            {
+                params.schedule = Dynamic_chunks;
+            }
+            else if (argv[i] == "Dynamic_individual")
+            {   
+                params.schedule = Dynamic_individual;
+            }
+            else
+            {
+                print("Unrecognised argument: ", argv[i]);
+                // exit(EXIT_FAILURE);
+            }
         }
         else 
         {
             print("Unrecognised argument: ", argv[i]);
+            // exit(EXIT_FAILURE);
         }
     }
+}
+
+void printParameters() 
+{
+    print("Experiment parameters: \n\nArray size: ", params.array_size, 
+        "\nNumber of threads: ", params.num_threads, 
+        "\nMin task size: ", params.min_task_size, 
+        "\nMax task size: ", params.max_task_size,
+        "\nTask distribution: ", params.task_size_dist,
+        "\nSchedule: ", params.schedule, "\n\n");
 }
 
 /*
@@ -132,6 +128,8 @@ double userFunction(double in1, vector<double> in2)
 int main(int argc, char *argv[])
 {
     processCommandLineArgs(argc, argv);
+
+    printParameters();
 
     // Experiment input vectors
     vector<double> input1(params.array_size);
