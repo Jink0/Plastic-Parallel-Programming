@@ -56,6 +56,36 @@ print(const Args& ...args)
 
 
 
+// Different possible schedules Static             - Give each thread equal portions
+//                              Dynamic_chunks     - Threads dynamically retrive a chunk of the tasks when they can
+//                              Dynamic_individual - Threads retrieve a single task when they can
+enum Schedule {Static, Dynamic_chunks, Dynamic_individual};
+
+// Parameters with default values
+struct parameters {
+    parameters(): task_dist(1), schedule(Dynamic_chunks) 
+    { 
+      // Most portable method of retriving processor count
+      FILE * fp;
+      char result[128];
+      fp = popen("/bin/cat /proc/cpuinfo |grep -c '^processor'","r");
+      fread(result, 1, sizeof(result)-1, fp);
+      fclose(fp);
+      num_threads = atoi(result);
+    }
+
+    // Number of threads to use
+    int num_threads;
+
+    // Distribution of the tasks
+    int task_dist;
+
+    // Schedule to use
+    Schedule schedule;
+};
+
+
+
 /*
  *  Data struct to pass to each thread
  *
@@ -134,20 +164,10 @@ void *mapArrayThread(void *threadarg)
  */
 
 template <typename in1, typename in2, typename out>
-void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output)
+void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, parameters params = parameters(), char *output_file = NULL)
 {
-  // Most portable method of retriving processor count
-  FILE * fp;
-  char result[128];
-  fp = popen("/bin/cat /proc/cpuinfo |grep -c '^processor'","r");
-  fread(result, 1, sizeof(result)-1, fp);
-  fclose(fp);
-  int num_threads = atoi(result);
-
-  char *output_file = NULL;
-
   // Initialise metrics
-  metrics_init(num_threads, output_file);
+  metrics_init(params.num_threads, output_file);
 
   // Check input sizes
   // if (input2.size() != output.size())
@@ -158,15 +178,15 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // }
 
   // Print the number of processors we can detect
-  print("[Main] Found ", num_threads, " processors\n");
+  print("[Main] Found ", params.num_threads, " processors\n");
   
   // Thread data struct array to store data structs for each thread
-  struct thread_data<in1, in2, out> thread_data_array[num_threads];
+  struct thread_data<in1, in2, out> thread_data_array[params.num_threads];
 
   // Calculate info for data partitioning
   int length    = input1.size();
-  int quotient  = length / num_threads;
-  int remainder = length % num_threads;
+  int quotient  = length / params.num_threads;
+  int remainder = length % params.num_threads;
 
   // Variables for iterators
   typename vector<in1>::iterator in1Begin = input1.begin();
@@ -174,7 +194,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   typename vector<out>::iterator outBegin = output.begin();
 
   // Set thread data values
-  for (long i = 0; i < num_threads; i++)
+  for (long i = 0; i < params.num_threads; i++)
   {
     thread_data_array[i].threadId     = i;
     thread_data_array[i].in1Begin     = in1Begin;
@@ -198,7 +218,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   }
 
   // Variables for creating and managing threads
-  pthread_t threads[num_threads];
+  pthread_t threads[params.num_threads];
   pthread_attr_t attr;
   int rc;
 
@@ -207,7 +227,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   // Create all our needed threads
-  for (long i = 0; i < num_threads; i++)
+  for (long i = 0; i < params.num_threads; i++)
   {
     print("[Main] Creating thread ", i , "\n");
 
@@ -223,7 +243,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   // Free attribute and join with the other threads
   pthread_attr_destroy(&attr);
-  for (long i = 0; i < num_threads; i++)
+  for (long i = 0; i < params.num_threads; i++)
   {
     rc = pthread_join(threads[i], NULL);
 
