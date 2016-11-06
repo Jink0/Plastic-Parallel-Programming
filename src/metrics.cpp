@@ -295,7 +295,7 @@ void metrics_calc(void)
     // Calculate total program time
     long program_time = TIME_DIFF_MICROS(now, metrics.start_time);
 
-    fprintf(metrics.output_stream, "Program running for %ld milliseconds\n", program_time);
+    fprintf(metrics.output_stream, "All time measurements in milliseconds\n\nTotal runtime:\t%ld\n\n", program_time);
 
     thread_times_t time;
 
@@ -308,18 +308,18 @@ void metrics_calc(void)
 
         if (total_time == 0) total_time = 1; // to prevent NANs
 
-        fprintf(metrics.output_stream, "Thread %d:\n", i);
-        fprintf(metrics.output_stream, "Completed %d tasks\n\n", time.tasks_completed);
+        fprintf(metrics.output_stream, "Thread:\t%d\n", i);
+        fprintf(metrics.output_stream, "Number of tasks completed:\t%d\n\n", time.tasks_completed);
 
-        fprintf(metrics.output_stream, "\tTime working (millis): %ld\n", time.cumul_work_millis);
-        fprintf(metrics.output_stream, "\tTime in overhead (millis): %ld\n", time.cumul_overhead_millis);
-        fprintf(metrics.output_stream, "\tTime mutex blocked (millis): %ld\n", time.cumul_mut_blocked_millis);
-        fprintf(metrics.output_stream, "\tTime blocked by master thread (millis): %ld\n\n", time.cumul_wait_blocked_millis);
+        fprintf(metrics.output_stream, "Time working:\t%ld\n",                    time.cumul_work_millis);
+        fprintf(metrics.output_stream, "Time in overhead:\t%ld\n",                time.cumul_overhead_millis);
+        fprintf(metrics.output_stream, "Time mutex blocked:\t%ld\n",              time.cumul_mut_blocked_millis);
+        fprintf(metrics.output_stream, "Time blocked by master thread:\t%ld\n\n", time.cumul_wait_blocked_millis);
 
-        fprintf(metrics.output_stream, "\tSpent %f%% of the time in work\n", 100. * ((float) time.cumul_work_millis) / total_time);
-        fprintf(metrics.output_stream, "\tSpent %f%% of the time in overhead\n", 100. * ((float) time.cumul_overhead_millis) / total_time);
-        fprintf(metrics.output_stream, "\tSpent %f%% of the time mutex blocked\n", 100. * ((float) time.cumul_mut_blocked_millis) / total_time);
-        fprintf(metrics.output_stream, "\tSpent %f%% of the time blocked by master thread\n", 100. * ((float) time.cumul_wait_blocked_millis) / total_time);
+        fprintf(metrics.output_stream, "Percentage of time in work:\t%.1f%%\n",                  100. * ((float) time.cumul_work_millis)         / total_time);
+        fprintf(metrics.output_stream, "Percentage of time in overhead:\t%.1f%%\n",              100. * ((float) time.cumul_overhead_millis)     / total_time);
+        fprintf(metrics.output_stream, "Percentage of time mutex blocked:\t%.1f%%\n",            100. * ((float) time.cumul_mut_blocked_millis)  / total_time);
+        fprintf(metrics.output_stream, "Percentage of time blocked by master thread:\t%.1f%%\n", 100. * ((float) time.cumul_wait_blocked_millis) / total_time);
         fprintf(metrics.output_stream, "\n\n");
     }
 
