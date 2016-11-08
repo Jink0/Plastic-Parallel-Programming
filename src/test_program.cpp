@@ -58,18 +58,36 @@ struct eParameters {
 
 
 
-void processConfig(struct eParameters* exParams, char *argv[])
+std::vector<eParameters> processConfig(char *argv[])
 {
+    // Setting property_tree namespace
     namespace pt = boost::property_tree;
 
+    // Create property tree and read our config file into it
     pt::ptree propTree;
     pt::ini_parser::read_ini(argv[1], propTree);
 
+    // Retreive number of experiments from property tree
+    uint32_t num_experiments = propTree.get<uint32_t>(pt::ptree::path_type("DEFAULTS/numExperiments", '/'));
+
+    // Default experiment parameters container
     struct eParameters defaultParams;
 
-    defaultParams.params.num_threads = propTree.get<int>(pt::ptree::path_type("DEFAULTS/numThreads", '/'));
-    defaultParams.params.task_dist   = propTree.get<int>(pt::ptree::path_type("DEFAULTS/taskDistribution", '/'));
+    // Read simple values from property tree
+    defaultParams.params.num_threads = propTree.get<int>(
+                                            pt::ptree::path_type("DEFAULTS/numThreads", '/'));
 
+    defaultParams.params.task_dist   = propTree.get<int>(
+                                            pt::ptree::path_type("DEFAULTS/taskDistribution", '/'));
+
+    defaultParams.array_size         = propTree.get<uint32_t>(
+                                            pt::ptree::path_type("DEFAULTS/arraySize", '/'));
+
+    defaultParams.output_file        = const_cast<char*>(
+                                            propTree.get<std::string>(
+                                                pt::ptree::path_type("DEFAULTS/outputFilesRootWord", '/')).c_str());
+
+    // Reading schedule values is more complex, as we need an enum value, so we need this switch statement
     std::string sched = propTree.get<std::string>(pt::ptree::path_type("DEFAULTS/schedule", '/'));
 
     if (sched.compare("Static") == 0)
@@ -90,58 +108,61 @@ void processConfig(struct eParameters* exParams, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    defaultParams.array_size  = propTree.get<uint32_t>(pt::ptree::path_type("DEFAULTS/arraySize", '/'));
-    defaultParams.output_file = const_cast<char*>(propTree.get<std::string>(pt::ptree::path_type("DEFAULTS/outputFilesRootWord", '/')).c_str());
+    // Vector of experiment parameters
+    std::vector<eParameters> exParams;
 
-    int num_experiments = propTree.get<int>(pt::ptree::path_type("DEFAULTS/numExperiments", '/'));
-
-    exParams = new eParameters[num_experiments];
-
-    for (int i = 0; i < num_experiments; i++)
+    for (uint32_t i = 0; i < num_experiments; i++)
     {
+        struct eParameters current;
+
+        // Constructing paths to parameter values
         std::string path1 = std::to_string(i + 1) + "/numThreads";
         std::string path2 = std::to_string(i + 1) + "/taskDistribution";
         std::string path3 = std::to_string(i + 1) + "/schedule";
         std::string path4 = std::to_string(i + 1) + "/arraySize";
 
+        // Retrieving said values
         boost::optional<int> n_threads   = propTree.get_optional<int>(pt::ptree::path_type(path1, '/'));
         boost::optional<int> t_dist      = propTree.get_optional<int>(pt::ptree::path_type(path2, '/'));
         boost::optional<std::string> sch = propTree.get_optional<std::string>(pt::ptree::path_type(path3, '/'));
         boost::optional<uint32_t> a_size = propTree.get_optional<uint32_t>(pt::ptree::path_type(path4, '/'));
 
+        // Since we are returning optional values, we must check they exist before assigning them. If they do not, we 
+        // use the default value NOTE - SHOULD CHANGE SO WE DETECT IF NO NEW VALS TO CALCULATE num_experiments PROGRAMATICALLY
         if (n_threads)
         {
-            exParams[i].params.num_threads = static_cast<int>(*n_threads);
+            current.params.num_threads = static_cast<int>(*n_threads);
         }
         else
         {
-            exParams[i].params.num_threads = defaultParams.params.num_threads;
+            current.params.num_threads = defaultParams.params.num_threads;
         }
 
         if (t_dist)
         {
-            exParams[i].params.task_dist = static_cast<int>(*t_dist);
+            current.params.task_dist = static_cast<int>(*t_dist);
         }
         else
         {
-            exParams[i].params.task_dist = defaultParams.params.task_dist;
+            current.params.task_dist = defaultParams.params.task_dist;
         }
 
         if (sch)
         {
+            // Same deal as earlier with the schedule parameter
             sched = static_cast<std::string>(*sch);
 
             if (sched.compare("Static") == 0)
             {
-                exParams[i].params.schedule = Static;
+                current.params.schedule = Static;
             }
             else if (sched.compare("Dynamic_chunks") == 0)
             {
-                exParams[i].params.schedule = Dynamic_chunks;
+                current.params.schedule = Dynamic_chunks;
             }
             else if (sched.compare("Dynamic_individual") == 0)
             {
-                exParams[i].params.schedule = Dynamic_individual;
+                current.params.schedule = Dynamic_individual;
             }
             else
             {
@@ -151,20 +172,35 @@ void processConfig(struct eParameters* exParams, char *argv[])
         }
         else
         {
-            exParams[i].params.schedule = defaultParams.params.schedule;
+            current.params.schedule = defaultParams.params.schedule;
         }
 
         if (a_size)
         {
-            exParams[i].array_size = static_cast<uint32_t>(*a_size);
+            current.array_size = static_cast<uint32_t>(*a_size);
         }
         else
         {
-            exParams[i].array_size = defaultParams.array_size;
+            current.array_size = defaultParams.array_size;
         }
 
-        exParams[i].output_file = defaultParams.output_file;
+        // Calculate array size to hold output filename for metrics
+        // char metrics_filename[(int) ((ceil(log10(i + 1)) + strlen(defaultParams.output_file) + 1) * sizeof(char))];
+
+        // Create filename
+        sprintf(current.output_file, "%s%d", defaultParams.output_file, i + 1);
+
+        // Store current parameters in output vector
+        exParams.push_back(current);
+
+        // strcat(exParams[i].output_file, metrics_filename);
+
+        // 
+        // exParams[i].output_file = defaultParams.output_file;
     }
+
+    // Return output vector
+    return exParams;
 }
 
 
@@ -177,120 +213,26 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    namespace pt = boost::property_tree;
 
-    pt::ptree propTree;
-    pt::ini_parser::read_ini(argv[1], propTree);
 
-    struct eParameters defaultParams;
+    std::vector<eParameters> exParams;
 
-    defaultParams.params.num_threads = propTree.get<int>(pt::ptree::path_type("DEFAULTS/numThreads", '/'));
-    defaultParams.params.task_dist   = propTree.get<int>(pt::ptree::path_type("DEFAULTS/taskDistribution", '/'));
 
-    std::string sched = propTree.get<std::string>(pt::ptree::path_type("DEFAULTS/schedule", '/'));
 
-    if (sched.compare("Static") == 0)
-    {
-        defaultParams.params.schedule = Static;
-    }
-    else if (sched.compare("Dynamic_chunks") == 0)
-    {
-        defaultParams.params.schedule = Dynamic_chunks;
-    }
-    else if (sched.compare("Dynamic_individual") == 0)
-    {
-        defaultParams.params.schedule = Dynamic_individual;
-    }
-    else
-    {
-        print("\nUnrecognised default schedule: ", sched, "\n\n");
-        exit(EXIT_FAILURE);
-    }
+    exParams = processConfig(argv);
 
-    defaultParams.array_size  = propTree.get<uint32_t>(pt::ptree::path_type("DEFAULTS/arraySize", '/'));
-    defaultParams.output_file = const_cast<char*>(propTree.get<std::string>(pt::ptree::path_type("DEFAULTS/outputFilesRootWord", '/')).c_str());
 
-    int num_experiments = propTree.get<int>(pt::ptree::path_type("DEFAULTS/numExperiments", '/'));
 
-    eParameters *exParams = new eParameters[num_experiments];
 
-    for (int i = 0; i < num_experiments; i++)
-    {
-        std::string path1 = std::to_string(i + 1) + "/numThreads";
-        std::string path2 = std::to_string(i + 1) + "/taskDistribution";
-        std::string path3 = std::to_string(i + 1) + "/schedule";
-        std::string path4 = std::to_string(i + 1) + "/arraySize";
 
-        boost::optional<int> n_threads   = propTree.get_optional<int>(pt::ptree::path_type(path1, '/'));
-        boost::optional<int> t_dist      = propTree.get_optional<int>(pt::ptree::path_type(path2, '/'));
-        boost::optional<std::string> sch = propTree.get_optional<std::string>(pt::ptree::path_type(path3, '/'));
-        boost::optional<uint32_t> a_size = propTree.get_optional<uint32_t>(pt::ptree::path_type(path4, '/'));
-
-        if (n_threads)
-        {
-            exParams[i].params.num_threads = static_cast<int>(*n_threads);
-        }
-        else
-        {
-            exParams[i].params.num_threads = defaultParams.params.num_threads;
-        }
-
-        if (t_dist)
-        {
-            exParams[i].params.task_dist = static_cast<int>(*t_dist);
-        }
-        else
-        {
-            exParams[i].params.task_dist = defaultParams.params.task_dist;
-        }
-
-        if (sch)
-        {
-            sched = static_cast<std::string>(*sch);
-
-            if (sched.compare("Static") == 0)
-            {
-                exParams[i].params.schedule = Static;
-            }
-            else if (sched.compare("Dynamic_chunks") == 0)
-            {
-                exParams[i].params.schedule = Dynamic_chunks;
-            }
-            else if (sched.compare("Dynamic_individual") == 0)
-            {
-                exParams[i].params.schedule = Dynamic_individual;
-            }
-            else
-            {
-                print("\nUnrecognised default schedule: ", sched, "\n\n");
-                exit(EXIT_FAILURE);
-            }
-        }
-        else
-        {
-            exParams[i].params.schedule = defaultParams.params.schedule;
-        }
-
-        if (a_size)
-        {
-            exParams[i].array_size = static_cast<uint32_t>(*a_size);
-        }
-        else
-        {
-            exParams[i].array_size = defaultParams.array_size;
-        }
-
-        exParams[i].output_file = defaultParams.output_file;
-    }
-
-    for (int i = 0; i < num_experiments; i++)
+    for (uint32_t i = 0; i < exParams.size() - 1; i++)
     {
         // Experiment input vectors
         vector<double> input1(exParams[i].array_size);
         vector<double> input2(exParams[i].array_size);
 
         // Generate data for vectors
-        for (int i = 0; i < exParams[i].array_size; i++) 
+        for (uint32_t i = 0; i < exParams[i].array_size; i++) 
         {
             input1[i] = (double) 1. / i;
             input2[i] = (double) 1. / i;
@@ -303,7 +245,6 @@ int main(int argc, char *argv[])
         sprintf(exp_num, "%d", i + 1);
 
         strcat(exParams[i].output_file, exp_num);
-        cout << exParams[i].output_file << endl;
 
         // Start mapArray
         map_array(input1, input2, userFunction, output, exParams[i].params, exParams[i].output_file);
