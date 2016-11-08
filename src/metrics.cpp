@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <sstream>
+#include <string>
+
 #include "metrics.h"
 
 
@@ -267,8 +270,6 @@ void metrics_finalise(void)
 
 void metrics_calc(void)
 {
-    fprintf(metrics.output_stream, "\n----------------------------------------------\n\n\n");
-
     // if (metrics.finish_time.tv_sec == 0 && metrics.finish_time.tv_usec == 0) 
     // {
     //     if (current_phase->tasks_running != 0) 
@@ -295,9 +296,27 @@ void metrics_calc(void)
     // Calculate total program time
     long program_time = TIME_DIFF_MICROS(now, metrics.start_time);
 
-    fprintf(metrics.output_stream, "All time measurements in milliseconds\n\nTotal runtime:\t%ld\n\n", program_time);
+    // All time measurements in milliseconds
+    // fprintf(metrics.output_stream, "All time measurements in milliseconds\n\n");
+    // fprintf(metrics.output_stream, "Total runtime:%ld\n\n", program_time);
 
     thread_times_t time;
+
+    std::ostringstream thread_numbers;
+    std::ostringstream num_tasks_completed;
+
+    std::ostringstream time_working;
+    std::ostringstream time_in_overhead;
+    std::ostringstream time_mutex_blocked;
+    std::ostringstream time_blocked_by_master_thread;
+
+    thread_numbers                << "Thread:";
+    num_tasks_completed           << "Number of tasks completed:";
+
+    time_working                  << "Time working:";
+    time_in_overhead              << "Time in overhead:";
+    time_mutex_blocked            << "Time mutex blocked:";
+    time_blocked_by_master_thread << "Time blocked by master thread:";
 
     // Write metrics to output stream for each thread
     for (int i = 0; i < metrics.num_threads; i++) 
@@ -308,22 +327,30 @@ void metrics_calc(void)
 
         if (total_time == 0) total_time = 1; // to prevent NANs
 
-        fprintf(metrics.output_stream, "Thread:\t%d\n", i);
-        fprintf(metrics.output_stream, "Number of tasks completed:\t%d\n\n", time.tasks_completed);
+        thread_numbers                << "\t" << i;
+        num_tasks_completed           << "\t" << time.tasks_completed;
 
-        fprintf(metrics.output_stream, "Time working:\t%ld\n",                    time.cumul_work_millis);
-        fprintf(metrics.output_stream, "Time in overhead:\t%ld\n",                time.cumul_overhead_millis);
-        fprintf(metrics.output_stream, "Time mutex blocked:\t%ld\n",              time.cumul_mut_blocked_millis);
-        fprintf(metrics.output_stream, "Time blocked by master thread:\t%ld\n\n", time.cumul_wait_blocked_millis);
-
-        fprintf(metrics.output_stream, "Percentage of time in work:\t%.1f%%\n",                  100. * ((float) time.cumul_work_millis)         / total_time);
-        fprintf(metrics.output_stream, "Percentage of time in overhead:\t%.1f%%\n",              100. * ((float) time.cumul_overhead_millis)     / total_time);
-        fprintf(metrics.output_stream, "Percentage of time mutex blocked:\t%.1f%%\n",            100. * ((float) time.cumul_mut_blocked_millis)  / total_time);
-        fprintf(metrics.output_stream, "Percentage of time blocked by master thread:\t%.1f%%\n", 100. * ((float) time.cumul_wait_blocked_millis) / total_time);
-        fprintf(metrics.output_stream, "\n\n");
+        time_working                  << "\t" << time.cumul_work_millis;
+        time_in_overhead              << "\t" << time.cumul_overhead_millis;
+        time_mutex_blocked            << "\t" << time.cumul_mut_blocked_millis;
+        time_blocked_by_master_thread << "\t" << time.cumul_wait_blocked_millis;
     }
 
-    fprintf(metrics.output_stream, "----------------------------------------------\n");
+    thread_numbers                << "\n";
+    num_tasks_completed           << "\n";
+
+    time_working                  << "\n";
+    time_in_overhead              << "\n";
+    time_mutex_blocked            << "\n";
+    time_blocked_by_master_thread << "\n";
+
+    fprintf(metrics.output_stream, thread_numbers.str().c_str());
+    fprintf(metrics.output_stream, num_tasks_completed.str().c_str());
+
+    fprintf(metrics.output_stream, time_working.str().c_str());
+    fprintf(metrics.output_stream, time_in_overhead.str().c_str());
+    fprintf(metrics.output_stream, time_mutex_blocked.str().c_str());
+    fprintf(metrics.output_stream, time_blocked_by_master_thread.str().c_str());
 }
 
 
