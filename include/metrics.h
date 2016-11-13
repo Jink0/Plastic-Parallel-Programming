@@ -16,7 +16,7 @@
     metrics_locked_mutex((thread_id));
 
 // Initialise metrics. If output_file is non-null, output metrics to the given file. Otherwise output to stdout
-void metrics_init(int num_threads, char *output_file);
+void metrics_init(int num_threads, std::string output_file);
 
 // Initialise metrics for a single thread
 void metrics_thread_start(int thread_id);

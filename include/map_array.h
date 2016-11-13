@@ -164,10 +164,10 @@ void *mapArrayThread(void *threadarg)
  */
 
 template <typename in1, typename in2, typename out>
-void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, parameters params = parameters(), char *output_file = NULL)
+void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, std::string output_filename, parameters params = parameters())
 {
   // Initialise metrics
-  metrics_init(params.num_threads, output_file);
+  metrics_init(params.num_threads, output_filename + ".csv");
 
   // Check input sizes
   // if (input2.size() != output.size())

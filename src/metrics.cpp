@@ -65,10 +65,10 @@ static struct {
 
 
 /*
- * Initialise metrics. If output_file is non-null, output metrics to the given file. Otherwise output to stdout
+ * Initialise metrics. If output_filename is non-null, output metrics to the given file. Otherwise output to stdout
  */
 
-void metrics_init(int num_threads, char *output_file = NULL)
+void metrics_init(int num_threads, std::string output_filename)
 {
     // Set overall start time
     gettimeofday(&metrics.start_time, NULL);
@@ -80,20 +80,13 @@ void metrics_init(int num_threads, char *output_file = NULL)
     metrics.num_threads = num_threads;
 
     // Set output stream
-    if (output_file == NULL)
-    {
-        metrics.output_stream = stdout;
-    }
-    else
-    {
-        metrics.output_stream = fopen(output_file, "w");
+    metrics.output_stream = fopen((char*) output_filename.c_str(), "w");
 
-        if (metrics.output_stream == NULL)
-        {
-            // If we couldn't open the file, throw an error
-            perror("Error, metric could not open file");
-            exit(EXIT_FAILURE);
-        }
+    if (metrics.output_stream == NULL)
+    {
+        // If we couldn't open the file, throw an error
+        perror("Error, metric could not open file");
+        exit(EXIT_FAILURE);
     }
 }
 
