@@ -198,12 +198,12 @@ std::vector<eParameters> processConfig(char *argv[])
             // Set current output file
             current.output_filename = ("Experiment" + std::to_string(i + 1) + "_Repeat" + std::to_string(r));
 
-            // Store current parameters in output vector
+            // Store current parameters in output vector.
             exParamsVector.push_back(current);
         }
     }
 
-    // Return complete experiment vector
+    // Return complete experiment vector.
     return exParamsVector;
 }
 
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
         // Output vector.
         vector<double> output(exParamsVector[i].array_size);
 
-        // Start mapArray
+        // Start mapArray.
         map_array(input1, input2, userFunction, output, exParamsVector[i].output_filename, exParamsVector[i].params);
     }
 

@@ -7,11 +7,8 @@
 
 
 /*
- * Simulate different types of array access, reading/writing,
- * sequential vs random. Items are summed are result returned
- * so compiler does not optimise away calls.
- * All arrays passed in as double. Indices accessed are
- * min <= index < max
+ * Simulate different types of array access, reading/writing, sequential vs random. Items are summed are result returned
+ * so compiler does not optimise away calls. All arrays passed in as double. Indices accessed are min <= index < max.
  */
 
 
@@ -19,7 +16,7 @@ enum ArrAccessType {R_Rand, R_Seq, R_Seq_Adj, W_Rand, W_Seq, W_Seq_Adj, RW_Rand_
 
 
 /*
- * Generate a random number N, such that min <= N < max
+ * Generate a random number N, such that min <= N < max.
  */
 
 static int get_rand(unsigned int *seed, int min, int max)
@@ -36,7 +33,7 @@ static int get_rand(unsigned int *seed, int min, int max)
 
 
 /*
- * Read random array elements. Use re-entrant PRNG as may be used by multiple threads at once
+ * Read random array elements. Use re-entrant PRNG as may be used by multiple threads at once.
  */
 
 double read_random(vector<double> arr, int min, int max, int num)
@@ -59,7 +56,7 @@ double read_random(vector<double> arr, int min, int max, int num)
 
 
 /*
- * Sequentially read array
+ * Sequentially read array.
  */
 
 double read_sequential(double *arr, int min, int max)
@@ -78,7 +75,7 @@ double read_sequential(double *arr, int min, int max)
 
 
 /*
- * Sequantially read array, however get random numbers to mimic times for random access
+ * Sequantially read array, however get random numbers to mimic times for random access.
  */
 
 double read_sequential_adjusted(double *arr, int min, int max)
@@ -86,7 +83,7 @@ double read_sequential_adjusted(double *arr, int min, int max)
     double sum = 0.;
     int i;
 
-    volatile int index; // stop compiler from optimising away unused index
+    volatile int index; // Stop compiler from optimising away unused index.
     unsigned seed;
     seed = (unsigned) time(NULL);
 
@@ -102,7 +99,7 @@ double read_sequential_adjusted(double *arr, int min, int max)
 
 
 /*
- * Write to num array elements min<=N<max
+ * Write to num array elements min<=N<max.
  */
 
 double write_random(double *arr, int min, int max, int num)
@@ -141,13 +138,13 @@ double write_sequential(double *arr, int min, int max)
 
 
 /*
- * Write sequentially to array entries, adjusted to call RNG
+ * Write sequentially to array entries, adjusted to call RNG.
  */
 
 double write_sequential_adjusted(double *arr, int min, int max)
 {
     int i;
-    volatile int index; // stop compiler from optimising away unused index
+    volatile int index; // stop compiler from optimising away unused index.
     unsigned seed;
     seed = (unsigned) time(NULL);
 
@@ -163,7 +160,7 @@ double write_sequential_adjusted(double *arr, int min, int max)
 
 
 /*
- * Read and write from random array elements, each time read and write from same element
+ * Read and write from random array elements, each time read and write from same element.
  */
 
 double read_write_random_same(double *arr, int min, int max, int num)
@@ -186,7 +183,7 @@ double read_write_random_same(double *arr, int min, int max, int num)
 
 
 /*
- * Read and write from random array elements, each time read and write from different elements
+ * Read and write from random array elements, each time read and write from different elements.
  */
 
 double read_write_random_diff(double *arr, int min, int max, int num)
@@ -210,7 +207,7 @@ double read_write_random_diff(double *arr, int min, int max, int num)
 
 
 /*
- * Read and write to sequential array elements
+ * Read and write to sequential array elements.
  */
 
 double read_write_sequential(double *arr, int min, int max)
@@ -230,7 +227,7 @@ double read_write_sequential(double *arr, int min, int max)
 
 
 /*
- * Read and write to sequential array elements. Adjusted to use RNG
+ * Read and write to sequential array elements. Adjusted to use RNG.
  */
 
 double read_write_sequential_adjusted(double *arr, int min, int max)
@@ -238,7 +235,7 @@ double read_write_sequential_adjusted(double *arr, int min, int max)
     int i;
     double sum = 0;
 
-    volatile int index; // stop compiler from optimising away unused index
+    volatile int index; // stop compiler from optimising away unused index.
     unsigned seed;
     seed = (unsigned) time(NULL);
 
@@ -261,7 +258,7 @@ double read_random_function(double in1, vector<double> in2) {
 
 
 /*
- *  Test user function
+ *  Test user function.
  */
 
 typedef double (*function_signature) (double, vector<double>);
@@ -280,20 +277,20 @@ function_signature userFunction(ArrAccessType access_type)
 
 int main()
 {
-    // Test input vectors
+    // Test input vectors.
     vector<double> input1;
     vector<double> input2;
 
-    // Push values onto the vectors
+    // Push values onto the vectors.
     for (int i = 0; i < 100000; i++) {
         input1.push_back(i);
         input2.push_back(i * 2);
     }
 
-    // Create output vector
+    // Create output vector.
     vector<double> output(input1.size());
 
-    // Start mapArray
+    // Start mapArray.
     // map_array(input1, input2, userFunction, output);
 
     int arr_size = 100000; // size of array to work on

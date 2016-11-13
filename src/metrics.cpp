@@ -12,29 +12,29 @@
 /*
  * Functions for calculating various metrics such as time in overhead/work etc. Each thread can only modify its own
  * array element, so no locking is required. It is assumed that negligible time occurs during the execution of each of
- * these functions, to avoid going insane
+ * these functions, to avoid going insane.
  */
 
 
 
 /*
- * Struct to store metrics for a single thread
+ * Struct to store metrics for a single thread.
  */
 
 typedef struct {
-    struct timeval start_time, finish_time; // To calculate the total time the thread is running
+    struct timeval start_time, finish_time; // To calculate the total time the thread is running.
 
-    struct timeval last_start_time;         // To calculate time spent on current work/overhead
-    struct timeval overhead_start_time;     // To calculate time spent in overhead
-    struct timeval mut_blocked_start_time;  // To calculate time spent blocked acquiring a mutex
-    struct timeval wait_blocked_start_time; // To calculate time spent blocked by master thread
+    struct timeval last_start_time;         // To calculate time spent on current work/overhead.
+    struct timeval overhead_start_time;     // To calculate time spent in overhead.
+    struct timeval mut_blocked_start_time;  // To calculate time spent blocked acquiring a mutex.
+    struct timeval wait_blocked_start_time; // To calculate time spent blocked by master thread.
 
-    long cumul_work_millis;                 // Cumulative amount of time spent doing work               (milliseconds)
-    long cumul_overhead_millis;             // Cumulative amount of time spent in overhead              (milliseconds)
-    long cumul_mut_blocked_millis;          // Cumulative amount of time spent blocked by mutex         (milliseconds)
-    long cumul_wait_blocked_millis;         // Cumulative amount of time spent blocked by master thread (milliseconds)
+    long cumul_work_millis;                 // Cumulative amount of time spent doing work               (milliseconds).
+    long cumul_overhead_millis;             // Cumulative amount of time spent in overhead              (milliseconds).
+    long cumul_mut_blocked_millis;          // Cumulative amount of time spent blocked by mutex         (milliseconds).
+    long cumul_wait_blocked_millis;         // Cumulative amount of time spent blocked by master thread (milliseconds).
 
-    int tasks_completed;                    // Number of tasks this thread has completed
+    int tasks_completed;                    // Number of tasks this thread has completed.
 } thread_times_t;
 
 
@@ -44,19 +44,19 @@ typedef struct {
  */
 
 static struct {
-    struct timeval start_time;    // To calculate total runtime. Should be set by metrics_init at the start of execution
+    struct timeval start_time;    // To calculate total runtime. Should be set by metrics_init at the start of execution.
     struct timeval finish_time;   // To calculate total runtime. After it is set, we should only calculate metrics etc.
-    thread_times_t *thread_times; // Array to store metrics for each thread
+    thread_times_t *thread_times; // Array to store metrics for each thread.
 
-    int num_threads;              // Number of threads we used
+    int num_threads;              // Number of threads we used.
 
-    FILE *output_stream;          // Output stream to write to. Used to write to the terminal or a file
+    FILE *output_stream;          // Output stream to write to. Used to write to the terminal or a file.
 } metrics;
 
 
 
 /*
- * Time difference, in microseconds, between struct timeval objects t1 and t2
+ * Time difference, in microseconds, between struct timeval objects t1 and t2.
  */
 
 #define TIME_DIFF_MICROS(t1, t2) \
@@ -65,26 +65,26 @@ static struct {
 
 
 /*
- * Initialise metrics. If output_filename is non-null, output metrics to the given file. Otherwise output to stdout
+ * Initialise metrics. If output_filename is non-null, output metrics to the given file. Otherwise output to stdout.
  */
 
 void metrics_init(int num_threads, std::string output_filename)
 {
-    // Set overall start time
+    // Set overall start time.
     gettimeofday(&metrics.start_time, NULL);
 
-    // Reserve space for our per-thread metrics
+    // Reserve space for our per-thread metrics.
     metrics.thread_times = new thread_times_t[num_threads];
 
-    // Record number of threads
+    // Record number of threads.
     metrics.num_threads = num_threads;
 
-    // Set output stream
+    // Set output stream.
     metrics.output_stream = fopen((char*) output_filename.c_str(), "w");
 
     if (metrics.output_stream == NULL)
     {
-        // If we couldn't open the file, throw an error
+        // If we couldn't open the file, throw an error.
         perror("Error, metric could not open file");
         exit(EXIT_FAILURE);
     }
@@ -93,7 +93,7 @@ void metrics_init(int num_threads, std::string output_filename)
 
 
 /*
- * Initialise metrics for a single thread
+ * Initialise metrics for a single thread.
  */
 
 void metrics_thread_start(int thread_id)
@@ -101,13 +101,13 @@ void metrics_thread_start(int thread_id)
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Set start time
+    // Set start time.
     metrics.thread_times[thread_id].start_time = now;
 
-    // Set work start time
+    // Set work start time.
     metrics.thread_times[thread_id].last_start_time = now;
 
-    // Set cumulative vals to start at 0
+    // Set cumulative vals to start at 0.
     metrics.thread_times[thread_id].cumul_work_millis         = 0;
     metrics.thread_times[thread_id].cumul_overhead_millis     = 0;
     metrics.thread_times[thread_id].cumul_mut_blocked_millis  = 0;
@@ -120,7 +120,7 @@ void metrics_thread_start(int thread_id)
 
 
 /*
- * Call when the thread is starting work
+ * Call when the thread is starting work.
  */
 
 void metrics_starting_work(int thread_id)
@@ -128,18 +128,18 @@ void metrics_starting_work(int thread_id)
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Overhead accrued is the time since we last finished doing work
+    // Overhead accrued is the time since we last finished doing work.
     metrics.thread_times[thread_id].cumul_overhead_millis += 
         TIME_DIFF_MICROS(now, metrics.thread_times[thread_id].last_start_time);
 
-    // Reset to last work start time
+    // Reset to last work start time.
     metrics.thread_times[thread_id].last_start_time = now;
 }
 
 
 
 /*
- * Call when the thread has finished work
+ * Call when the thread has finished work.
  */
 
 void metrics_finishing_work(int thread_id)
@@ -147,27 +147,27 @@ void metrics_finishing_work(int thread_id)
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Work time accrued is the time since work started
+    // Work time accrued is the time since work started.
     metrics.thread_times[thread_id].cumul_work_millis +=
         TIME_DIFF_MICROS(now, metrics.thread_times[thread_id].last_start_time);
 
 
-    // Reset to last overhead start time
+    // Reset to last overhead start time.
     metrics.thread_times[thread_id].last_start_time = now;
 
-    // Record another task completed
+    // Record another task completed.
     metrics.thread_times[thread_id].tasks_completed++;
 }
 
 
 
 /*
- * Call before thread tries to obtain a mutex
+ * Call before thread tries to obtain a mutex.
  */
 
 void metrics_obtaining_mutex(int thread_id)
 {
-    // Set start time
+    // Set start time.
     gettimeofday(&metrics.thread_times[thread_id].mut_blocked_start_time, NULL);
 }
 
@@ -175,7 +175,7 @@ void metrics_obtaining_mutex(int thread_id)
 
 /*
  * Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been 
- * blocked
+ * blocked.
  */
 
 void metrics_obtained_mutex(int thread_id)
@@ -183,7 +183,7 @@ void metrics_obtained_mutex(int thread_id)
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Increment cumulative blocking time by the time since we started obtaining the mutex
+    // Increment cumulative blocking time by the time since we started obtaining the mutex.
     metrics.thread_times[thread_id].cumul_mut_blocked_millis +=
         TIME_DIFF_MICROS(now, metrics.thread_times[thread_id].mut_blocked_start_time);
 }
@@ -191,7 +191,7 @@ void metrics_obtained_mutex(int thread_id)
 
 
 /*
- * Call when blocked by the master thread. Increment overhead, as last_start_time will be reset when unblocked
+ * Call when blocked by the master thread. Increment overhead, as last_start_time will be reset when unblocked.
  */
 
 void metrics_blocked(int thread_id)
@@ -199,10 +199,10 @@ void metrics_blocked(int thread_id)
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Set start time for main thread blocking
+    // Set start time for main thread blocking.
     metrics.thread_times[thread_id].wait_blocked_start_time = now;
 
-    // Increment overhead time
+    // Increment overhead time.
     metrics.thread_times[thread_id].cumul_overhead_millis +=
         TIME_DIFF_MICROS(now, metrics.thread_times[thread_id].last_start_time);
 }
@@ -210,7 +210,7 @@ void metrics_blocked(int thread_id)
 
 
 /*
- * Call when unblocked by the master thread. Reset last_start_time
+ * Call when unblocked by the master thread. Reset last_start_time.
  */
 
 void metrics_unblocked(int thread_id)
@@ -218,18 +218,18 @@ void metrics_unblocked(int thread_id)
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Increment time blocked by main thread
+    // Increment time blocked by main thread.
     metrics.thread_times[thread_id].cumul_wait_blocked_millis +=
         TIME_DIFF_MICROS(now, metrics.thread_times[thread_id].wait_blocked_start_time);
 
-    // Reset overhead time counter
+    // Reset overhead time counter.
     metrics.thread_times[thread_id].overhead_start_time = now;
 }
 
 
 
 /*
- * Finalise metrics for a single thread
+ * Finalise metrics for a single thread.
  */
 
 void metrics_thread_finished(int thread_id)
@@ -246,7 +246,7 @@ void metrics_thread_finished(int thread_id)
 
 
 /*
- * Finalise metrics for entire program
+ * Finalise metrics for entire program.
  */
 
 void metrics_finalise(void)
@@ -258,40 +258,16 @@ void metrics_finalise(void)
 
 /*
  * Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to 
- * inconsistent results. So metrics should not be fully trusted until all threads have finished
+ * inconsistent results. So metrics should not be fully trusted until all threads have finished.
  */
 
 void metrics_calc(void)
 {
-    // if (metrics.finish_time.tv_sec == 0 && metrics.finish_time.tv_usec == 0) 
-    // {
-    //     if (current_phase->tasks_running != 0) 
-    //     {
-    //         // If tasks still running then metrics not fully reliable
-    //         fprintf(metrics.output_stream,
-    //                 "          Metrics end of phase %d\n\n", current_phase->phase_number);
-    //     } 
-    //     else {
-
-    //         fprintf(metrics.output_stream,
-    //                 "          Metrics at end of phase %d\n\n", current_phase->phase_number);
-    //     }
-    // } 
-    // else 
-    // {
-    //     fprintf(metrics.output_stream,
-    //             "          Final Metrics, after phase %d\n\n", current_phase->phase_number);
-    // }
-
     struct timeval now;
     gettimeofday(&now, NULL);
 
-    // Calculate total program time
+    // Calculate total program time.
     long program_time = TIME_DIFF_MICROS(now, metrics.start_time);
-
-    // All time measurements in milliseconds
-    // fprintf(metrics.output_stream, "All time measurements in milliseconds\n\n");
-    // fprintf(metrics.output_stream, "Total runtime:%ld\n\n", program_time);
 
     thread_times_t time;
 
@@ -311,14 +287,14 @@ void metrics_calc(void)
     time_mutex_blocked            << "Time mutex blocked:";
     time_blocked_by_master_thread << "Time blocked by master thread:";
 
-    // Write metrics to output stream for each thread
+    // Write metrics to output stream for each thread.
     for (int i = 0; i < metrics.num_threads; i++) 
     {
         time = metrics.thread_times[i];
 
         long total_time = time.cumul_work_millis + time.cumul_overhead_millis + time.cumul_wait_blocked_millis;
 
-        if (total_time == 0) total_time = 1; // to prevent NANs
+        if (total_time == 0) total_time = 1; // to prevent NANs.
 
         thread_numbers                << "\t" << i;
         num_tasks_completed           << "\t" << time.tasks_completed;
@@ -349,11 +325,11 @@ void metrics_calc(void)
 
 
 /*
- * Cleanup
+ * Cleanup.
  */
 
 void metrics_exit(void)
 {
-    // Free our malloc'ed memory
+    // Free our malloc'ed memory.
     free(metrics.thread_times);
 }
