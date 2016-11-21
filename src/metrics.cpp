@@ -271,6 +271,8 @@ void metrics_calc(void)
 
     thread_times_t time;
 
+    std::ostringstream total_runtime;
+
     std::ostringstream thread_numbers;
     std::ostringstream num_tasks_completed;
 
@@ -278,6 +280,8 @@ void metrics_calc(void)
     std::ostringstream time_in_overhead;
     std::ostringstream time_mutex_blocked;
     std::ostringstream time_blocked_by_master_thread;
+
+    total_runtime                 << "Total runtime:" << "\t" << program_time << "\n";
 
     thread_numbers                << "Thread:";
     num_tasks_completed           << "Number of tasks completed:";
@@ -313,13 +317,15 @@ void metrics_calc(void)
     time_mutex_blocked            << "\n";
     time_blocked_by_master_thread << "\n";
 
-    fprintf(metrics.output_stream, thread_numbers.str().c_str());
-    fprintf(metrics.output_stream, num_tasks_completed.str().c_str());
+    fputs(total_runtime.str().c_str(), metrics.output_stream);
 
-    fprintf(metrics.output_stream, time_working.str().c_str());
-    fprintf(metrics.output_stream, time_in_overhead.str().c_str());
-    fprintf(metrics.output_stream, time_mutex_blocked.str().c_str());
-    fprintf(metrics.output_stream, time_blocked_by_master_thread.str().c_str());
+    fputs(thread_numbers.str().c_str(), metrics.output_stream);
+    fputs(num_tasks_completed.str().c_str(), metrics.output_stream);
+
+    fputs(time_working.str().c_str(), metrics.output_stream);
+    fputs(time_in_overhead.str().c_str(), metrics.output_stream);
+    fputs(time_mutex_blocked.str().c_str(), metrics.output_stream);
+    fputs(time_blocked_by_master_thread.str().c_str(), metrics.output_stream);
 }
 
 

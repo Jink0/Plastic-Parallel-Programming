@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+
+#include <unistd.h>
+
 // For string functions
 #include <string.h>
 
@@ -10,6 +13,8 @@
 
 // Map array library for testing
 #include "map_array.h"
+
+#include <sys/stat.h>
 
 
 
@@ -209,6 +214,32 @@ std::vector<eParameters> processConfig(char *argv[])
 
 
 
+void createFolderAndMove()
+{
+    // Buffer for stat().
+    struct stat buf;
+
+    // Directory name to start at.
+    int i = 1;
+    
+    // Root directory word.
+    std::string root_dir_name = "run";
+
+    // While a directory exists with the name rootWord + i, iterate i. This finds what we should call the new directory.
+    while (stat((root_dir_name + to_string(i)).c_str(), &buf) == 0 && S_ISDIR(buf.st_mode))
+    {
+        i++;
+    }
+
+    // Create our new directory.
+    mkdir((root_dir_name + to_string(i)).c_str(), 0775);
+
+    // Move into it to store our output files here.
+    chdir((root_dir_name + to_string(i)).c_str());
+}
+
+
+
 /*
  *  Test user function
  */
@@ -231,6 +262,9 @@ int main(int argc, char *argv[])
 
     // Print our experiment parameters.
     printExperimentParameters(exParamsVector);
+
+    // Create a folder for this run's output logs, and change the current working directory to it.
+    createFolderAndMove();
 
     // Run each experiment.
     for (uint32_t i = 0; i < exParamsVector.size(); i++)
