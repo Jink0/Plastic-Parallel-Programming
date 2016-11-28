@@ -1,5 +1,6 @@
 # Compiled Object files
-src/*.o
+build/*.o
 
-# Executables
+# Runs
+build/run*
 
