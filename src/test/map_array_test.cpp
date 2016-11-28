@@ -249,6 +249,70 @@ double userFunction(double in1, vector<double> in2)
     return in1 + in2[0];
 }
 
+
+
+/*
+ * Return number of iterations of Collatz function
+ * necessary to reach 1. This assumes that the Collatz
+ * conjecture is true, so only goes through a finite number
+ * of calls (this has been tested up to 2^60)
+ */
+
+int collatz(int start, vector<int> temp) 
+{
+    if (start < 1) 
+    {
+        fprintf(stderr,"Error, cannot start collatz with %d\n", start);
+        return -1;
+    }
+
+    int count = 0;
+    while (start != 1) 
+    {
+        count++;
+        if (start % 2) 
+        {
+            start = 3 * start + 1;
+        } 
+        else 
+        {
+            start = start/2;
+        }
+    }
+
+    return count;
+}
+
+
+
+/*
+ * Iterative version of collatz, could potentially cause stack
+ * overflow if particularly long sequence!
+ */
+int collatz_iter(int start, vector<int> temp) 
+{
+    if (start < 1) 
+    {
+        fprintf(stderr,"Error, cannot start collatz with %d\n", start);
+        return -1;
+    }
+
+    if (start == 1) 
+    {
+        return 0;
+    } 
+    else if (start % 2) 
+    {
+        return 1 + collatz(3 * start + 1, temp);
+    } 
+    else 
+    {
+        return 1 + collatz( start / 2, temp);
+    }
+}
+
+
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -269,22 +333,26 @@ int main(int argc, char *argv[])
     // Run each experiment.
     for (uint32_t i = 0; i < exParamsVector.size(); i++)
     {
+        uint32_t as = exParamsVector[i].array_size;
+
         // Experiment input vectors.
-        vector<double> input1(exParamsVector[i].array_size);
-        vector<double> input2(exParamsVector[i].array_size);
+        vector<int> input1(as);
+        vector<int> input2(as);
 
         // Generate data for vectors.
-        for (uint32_t i = 0; i < exParamsVector[i].array_size; i++) 
+        for (uint32_t i = 0; i < as; i++) 
         {
-            input1[i] = (double) 1. / i;
-            input2[i] = (double) 1. / i;
+            // input1[i] = (double) 1. / i;
+            // input2[i] = (double) 1. / i;
+            input1[i] = (int) i + 1;
+            input2[i] = (int) i + 1;
         }
 
         // Output vector.
-        vector<double> output(exParamsVector[i].array_size);
+        vector<int> output(as);
 
         // Start mapArray.
-        map_array(input1, input2, userFunction, output, exParamsVector[i].output_filename, exParamsVector[i].params);
+        map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
     }
 
     return 0;
