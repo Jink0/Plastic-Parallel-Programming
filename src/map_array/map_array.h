@@ -74,29 +74,13 @@ struct tasks
 template <typename in1, typename in2, typename out>
 class BagOfTasks {
   public:
-    tasks<in1, in2, out> getTasks(uint32_t num)
-    {
-      typename vector<in1>::iterator tasksBegin = in1Begin;
+    // Constructor
+    BagOfTasks();
 
-      if (num < in1End - in1Begin)
-      {
-        advance(in1Begin, num);
-      }
-      else
-      {
-        advance(in1Begin, in1End - in1Begin);
-      }
-
-      struct tasks<in1, in2, out> output = {
-        tasksBegin, 
-        in1Begin,
-        input2,
-        userFunction,
-        outBegin
-      };
-
-      return output;
-    }
+    // Destructor
+    ~BagOfTasks();
+    // Task retreival
+    tasks<in1, in2, out> getTasks(uint32_t num);
 
   private:
     typename vector<in1>::iterator in1Begin;
@@ -108,6 +92,54 @@ class BagOfTasks {
 
     typename vector<out>::iterator outBegin;
 };
+
+
+
+template <typename in1, typename in2, typename out>
+BagOfTasks<in1, in2, out>::BagOfTasks(
+  //vector<in1>::iterator in1Begin, 
+ //                      vector<in1>::iterator in1End, 
+//                       vector<in2>* input2, 
+//                       out (*userFunction) (in1, vector<in2>), 
+//                       vector<out>::iterator outBegin)
+  )
+{
+ // in1Begin = in1Begin;
+ // in1End   = in1End;
+
+//  input2 = input2;
+
+//  userFunction = userFunction;
+
+//  outBegin = outBegin;
+}
+
+
+
+template <typename in1, typename in2, typename out>
+tasks<in1, in2, out> BagOfTasks<in1, in2, out>::getTasks(uint32_t num)
+{
+  typename vector<in1>::iterator tasksBegin = in1Begin;
+
+  if (num < in1End - in1Begin)
+  {
+    advance(in1Begin, num);
+  }
+  else
+  {
+    advance(in1Begin, in1End - in1Begin);
+  }
+
+  struct tasks<in1, in2, out> output = {
+    tasksBegin, 
+    in1Begin,
+    input2,
+    userFunction,
+    outBegin
+  };
+
+  return output;
+}
 
 
 
@@ -238,6 +270,8 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");
+
+  struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>();
   
   // Thread data struct array to store data structs for each thread.
   struct thread_data<in1, in2, out> thread_data_array[params.num_threads];
