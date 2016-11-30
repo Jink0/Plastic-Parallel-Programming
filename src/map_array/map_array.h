@@ -271,7 +271,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");
 
-  struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>();
+  // struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>();
   
   // Thread data struct array to store data structs for each thread.
   struct thread_data<in1, in2, out> thread_data_array[params.num_threads];
