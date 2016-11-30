@@ -1,9 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-
-#include <unistd.h>
-
 // For string functions
 #include <string.h>
 
@@ -11,10 +5,14 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 
+// For folder operations
+#include <boost/filesystem.hpp>
+
 // Map array library for testing
 #include "map_array.h"
 
-#include <sys/stat.h>
+using namespace std;
+using namespace boost::filesystem;
 
 
 
@@ -27,7 +25,7 @@ struct eParameters {
     uint32_t array_size;
 
     // Output filename.
-    std::string output_filename;
+    string output_filename;
 };
 
 
@@ -36,7 +34,7 @@ struct eParameters {
  * Prints the parameters of each experiment in the experiment vector.
  */
 
-void printExperimentParameters(std::vector<eParameters> exParamsVector) 
+void printExperimentParameters(vector<eParameters> exParamsVector) 
 {
     for (uint32_t i = 0; i < exParamsVector.size(); i++)
     {
@@ -66,7 +64,7 @@ void printExperimentParameters(std::vector<eParameters> exParamsVector)
  * Reads the given config file and generates all of our experiment parameters.
  */
 
-std::vector<eParameters> processConfig(char *argv[])
+vector<eParameters> processConfig(char *argv[])
 {
     /*
      * Read experiment parameters.
@@ -94,7 +92,7 @@ std::vector<eParameters> processConfig(char *argv[])
     defaultParams.array_size         = propTree.get<uint32_t>(pt::ptree::path_type("DEFAULTS/arraySize", '/'));
 
     // Reading schedule is more complex, as we need an enum value, so we switch on the string read.
-    std::string sched = propTree.get<std::string>(pt::ptree::path_type("DEFAULTS/schedule", '/'));
+    string sched = propTree.get<string>(pt::ptree::path_type("DEFAULTS/schedule", '/'));
 
     if (sched.compare("Static") == 0)
     {
@@ -121,20 +119,20 @@ std::vector<eParameters> processConfig(char *argv[])
      */
 
     // Vector of experiment parameters.
-    std::vector<eParameters> exParamsVector;
+    vector<eParameters> exParamsVector;
 
     for (uint32_t i = 0; i < num_experiments; i++)
     {
         // Construct paths to parameter values.
-        std::string path1 = std::to_string(i + 1) + "/numThreads";
-        std::string path2 = std::to_string(i + 1) + "/taskDistribution";
-        std::string path3 = std::to_string(i + 1) + "/schedule";
-        std::string path4 = std::to_string(i + 1) + "/arraySize";
+        string path1 = to_string(i + 1) + "/numThreads";
+        string path2 = to_string(i + 1) + "/taskDistribution";
+        string path3 = to_string(i + 1) + "/schedule";
+        string path4 = to_string(i + 1) + "/arraySize";
 
         // Retrieving said values.
         boost::optional<int> n_threads   = propTree.get_optional<int>(pt::ptree::path_type(path1, '/'));
         boost::optional<int> t_dist      = propTree.get_optional<int>(pt::ptree::path_type(path2, '/'));
-        boost::optional<std::string> sch = propTree.get_optional<std::string>(pt::ptree::path_type(path3, '/'));
+        boost::optional<string> sch = propTree.get_optional<string>(pt::ptree::path_type(path3, '/'));
         boost::optional<uint32_t> a_size = propTree.get_optional<uint32_t>(pt::ptree::path_type(path4, '/'));
 
         // Current experiment parameters.
@@ -163,7 +161,7 @@ std::vector<eParameters> processConfig(char *argv[])
         if (sch)
         {
             // Same deal as earlier with the schedule parameter.
-            sched = static_cast<std::string>(*sch);
+            sched = static_cast<string>(*sch);
 
             if (sched.compare("Static") == 0)
             {
@@ -201,7 +199,7 @@ std::vector<eParameters> processConfig(char *argv[])
         for (uint32_t r = 0; r < repeats; r++) 
         {
             // Set current output file
-            current.output_filename = ("Experiment" + std::to_string(i + 1) + "_Repeat" + std::to_string(r));
+            current.output_filename = ("Experiment" + to_string(i + 1) + "_Repeat" + to_string(r));
 
             // Store current parameters in output vector.
             exParamsVector.push_back(current);
@@ -214,34 +212,43 @@ std::vector<eParameters> processConfig(char *argv[])
 
 
 
+/*
+ * Creates a folder with the next valid name (the next run number), and moves into it.
+ */
+
 void createFolderAndMove()
 {
-    // Buffer for stat().
-    struct stat buf;
+    // Create runs directory if it doesn't exist.
+    path p("runs");
+    create_directory(p);
+
+    // Move into the runs directory.
+    current_path("runs");
 
     // Directory name to start at.
     int i = 1;
     
     // Root directory word.
-    std::string root_dir_name = "run";
+    string root_dir_name = "run";
 
-    // While a directory exists with the name rootWord + i, iterate i. This finds what we should call the new directory.
-    while (stat((root_dir_name + to_string(i)).c_str(), &buf) == 0 && S_ISDIR(buf.st_mode))
+    // Find what the next run number should be.
+    while (is_directory(root_dir_name + to_string(i).c_str()))
     {
         i++;
     }
 
-    // Create our new directory.
-    mkdir((root_dir_name + to_string(i)).c_str(), 0775);
+    // Create our run directory.
+    path p2(root_dir_name + to_string(i).c_str());
+    create_directory(p2);
 
-    // Move into it to store our output files here.
-    chdir((root_dir_name + to_string(i)).c_str());
+    // Move into our run directory.
+    current_path(root_dir_name + to_string(i).c_str());
 }
 
 
 
 /*
- *  Test user function
+ * Test user function
  */
 
 double userFunction(double in1, vector<double> in2)
@@ -251,64 +258,34 @@ double userFunction(double in1, vector<double> in2)
 
 
 
-/*
- * Return number of iterations of Collatz function
- * necessary to reach 1. This assumes that the Collatz
- * conjecture is true, so only goes through a finite number
- * of calls (this has been tested up to 2^60)
- */
-
-int collatz(int start, vector<int> temp) 
+int collatz(int weight, vector<int> seeds) 
 {
-    if (start < 1) 
+    for (int i = 0; i < weight * 100000; i++)
     {
-        fprintf(stderr,"Error, cannot start collatz with %d\n", start);
-        return -1;
-    }
+        int start = seeds[0];
 
-    int count = 0;
-    while (start != 1) 
-    {
-        count++;
-        if (start % 2) 
+        if (start < 1) 
         {
-            start = 3 * start + 1;
-        } 
-        else 
+            fprintf(stderr,"Error, cannot start collatz with %d\n", start);
+            return -1;
+        }
+
+        int count = 0;
+        while (start != 1) 
         {
-            start = start/2;
+            count++;
+            if (start % 2) 
+            {
+                start = 3 * start + 1;
+            } 
+            else 
+            {
+                start = start/2;
+            }
         }
     }
-
-    return count;
-}
-
-
-
-/*
- * Iterative version of collatz, could potentially cause stack
- * overflow if particularly long sequence!
- */
-int collatz_iter(int start, vector<int> temp) 
-{
-    if (start < 1) 
-    {
-        fprintf(stderr,"Error, cannot start collatz with %d\n", start);
-        return -1;
-    }
-
-    if (start == 1) 
-    {
-        return 0;
-    } 
-    else if (start % 2) 
-    {
-        return 1 + collatz(3 * start + 1, temp);
-    } 
-    else 
-    {
-        return 1 + collatz( start / 2, temp);
-    }
+    
+    return 1;
 }
 
 
@@ -322,13 +299,19 @@ int main(int argc, char *argv[])
     }
 
     // Process given configuration file.
-    std::vector<eParameters> exParamsVector = processConfig(argv);
+    vector<eParameters> exParamsVector = processConfig(argv);
 
     // Print our experiment parameters.
     printExperimentParameters(exParamsVector);
 
+    // Record current filepath before we move so we can copy the config file later.
+    path p(current_path());
+
     // Create a folder for this run's output logs, and change the current working directory to it.
     createFolderAndMove();
+
+    // Copy our config file so we know what parameters were used.
+    copy_file(p /= argv[1], current_path() /= argv[1]);
 
     // Run each experiment.
     for (uint32_t i = 0; i < exParamsVector.size(); i++)
@@ -344,8 +327,10 @@ int main(int argc, char *argv[])
         {
             // input1[i] = (double) 1. / i;
             // input2[i] = (double) 1. / i;
-            input1[i] = (int) i + 1;
-            input2[i] = (int) i + 1;
+            // input1[i] = (int) i + 1;
+            // input2[i] = (int) i + 1;
+            input1[i] = 1;
+            input2[i] = 87736;
         }
 
         // Output vector.

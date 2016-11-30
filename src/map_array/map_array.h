@@ -5,7 +5,7 @@
 #include <vector>    // Vectors
 #include <assert.h>  // Assert functions
 #include <pthread.h> // Thread and mutex functions
-#include <mutex>     // std::mutex
+#include <mutex>     // mutex
 #include <unistd.h>  // For sleep()
 using namespace std;
 
@@ -24,45 +24,103 @@ using namespace std;
  *  Mutexed print function.
  */
 
-std::ostream&
-print_one(std::ostream& os)
+ostream&
+print_one(ostream& os)
 {
   return os;
 }
 
 template <class A0, class ...Args>
-std::ostream&
-print_one(std::ostream& os, const A0& a0, const Args& ...args)
+ostream&
+print_one(ostream& os, const A0& a0, const Args& ...args)
 {
   os << a0;
   return print_one(os, args...);
 }
 
 template <class ...Args>
-std::ostream&
-print(std::ostream& os, const Args& ...args)
+ostream&
+print(ostream& os, const Args& ...args)
 {
   return print_one(os, args...);
 }
 
 template <class ...Args>
-std::ostream&
+ostream&
 print(const Args& ...args)
 {
-  static std::mutex m;
-  std::lock_guard<std::mutex> _(m);
-  return print(std::cout, args...);
+  static mutex m;
+  lock_guard<mutex> _(m);
+  return print(cout, args...);
 }
+
+
+
+template <typename in1, typename in2, typename out>
+struct tasks
+{
+  typename vector<in1>::iterator in1Begin;
+  typename vector<in1>::iterator in1End;
+
+  vector<in2>* input2;
+
+  out (*userFunction) (in1, vector<in2>);
+
+  typename vector<out>::iterator outBegin;
+};
+
+
+
+template <typename in1, typename in2, typename out>
+class BagOfTasks {
+  public:
+    tasks<in1, in2, out> getTasks(uint32_t num)
+    {
+      typename vector<in1>::iterator tasksBegin = in1Begin;
+
+      if (num < in1End - in1Begin)
+      {
+        advance(in1Begin, num);
+      }
+      else
+      {
+        advance(in1Begin, in1End - in1Begin);
+      }
+
+      struct tasks<in1, in2, out> output = {
+        tasksBegin, 
+        in1Begin,
+        input2,
+        userFunction,
+        outBegin
+      };
+
+      return output;
+    }
+
+  private:
+    typename vector<in1>::iterator in1Begin;
+    typename vector<in1>::iterator in1End;
+
+    vector<in2>* input2;
+
+    out (*userFunction) (in1, vector<in2>);
+
+    typename vector<out>::iterator outBegin;
+};
 
 
 
 // Different possible schedules Static             - Give each thread equal portions.
 //                              Dynamic_chunks     - Threads dynamically retrive a chunk of the tasks when they can.
 //                              Dynamic_individual - Threads retrieve a single task when they can.
-enum Schedule {Static, Dynamic_chunks, Dynamic_individual};
+//                              Tapered            - Chunk size starts off large and decreases to better handle load imbalance between iterations.
+//                              Auto               - Automatically try to figure out the best schedule.
+enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
 
 // Parameters with default values.
-struct parameters {
+struct parameters 
+{
     parameters(): task_dist(1), schedule(Dynamic_chunks) 
     { 
       // Most portable method of retriving processor count.
@@ -165,7 +223,7 @@ void *mapArrayThread(void *threadarg)
 
 template <typename in1, typename in2, typename out>
 void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, 
-               std::string output_filename, parameters params = parameters())
+               string output_filename, parameters params = parameters())
 {
   // Initialise metrics.
   metrics_init(params.num_threads, output_filename + ".csv");

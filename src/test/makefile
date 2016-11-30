@@ -9,4 +9,4 @@
 # 	$(CC) $(CFLAGS) $^ -o $(BIN_DIR)/$@ $(LIBS)
 
 map_array_test: map_array_test.o metrics.o
-	$(CXX) $(CPPFLAGS) $^ -o $(BIN_DIR)/$@
+	$(CXX) $(CPPFLAGS) $^ -o $(BIN_DIR)/$@ $(LIBS)
