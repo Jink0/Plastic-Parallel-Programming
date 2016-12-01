@@ -7,7 +7,7 @@ echo "Running experiments..."
 
 start=`date +%s`
 
-for i in {1..8}
+for i in {1..4}
 do
 	../bin/map_array_test config$i.ini > /dev/null
 done

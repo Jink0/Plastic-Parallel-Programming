@@ -251,16 +251,31 @@ void createFolderAndMove()
  * Test user function
  */
 
-double userFunction(double in1, vector<double> in2)
+int returnOne(int in1, vector<int> in2)
+{
+    return 1;
+}
+
+
+
+/*
+ * Test user function
+ */
+
+int oneTouch(int in1, vector<int> in2)
 {
     return in1 + in2[0];
 }
 
 
 
+/*
+ * Test user function
+ */
+
 int collatz(int weight, vector<int> seeds) 
 {
-    for (int i = 0; i < weight * 100000; i++)
+    for (int i = 0; i < weight; i++)
     {
         int start = seeds[0];
 
@@ -329,7 +344,7 @@ int main(int argc, char *argv[])
             // input2[i] = (double) 1. / i;
             // input1[i] = (int) i + 1;
             // input2[i] = (int) i + 1;
-            input1[i] = 1;
+            input1[i] = 100000;
             input2[i] = 87736;
         }
 
@@ -337,7 +352,7 @@ int main(int argc, char *argv[])
         vector<int> output(as);
 
         // Start mapArray.
-        map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
+        map_array(input1, input2, returnOne, output, exParamsVector[i].output_filename, exParamsVector[i].params);
     }
 
     return 0;
