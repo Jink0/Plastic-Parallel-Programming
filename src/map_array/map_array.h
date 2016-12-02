@@ -255,7 +255,7 @@ void *mapArrayThread(void *threadarg)
 
 
 
-template <typename in1, typename in2, typename out>
+/*template <typename in1, typename in2, typename out>
 class BagOfTasks {
   public:
     // Constructor
@@ -285,6 +285,7 @@ template <typename in1, typename in2, typename out>
 BagOfTasks<in1, in2, out>::BagOfTasks(vector<in1>::iterator in1Begin)
 : in1Begin(in1Begin)
 {}
+*/
 
 
 
@@ -317,7 +318,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");
 
-  struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>(input1.begin());
+  //struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>(input1.begin());
 
 
 
