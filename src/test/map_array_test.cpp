@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
             // input2[i] = (double) 1. / i;
             // input1[i] = (int) i + 1;
             // input2[i] = (int) i + 1;
-            input1[i] = 100000;
+            input1[i] = 1;
             input2[i] = 87736;
         }
 
