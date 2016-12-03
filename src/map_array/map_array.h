@@ -56,106 +56,6 @@ print(const Args& ...args)
 
 
 
-template <typename in1, typename in2, typename out>
-struct tasks
-{
-  typename vector<in1>::iterator in1Begin;
-  typename vector<in1>::iterator in1End;
-
-  vector<in2>* input2;
-
-  out (*userFunction) (in1, vector<in2>);
-
-  typename vector<out>::iterator outBegin;
-};
-
-
-
-/*template <typename in1, typename in2, typename out>
-class BagOfTasks {
-  public:
-    // Constructor
-    BagOfTasks(vector<in1>::iterator in1Begin, 
-                           vector<in1>::iterator in1End, 
-                           vector<in2>* input2, 
-                           out (*userFunction) (in1, vector<in2>), 
-                           vector<out>::iterator outBegin)
-{
-  in1Begin = in1Begin;
-  in1End   = in1End;
-
-  input2 = input2;
-
-  userFunction = userFunction;
-
-  outBegin = outBegin;
-};
-
-    // Destructor
-    ~BagOfTasks() {};
-    // Task retreival
-    tasks<in1, in2, out> getTasks(uint32_t num);
-
-  private:
-    typename vector<in1>::iterator in1Begin;
-    typename vector<in1>::iterator in1End;
-
-    vector<in2>* input2;
-
-    out (*userFunction) (in1, vector<in2>);
-
-    typename vector<out>::iterator outBegin;
-};*/
-
-
-
-/*template <typename in1, typename in2, typename out>
-BagOfTasks<in1, in2, out>::BagOfTasks(
-                           vector<in1>::iterator in1Begin, 
-                           vector<in1>::iterator in1End, 
-                           vector<in2>* input2, 
-                           out (*userFunction) (in1, vector<in2>), 
-                           vector<out>::iterator outBegin)
-{
-  in1Begin = in1Begin;
-  in1End   = in1End;
-
-  input2 = input2;
-
-  userFunction = userFunction;
-
-  outBegin = outBegin;
-}*/
-
-
-
-/*template <typename in1, typename in2, typename out>
-tasks<in1, in2, out> BagOfTasks<in1, in2, out>::getTasks(uint32_t num)
-{
-  typename vector<in1>::iterator tasksBegin = in1Begin;
-
-  if (num < in1End - in1Begin)
-  {
-    advance(in1Begin, num);
-  }
-  else
-  {
-    advance(in1Begin, in1End - in1Begin);
-  }
-
-  struct tasks<in1, in2, out> output = {
-    tasksBegin, 
-    in1Begin,
-    input2,
-    userFunction,
-    outBegin
-  };
-
-  return output;
-}*/
-
-
-
 // Different possible schedules Static             - Give each thread equal portions.
 //                              Dynamic_chunks     - Threads dynamically retrive a chunk of the tasks when they can.
 //                              Dynamic_individual - Threads retrieve a single task when they can.
@@ -255,37 +155,86 @@ void *mapArrayThread(void *threadarg)
 
 
 
-/*template <typename in1, typename in2, typename out>
-class BagOfTasks {
-  public:
-    // Constructor
-    BagOfTasks() {};
+template <typename in1, typename in2, typename out>
+struct tasks
+{
+  typename vector<in1>::iterator in1Begin;
+  typename vector<in1>::iterator in1End;
 
-    BagOfTasks(vector<in1>::iterator in1Begin);
+  vector<in2>* input2;
 
-    // Destructor
-    ~BagOfTasks() {};
-    // Task retreival
-    tasks<in1, in2, out> getTasks(uint32_t num);
+  out (*userFunction) (in1, vector<in2>);
 
-  private:
-    typename vector<in1>::iterator in1Begin;
-    typename vector<in1>::iterator in1End;
-
-    vector<in2>* input2;
-
-    out (*userFunction) (in1, vector<in2>);
-
-    typename vector<out>::iterator outBegin;
+  typename vector<out>::iterator outBegin;
 };
 
 
 
-template <typename in1, typename in2, typename out>
-BagOfTasks<in1, in2, out>::BagOfTasks(vector<in1>::iterator in1Begin)
-: in1Begin(in1Begin)
-{}
-*/
+class BagOfTasks {
+  public:
+    // Constructor
+    BagOfTasks(vector<int>::iterator in1B, vector<int>::iterator in1E, vector<int>* in2p, int (*userF) (int, vector<int>), vector<int>::iterator outB)
+      : in1Begin(in1B)
+      , in1End(in1E)
+      , input2(in2p)
+      , userFunction(userF)
+      , outBegin(outB)
+    {}
+
+    // Destructor
+    ~BagOfTasks() {};
+
+    // Task retreival
+    tasks<int, int, int> getTasks(uint32_t num);
+
+  //private:
+    typename vector<int>::iterator in1Begin;
+    typename vector<int>::iterator in1End;
+
+    vector<int>* input2;
+
+    int (*userFunction) (int, vector<int>);
+
+    typename vector<int>::iterator outBegin;
+};
+
+
+
+ostream& operator << (ostream& os, const BagOfTasks& b)
+{
+  return os << "Bag of tasks: " << endl << endl
+            << "First value of in1: " << b.in1Begin[0] << endl 
+            << "Last value of in1:  " << (b.in1End - 1)[0] << endl
+            << "First value of in2: " << b.input2[0][0] << endl 
+            << "Last value of in2:  " << b.input2[0][0] << endl;
+            // << "First result: "       << b->userFunction(*(in1Begin), input2);
+}
+
+
+
+tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
+{
+  typename vector<int>::iterator tasksBegin = in1Begin;
+
+  if (num < in1End - in1Begin)
+  {
+    advance(in1Begin, num);
+  }
+  else
+  {
+    advance(in1Begin, in1End - in1Begin);
+  }
+
+  struct tasks<int, int, int> output = {
+    tasksBegin, 
+    in1Begin,
+    input2,
+    userFunction,
+    outBegin
+  };
+
+  return output;
+}
 
 
 
@@ -319,6 +268,12 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   print("[Main] Found ", params.num_threads, " processors\n");
 
   //struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>(input1.begin());
+
+  BagOfTasks bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
+
+
+
+
 
 
 
