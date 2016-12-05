@@ -101,7 +101,7 @@ struct parameters
  *  typename vector<out>::iterator outBegin                           - Where to start in output.
  */
 
-template <typename in1, typename in2, typename out>
+/*template <typename in1, typename in2, typename out>
 struct thread_data
 {
   int  threadId;
@@ -114,7 +114,7 @@ struct thread_data
   out (*userFunction) (in1, vector<in2>);
 
   typename vector<out>::iterator outBegin;
-};
+};*/
 
 
 
@@ -124,7 +124,7 @@ struct thread_data
  *  void *threadarg - Pointer to thread_data structure.
  */
 
-template <typename in1, typename in2, typename out>
+/*template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
 {
   // Pointer to store personal data
@@ -151,7 +151,52 @@ void *mapArrayThread(void *threadarg)
   metrics_thread_finished(my_data->threadId);
 
   pthread_exit(NULL);
+}*/
+
+
+
+/*
+ *  Function to start each thread of mapArray on.
+ *
+ *  void *threadarg - Pointer to thread_data structure.
+ */
+
+template <typename in1, typename in2, typename out>
+void *mapArrayThread(void *threadarg)
+{
+  // Pointer to store personal data
+  struct thread_data *my_data;
+  my_data = (struct thread_data *) threadarg;
+
+  // Initialise metrics
+  //metrics_thread_start(my_data->threadId);
+
+  // Print starting parameters
+  //print("[Thread ", my_data->threadId, "] Hello! \n");
+
+  // Get tasks
+
+
+  /*// Run between iterator ranges, stepping through input1 and output vectors
+  for (; my_data->in1Begin != my_data->in1End; ++my_data->in1Begin, ++my_data->outBegin)
+  {
+    metrics_starting_work(my_data->threadId);
+    
+    // Run user function
+    *(my_data->outBegin) = my_data->userFunction(*(my_data->in1Begin), my_data->input2);
+
+     metrics_finishing_work(my_data->threadId);
+  }
+
+  metrics_thread_finished(my_data->threadId);*/
+
+  pthread_exit(NULL);
 }
+
+
+
+
+
 
 
 
@@ -188,6 +233,8 @@ class BagOfTasks {
     tasks<int, int, int> getTasks(uint32_t num);
 
   //private:
+    mutex m;
+
     typename vector<int>::iterator in1Begin;
     typename vector<int>::iterator in1End;
 
@@ -196,30 +243,27 @@ class BagOfTasks {
     int (*userFunction) (int, vector<int>);
 
     typename vector<int>::iterator outBegin;
-
-  private:
-    mutex m;
 };
 
 
 
-ostream& operator << (ostream& os, const BagOfTasks& b)
+/*ostream& operator << (ostream& os, const BagOfTasks& b)
 {
-  lock_guard<mutex> lock(m);
-  
+  lock_guard<mutex> lock(b->m);
+
   return os << "Bag of tasks: " << endl << endl
             << "First value of in1: " << b.in1Begin[0] << endl 
             << "Last value of in1:  " << (b.in1End - 1)[0] << endl
             << "First value of in2: " << b.input2[0][0] << endl 
             << "Last value of in2:  " << b.input2[0][0] << endl;
             // << "First result: "       << b->userFunction(*(in1Begin), input2);
-}
+}*/
 
 
 
 tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
 {
-  lock_guard<mutex> lock(m);
+  lock_guard<mutex> lock(this->m);
 
   typename vector<int>::iterator tasksBegin = in1Begin;
 
@@ -242,6 +286,27 @@ tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
 
   return output;
 }
+
+
+
+/*
+ *  Data struct to pass to each thread.
+ *
+ *  int                            threadId                           - Integer ID of the thread.
+ *  typename vector<in1>::iterator in1Begin                           - Where to begin in input1.
+ *  typename vector<in1>::iterator in1End                             - Where to end in input1.
+ *  vector<in2>                    input2                             - Pointer to vector input2.
+ *  out                            (*userFunction) (in1, vector<in2>) - User function pointer to a function which takes 
+ *                                                                      (in1, vector<in2>) and returns an out type.
+ *  typename vector<out>::iterator outBegin                           - Where to start in output.
+ */
+
+struct thread_data
+{
+  int        threadId;
+  uint32_t   chunkSize;
+  BagOfTasks *bot;
+};
 
 
 
@@ -278,46 +343,24 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   BagOfTasks bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
-
-
-
-
-
-
-  // Thread data struct array to store data structs for each thread.
-  struct thread_data<in1, in2, out> thread_data_array[params.num_threads];
+  struct  thread_data thread_data_array[params.num_threads];
 
   // Calculate info for data partitioning.
-  int length    = input1.size();
-  int quotient  = length / params.num_threads;
-  int remainder = length % params.num_threads;
-
-  // Variables for iterators.
-  typename vector<in1>::iterator in1Begin = input1.begin();
-  typename vector<in1>::iterator in1End;
-  typename vector<out>::iterator outBegin = output.begin();
+  uint32_t length    = input1.size();
+  uint32_t quotient  = length / params.num_threads;
+  uint32_t remainder = length % params.num_threads;
 
   // Set thread data values.
   for (long i = 0; i < params.num_threads; i++)
   {
-    thread_data_array[i].threadId     = i;
-    thread_data_array[i].in1Begin     = in1Begin;
-
-    advance(in1Begin, quotient);
-
-    thread_data_array[i].in1End       = in1Begin;
-    thread_data_array[i].input2       = input2;
-    thread_data_array[i].userFunction = user_function;
-    thread_data_array[i].outBegin     = outBegin;
-
-    advance(outBegin, quotient);
+    thread_data_array[i].threadId   = i;
+    thread_data_array[i].chunkSize  = quotient;
+    thread_data_array[i].bot = &bot;
 
     // If we still have remainder tasks, add one to this thread.
     if (i < remainder) 
     { 
-      thread_data_array[i].in1End++; 
-      in1Begin++;
-      outBegin++;
+      thread_data_array[i].chunkSize++; 
     }
   }
 
