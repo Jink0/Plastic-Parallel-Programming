@@ -196,12 +196,17 @@ class BagOfTasks {
     int (*userFunction) (int, vector<int>);
 
     typename vector<int>::iterator outBegin;
+
+  private:
+    mutex m;
 };
 
 
 
 ostream& operator << (ostream& os, const BagOfTasks& b)
 {
+  lock_guard<mutex> lock(m);
+  
   return os << "Bag of tasks: " << endl << endl
             << "First value of in1: " << b.in1Begin[0] << endl 
             << "Last value of in1:  " << (b.in1End - 1)[0] << endl
@@ -214,6 +219,8 @@ ostream& operator << (ostream& os, const BagOfTasks& b)
 
 tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
 {
+  lock_guard<mutex> lock(m);
+
   typename vector<int>::iterator tasksBegin = in1Begin;
 
   if (num < in1End - in1Begin)
