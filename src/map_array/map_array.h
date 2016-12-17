@@ -7,6 +7,9 @@
 #include <pthread.h> // Thread and mutex functions
 #include <mutex>     // mutex
 #include <unistd.h>  // For sleep()
+
+#include <boost/thread.hpp>
+
 using namespace std;
 
 #include <metrics.h>
@@ -155,51 +158,6 @@ void *mapArrayThread(void *threadarg)
 
 
 
-/*
- *  Function to start each thread of mapArray on.
- *
- *  void *threadarg - Pointer to thread_data structure.
- */
-
-template <typename in1, typename in2, typename out>
-void *mapArrayThread(void *threadarg)
-{
-  // Pointer to store personal data
-  struct thread_data *my_data;
-  my_data = (struct thread_data *) threadarg;
-
-  // Initialise metrics
-  //metrics_thread_start(my_data->threadId);
-
-  // Print starting parameters
-  //print("[Thread ", my_data->threadId, "] Hello! \n");
-
-  // Get tasks
-
-
-  /*// Run between iterator ranges, stepping through input1 and output vectors
-  for (; my_data->in1Begin != my_data->in1End; ++my_data->in1Begin, ++my_data->outBegin)
-  {
-    metrics_starting_work(my_data->threadId);
-    
-    // Run user function
-    *(my_data->outBegin) = my_data->userFunction(*(my_data->in1Begin), my_data->input2);
-
-     metrics_finishing_work(my_data->threadId);
-  }
-
-  metrics_thread_finished(my_data->threadId);*/
-
-  pthread_exit(NULL);
-}
-
-
-
-
-
-
-
-
 template <typename in1, typename in2, typename out>
 struct tasks
 {
@@ -263,19 +221,28 @@ class BagOfTasks {
 
 tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
 {
+  // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
   lock_guard<mutex> lock(this->m);
 
+  // Record where we should start in our task list.
   typename vector<int>::iterator tasksBegin = in1Begin;
 
+  uint32_t num_tasks;
+
+  // Calculate number of tasks to return.
   if (num < in1End - in1Begin)
   {
-    advance(in1Begin, num);
+    num_tasks = num;
   }
   else
   {
-    advance(in1Begin, in1End - in1Begin);
+    num_tasks = in1End - in1Begin;
   }
 
+  // Advance our iterator so it now marks the end of our tasks.
+  advance(in1Begin, num_tasks);
+
+  // Create tasks data structure to return.
   struct tasks<int, int, int> output = {
     tasksBegin, 
     in1Begin,
@@ -283,6 +250,9 @@ tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
     userFunction,
     outBegin
   };
+
+  // Advance the output iterator to output in the correct place next time.
+  advance(outBegin, num_tasks);
 
   return output;
 }
@@ -311,6 +281,48 @@ struct thread_data
 
 
 /*
+ *  Function to start each thread of mapArray on.
+ *
+ *  void *threadarg - Pointer to thread_data structure.
+ */
+
+template <typename in1, typename in2, typename out>
+void *mapArrayThread(void *threadarg)
+{
+  // Pointer to store personal data
+  struct thread_data *my_data;
+  my_data = (struct thread_data *) threadarg;
+
+  // Initialise metrics
+  metrics_thread_start(my_data->threadId);
+
+  // Print starting parameters
+  print("[Thread ", my_data->threadId, "] Hello! \n");
+
+  tasks<int, int, int> my_tasks;
+
+  // Get tasks
+  my_tasks = (*my_data->bot).getTasks(my_data->chunkSize);
+
+  // Run between iterator ranges, stepping through input1 and output vectors
+  for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
+  {
+    metrics_starting_work(my_data->threadId);
+    
+    // Run user function
+    *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
+
+     metrics_finishing_work(my_data->threadId);
+  }
+
+  metrics_thread_finished(my_data->threadId);
+
+  pthread_exit(NULL);
+}
+
+
+
+/*
  *  Implementation of the mapArray parallel programming pattern. Currently uses all available cores and splits tasks 
  *  evenly. If the output vector is not big enough, it will be resized.
  *
@@ -335,6 +347,8 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     // output.clear();
     // output.resize(input2.size());
   // }
+
+  int num_threads = boost::thread::hardware_concurrency();
 
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");

@@ -353,6 +353,11 @@ int main(int argc, char *argv[])
 
         // Start mapArray.
         map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
+
+        for (uint32_t i = 0; i < as; i++) 
+        {
+            print(output[i]);
+        }
     }
 
     return 0;

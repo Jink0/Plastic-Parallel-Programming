@@ -10,7 +10,7 @@ vpath %.h $(MAP_ARRAY_DIR)
 
 CPPFLAGS += -Wall -pthread -std=c++11 -I$(MAP_ARRAY_DIR) -g
 
-LIBS += -lboost_system -lboost_filesystem
+LIBS += -lboost_system -lboost_filesystem -lboost_thread
 
 -include $(DEPENDENCY_FILE)
 
