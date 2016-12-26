@@ -6,7 +6,9 @@
 #include <boost/property_tree/ini_parser.hpp>
 
 // For folder operations
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #include <boost/filesystem.hpp>
+#undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 // Map array library for testing
 #include "map_array.h"
@@ -356,7 +358,7 @@ int main(int argc, char *argv[])
 
         for (uint32_t i = 0; i < as; i++) 
         {
-            print(output[i]);
+            //print(output[i]);
         }
     }
 

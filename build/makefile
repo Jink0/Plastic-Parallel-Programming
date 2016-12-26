@@ -8,9 +8,9 @@ DEPENDENCY_FILE = ./dependencies.d
 vpath %.cpp $(CONTROLLER_DIR) $(MAP_ARRAY_DIR) $(TEST_DIR)
 vpath %.h $(MAP_ARRAY_DIR)
 
-CPPFLAGS += -Wall -pthread -std=c++11 -I$(MAP_ARRAY_DIR) -g
+CPPFLAGS += -Wall -pthread -std=c++11 -I$(MAP_ARRAY_DIR) -g #-DBOOST_NO_CXX11_SCOPED_ENUMS
 
-LIBS += -lboost_system -lboost_filesystem -lboost_thread
+LIBS += -lboost_filesystem -lboost_system -lboost_thread
 
 -include $(DEPENDENCY_FILE)
 
