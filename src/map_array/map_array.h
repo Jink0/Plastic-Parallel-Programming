@@ -100,7 +100,15 @@ struct tasks
 };
 
 
+template <typename in1, typename in2, typename out>
+class BagOfTasks;
 
+template <typename in1, typename in2, typename out>
+BagOfTasks<in1, in2, out> getTasks(BagOfTasks<in1, in2, out>& bot, uint32_t num);
+
+
+
+template <typename in1, typename in2, typename out>
 class BagOfTasks {
   public:
     // Constructor
@@ -116,8 +124,7 @@ class BagOfTasks {
     ~BagOfTasks() {};
 
     // Task retreival
-    template <typename in1, typename in2, typename out>
-    tasks<in1, in2, out> getTasks(uint32_t num);
+    friend tasks<in1, in2, out> getTasks<in1, in2, out>(BagOfTasks& bot, uint32_t num);
 
   //private:
     mutex m;
@@ -131,6 +138,45 @@ class BagOfTasks {
 
     typename vector<int>::iterator outBegin;
 };
+
+/*template <typename in1, typename in2, typename out>
+tasks<in1, in2, out> getTasks(BagOfTasks<in1, in2, out>& bot, uint32_t num)
+{
+  // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
+  lock_guard<mutex> lock(bot.m);
+
+  // Record where we should start in our task list.
+  typename vector<in1>::iterator tasksBegin = bot.in1Begin;
+
+  uint32_t num_tasks;
+
+  // Calculate number of tasks to return.
+  if (num < bot.in1End - bot.in1Begin)
+  {
+    num_tasks = num;
+  }
+  else
+  {
+    num_tasks = bot.in1End - bot.in1Begin;
+  }
+
+  // Advance our iterator so it now marks the end of our tasks.
+  advance(bot.in1Begin, num_tasks);
+
+  // Create tasks data structure to return.
+  struct tasks<in1, in2, out> output = {
+    tasksBegin, 
+    bot.in1Begin,
+    bot.input2,
+    bot.userFunction,
+    bot.outBegin
+  };
+
+  // Advance the output iterator to output in the correct place next time.
+  advance(bot.outBegin, num_tasks);
+
+  return output;
+}
 
 
 
@@ -147,7 +193,7 @@ class BagOfTasks {
 }*/
 
 
-
+/*
 template <typename in1, typename in2, typename out>
 tasks<in1, in2, out> BagOfTasks::getTasks(uint32_t num)
 {
@@ -206,7 +252,7 @@ struct thread_data
 {
   int        threadId;
   uint32_t   chunkSize;
-  BagOfTasks *bot;
+  BagOfTasks<in1, in2, out> *bot;
 };
 
 
@@ -219,7 +265,7 @@ struct thread_data
 
 template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
-{
+{/*
   // Pointer to store personal data
   struct thread_data<in1, in2, out> *my_data;
   my_data = (struct thread_data<in1, in2, out> *) threadarg;
@@ -245,7 +291,7 @@ void *mapArrayThread(void *threadarg)
   }
 
   metrics_thread_finished(my_data->threadId);
-
+*/
   pthread_exit(NULL);
 }
 
@@ -280,7 +326,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");
 
-  BagOfTasks bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
+  BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
   struct  thread_data<in1, in2, out> thread_data_array[params.num_threads];
 
