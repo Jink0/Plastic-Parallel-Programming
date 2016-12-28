@@ -71,13 +71,7 @@ struct parameters
 {
     parameters(): task_dist(1), schedule(Dynamic_chunks) 
     { 
-      // Most portable method of retriving processor count.
-      FILE * fp;
-      char result[128];
-      fp = popen("/bin/cat /proc/cpuinfo |grep -c '^processor'","r");
-      fread(result, 1, sizeof(result)-1, fp);
-      fclose(fp);
-      num_threads = atoi(result);
+      num_threads = boost::thread::hardware_concurrency();
     }
 
     // Number of threads to use.
@@ -89,72 +83,6 @@ struct parameters
     // Schedule to use.
     Schedule schedule;
 };
-
-
-
-/*
- *  Data struct to pass to each thread.
- *
- *  int                            threadId                           - Integer ID of the thread.
- *  typename vector<in1>::iterator in1Begin                           - Where to begin in input1.
- *  typename vector<in1>::iterator in1End                             - Where to end in input1.
- *  vector<in2>                    input2                             - Pointer to vector input2.
- *  out                            (*userFunction) (in1, vector<in2>) - User function pointer to a function which takes 
- *                                                                      (in1, vector<in2>) and returns an out type.
- *  typename vector<out>::iterator outBegin                           - Where to start in output.
- */
-
-/*template <typename in1, typename in2, typename out>
-struct thread_data
-{
-  int  threadId;
-
-  typename vector<in1>::iterator in1Begin;
-  typename vector<in1>::iterator in1End;
-
-  vector<in2> input2;
-
-  out (*userFunction) (in1, vector<in2>);
-
-  typename vector<out>::iterator outBegin;
-};*/
-
-
-
-/*
- *  Function to start each thread of mapArray on.
- *
- *  void *threadarg - Pointer to thread_data structure.
- */
-
-/*template <typename in1, typename in2, typename out>
-void *mapArrayThread(void *threadarg)
-{
-  // Pointer to store personal data
-  struct thread_data<in1, in2, out> *my_data;
-  my_data = (struct thread_data<in1, in2, out> *) threadarg;
-
-  // Initialise metrics
-  metrics_thread_start(my_data->threadId);
-
-  // Print starting parameters
-  print("[Thread ", my_data->threadId, "] Hello! I will process ", my_data->in1End - my_data->in1Begin, " tasks\n");
-
-  // Run between iterator ranges, stepping through input1 and output vectors
-  for (; my_data->in1Begin != my_data->in1End; ++my_data->in1Begin, ++my_data->outBegin)
-  {
-    metrics_starting_work(my_data->threadId);
-    
-    // Run user function
-    *(my_data->outBegin) = my_data->userFunction(*(my_data->in1Begin), my_data->input2);
-
-     metrics_finishing_work(my_data->threadId);
-  }
-
-  metrics_thread_finished(my_data->threadId);
-
-  pthread_exit(NULL);
-}*/
 
 
 
@@ -188,7 +116,8 @@ class BagOfTasks {
     ~BagOfTasks() {};
 
     // Task retreival
-    tasks<int, int, int> getTasks(uint32_t num);
+    template <typename in1, typename in2, typename out>
+    tasks<in1, in2, out> getTasks(uint32_t num);
 
   //private:
     mutex m;
@@ -219,13 +148,14 @@ class BagOfTasks {
 
 
 
-tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
+template <typename in1, typename in2, typename out>
+tasks<in1, in2, out> BagOfTasks::getTasks(uint32_t num)
 {
   // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
   lock_guard<mutex> lock(this->m);
 
   // Record where we should start in our task list.
-  typename vector<int>::iterator tasksBegin = in1Begin;
+  typename vector<in1>::iterator tasksBegin = in1Begin;
 
   uint32_t num_tasks;
 
@@ -243,7 +173,7 @@ tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
   advance(in1Begin, num_tasks);
 
   // Create tasks data structure to return.
-  struct tasks<int, int, int> output = {
+  struct tasks<in1, in2, out> output = {
     tasksBegin, 
     in1Begin,
     input2,
@@ -271,6 +201,7 @@ tasks<int, int, int> BagOfTasks::getTasks(uint32_t num)
  *  typename vector<out>::iterator outBegin                           - Where to start in output.
  */
 
+template <typename in1, typename in2, typename out>
 struct thread_data
 {
   int        threadId;
@@ -290,8 +221,8 @@ template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
 {
   // Pointer to store personal data
-  struct thread_data *my_data;
-  my_data = (struct thread_data *) threadarg;
+  struct thread_data<in1, in2, out> *my_data;
+  my_data = (struct thread_data<in1, in2, out> *) threadarg;
 
   // Initialise metrics
   metrics_thread_start(my_data->threadId);
@@ -299,10 +230,8 @@ void *mapArrayThread(void *threadarg)
   // Print starting parameters
   print("[Thread ", my_data->threadId, "] Hello! \n");
 
-  tasks<int, int, int> my_tasks;
-
   // Get tasks
-  my_tasks = (*my_data->bot).getTasks(my_data->chunkSize);
+  tasks<in1, in2, out> my_tasks = (*my_data->bot).template getTasks<in1, in2, out>(my_data->chunkSize);
 
   // Run between iterator ranges, stepping through input1 and output vectors
   for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
@@ -348,16 +277,12 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     // output.resize(input2.size());
   // }
 
-  int num_threads = boost::thread::hardware_concurrency();
-
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");
 
-  //struct BagOfTasks<in1, in2, out>* bagOfTasks = new BagOfTasks<in1, in2, out>(input1.begin());
-
   BagOfTasks bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
-  struct  thread_data thread_data_array[params.num_threads];
+  struct  thread_data<in1, in2, out> thread_data_array[params.num_threads];
 
   // Calculate info for data partitioning.
   uint32_t length    = input1.size();
