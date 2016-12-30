@@ -23,62 +23,70 @@ using namespace std;
  * you cannot seperate the definition of a template class from its declaration and put it inside a .cpp file.
  */
 
-
-
 /*
- *  Mutexed print function.
+ * Mutexed print function:
  */
 
-std::ostream&
-print_one(std::ostream& os)
+// With nothing to add to the output stream, just return the stream.
+ostream&
+print_rec(ostream& outS)
 {
-    return os;
+    return outS;
 }
 
+// Recursively print arguments.
 template <class A0, class ...Args>
-std::ostream&
-print_one(std::ostream& os, const A0& a0, const Args& ...args)
+ostream&
+print_rec(ostream& outS, const A0& a0, const Args& ...args)
 {
-    os << a0;
-    return print_one(os, args...);
+    outS << a0;
+    return print_rec(outS, args...);
 }
 
+// Case when given an output stream.
 template <class ...Args>
-std::ostream&
-print(std::ostream& os, const Args& ...args)
+ostream&
+print(ostream& outS, const Args& ...args)
 {
-    return print_one(os, args...);
+    return print_rec(outS, args...);
 }
 
-std::mutex&
+// Retrieve the mutex. Must be done using this non-templated function, so that we have one mutex across all 
+// instantiations of the templated function.
+mutex&
 get_cout_mutex()
 {
-    static std::mutex m;
+    static mutex m;
     return m;
 }
 
+// The main print function defaults to the cout output stream.
 template <class ...Args>
-std::ostream&
+ostream&
 print(const Args& ...args)
 {
-    std::lock_guard<std::mutex> _(get_cout_mutex());
-    return print(std::cout, args...);
+    lock_guard<mutex> _(get_cout_mutex());
+    return print(cout, args...);
 }
 
 
 
-// Different possible schedules Static             - Give each thread equal portions.
-//                              Dynamic_chunks     - Threads dynamically retrive a chunk of the tasks when they can.
-//                              Dynamic_individual - Threads retrieve a single task when they can.
-//                              Tapered            - Chunk size starts off large and decreases to better handle load imbalance between iterations.
-//                              Auto               - Automatically try to figure out the best schedule.
+/* Different possible schedules Static             - Give each thread equal portions.
+                                Dynamic_chunks     - Threads dynamically retrive a chunk of the tasks when they can.
+                                Dynamic_individual - Threads retrieve a single task when they can.
+                                Tapered            - Chunk size starts off large and decreases to better handle load 
+                                                     imbalance between iterations.
+                                Auto               - Automatically try to figure out the best schedule. */
 enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
+
+
 
 // Parameters with default values.
 struct parameters 
 {
     parameters(): task_dist(1), schedule(Dynamic_chunks) 
     { 
+      // Retreive the number of CPUs using the boost library.
       num_threads = boost::thread::hardware_concurrency();
     }
 
@@ -94,38 +102,57 @@ struct parameters
 
 
 
-
 // Returns the typename given to the template. Example usage: typename<int>() returns "int".
 template<typename T>
 string type_name()
 {
+    // Variable to store status.
     int status;
-    string tname = typeid(T).name();
-    char *demangled_name = abi::__cxa_demangle(tname.c_str(), NULL, NULL, &status);
-    if(status == 0) {
-        tname = demangled_name;
-        free(demangled_name);
+
+    // Mangled name of type T.
+    string mName = typeid(T).name();
+
+    // Attempt to demangle 
+    char *dmName = abi::__cxa_demangle(mName.c_str(), NULL, NULL, &status);
+
+    // If successful,
+    if(status == 0) 
+    {
+        // Record name.
+        mName = dmName;
+
+        // Free memory.
+        free(dmName);
     }   
-    return tname;
+
+    return mName;
 }
 
 
 
+// Structure to contain a group of tasks.
 template <typename in1, typename in2, typename out>
 struct tasks
 {
+  // Start of input.
   typename vector<in1>::iterator in1Begin;
+
+  // End of input.
   typename vector<in1>::iterator in1End;
 
+  // Pointer to shared input2 vector.
   vector<in2>* input2;
 
+  // User function pointer.
   out (*userFunction) (in1, vector<in2>);
 
+  // Start of output.
   typename vector<out>::iterator outBegin;
 };
 
 
 
+// Bag of tasks class.
 template <class in1, class in2, class out>
 class BagOfTasks {
   public:
@@ -149,19 +176,22 @@ class BagOfTasks {
     // Overloads << operator for easy printing with streams.
     friend ostream& operator<< (ostream &outS, BagOfTasks<in1, in2, out> &bot)
     {
-        lock_guard<mutex> lock(bot.m);
+      // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is 
+      // destroyed and the mutex is released. 
+      lock_guard<mutex> lock(bot.m);
 
-        return outS << "Bag of tasks: " << endl
-                    << "Data types - <" << type_name<in1>() << ", " 
-                                        << type_name<in2>() << ", " 
-                                        << type_name<out>() << ">" << endl
-                    << "Number of tasks - " << bot.in1End - bot.in1Begin << endl << endl;
+      // Print all our important data.
+      return outS << "Bag of tasks: " << endl
+                  << "Data types - <" << type_name<in1>() << ", " 
+                                      << type_name<in2>() << ", " 
+                                      << type_name<out>() << ">" << endl
+                  << "Number of tasks - " << bot.in1End - bot.in1Begin << endl << endl;
     };
 
     // Returns tasks of the specified number or less. 
     tasks<in1, in2, out> getTasks(uint32_t num)
     {
-      // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
+      // Get mutex. 
       lock_guard<mutex> lock(m);
 
       // Record where we should start in our task list.
@@ -212,34 +242,23 @@ class BagOfTasks {
 
 
 
-/*
- *  Data struct to pass to each thread.
- *
- *  int                            threadId                           - Integer ID of the thread.
- *  typename vector<in1>::iterator in1Begin                           - Where to begin in input1.
- *  typename vector<in1>::iterator in1End                             - Where to end in input1.
- *  vector<in2>                    input2                             - Pointer to vector input2.
- *  out                            (*userFunction) (in1, vector<in2>) - User function pointer to a function which takes 
- *                                                                      (in1, vector<in2>) and returns an out type.
- *  typename vector<out>::iterator outBegin                           - Where to start in output.
- */
-
+// Data struct to pass to each thread.
 template <typename in1, typename in2, typename out>
 struct thread_data
 {
+  // Id of this thread.
   int        threadId;
+
+  // Starting chunk size of tasks to retreive.
   uint32_t   chunkSize;
+
+  // Pointer to the shared bag of tasks object.
   BagOfTasks<in1, in2, out> *bot;
 };
 
 
 
-/*
- *  Function to start each thread of mapArray on.
- *
- *  void *threadarg - Pointer to thread_data structure.
- */
-
+// Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
 {
