@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
 
         for (uint32_t i = 0; i < as; i++) 
         {
-            print(output[i]);
+            //print(output[i]);
         }
     }
 

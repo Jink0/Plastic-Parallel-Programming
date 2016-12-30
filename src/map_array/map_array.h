@@ -29,34 +29,40 @@ using namespace std;
  *  Mutexed print function.
  */
 
-ostream&
-print_one(ostream& os)
+std::ostream&
+print_one(std::ostream& os)
 {
-  return os;
+    return os;
 }
 
 template <class A0, class ...Args>
-ostream&
-print_one(ostream& os, const A0& a0, const Args& ...args)
+std::ostream&
+print_one(std::ostream& os, const A0& a0, const Args& ...args)
 {
-  os << a0;
-  return print_one(os, args...);
+    os << a0;
+    return print_one(os, args...);
 }
 
 template <class ...Args>
-ostream&
-print(ostream& os, const Args& ...args)
+std::ostream&
+print(std::ostream& os, const Args& ...args)
 {
-  return print_one(os, args...);
+    return print_one(os, args...);
+}
+
+std::mutex&
+get_cout_mutex()
+{
+    static std::mutex m;
+    return m;
 }
 
 template <class ...Args>
-ostream&
+std::ostream&
 print(const Args& ...args)
 {
-  static mutex m;
-  lock_guard<mutex> _(m);
-  return print(cout, args...);
+    std::lock_guard<std::mutex> _(get_cout_mutex());
+    return print(std::cout, args...);
 }
 
 
@@ -89,7 +95,7 @@ struct parameters
 
 
 
-
+// Returns the typename given to the template. Example usage: typename<int>() returns "int".
 template<typename T>
 string type_name()
 {
@@ -140,7 +146,7 @@ class BagOfTasks {
     // Destructor
     ~BagOfTasks() {};
 
-    // Overloads << operator for easy printing with cout.
+    // Overloads << operator for easy printing with streams.
     friend ostream& operator<< (ostream &outS, BagOfTasks<in1, in2, out> &bot)
     {
         lock_guard<mutex> lock(bot.m);
