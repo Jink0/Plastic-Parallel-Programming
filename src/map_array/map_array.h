@@ -8,6 +8,8 @@
 #include <mutex>     // mutex
 #include <unistd.h>  // For sleep()
 
+#include <cxxabi.h>  // For demangling typenames (gcc only)
+
 #include <boost/thread.hpp>
 
 using namespace std;
@@ -86,6 +88,23 @@ struct parameters
 
 
 
+
+
+template<typename T>
+string type_name()
+{
+    int status;
+    string tname = typeid(T).name();
+    char *demangled_name = abi::__cxa_demangle(tname.c_str(), NULL, NULL, &status);
+    if(status == 0) {
+        tname = demangled_name;
+        free(demangled_name);
+    }   
+    return tname;
+}
+
+
+
 template <typename in1, typename in2, typename out>
 struct tasks
 {
@@ -100,138 +119,90 @@ struct tasks
 };
 
 
-template <typename in1, typename in2, typename out>
-class BagOfTasks;
 
-template <typename in1, typename in2, typename out>
-BagOfTasks<in1, in2, out> getTasks(BagOfTasks<in1, in2, out>& bot, uint32_t num);
-
-
-
-template <typename in1, typename in2, typename out>
+template <class in1, class in2, class out>
 class BagOfTasks {
   public:
     // Constructor
-    BagOfTasks(vector<int>::iterator in1B, vector<int>::iterator in1E, vector<int>* in2p, int (*userF) (int, vector<int>), vector<int>::iterator outB)
-      : in1Begin(in1B)
-      , in1End(in1E)
-      , input2(in2p)
-      , userFunction(userF)
-      , outBegin(outB)
-    {}
+    BagOfTasks(typename vector<in1>::iterator in1B, 
+               typename vector<in1>::iterator in1E, 
+               vector<in2>* in2p, 
+               out (*userF) (in1, vector<in2>), 
+               typename vector<out>::iterator outB) :
+              
+               in1Begin(in1B),
+               in1End(in1E),
+               input2(in2p),
+               userFunction(userF),
+               outBegin(outB)
+      {}
 
     // Destructor
     ~BagOfTasks() {};
 
-    // Task retreival
-    friend tasks<in1, in2, out> getTasks<in1, in2, out>(BagOfTasks& bot, uint32_t num);
+    // Overloads << operator for easy printing with cout.
+    friend ostream& operator<< (ostream &outS, BagOfTasks<in1, in2, out> &bot)
+    {
+        lock_guard<mutex> lock(bot.m);
 
-  //private:
+        return outS << "Bag of tasks: " << endl
+                    << "Data types - <" << type_name<in1>() << ", " 
+                                        << type_name<in2>() << ", " 
+                                        << type_name<out>() << ">" << endl
+                    << "Number of tasks - " << bot.in1End - bot.in1Begin << endl << endl;
+    };
+
+    // Returns tasks of the specified number or less. 
+    tasks<in1, in2, out> getTasks(uint32_t num)
+    {
+      // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
+      lock_guard<mutex> lock(m);
+
+      // Record where we should start in our task list.
+      typename vector<in1>::iterator tasksBegin = in1Begin;
+
+      uint32_t num_tasks;
+
+      // Calculate number of tasks to return.
+      if (num < in1End - in1Begin)
+      {
+        num_tasks = num;
+      }
+      else
+      {
+        num_tasks = in1End - in1Begin;
+      }
+
+      // Advance our iterator so it now marks the end of our tasks.
+      advance(in1Begin, num_tasks);
+
+      // Create tasks data structure to return.
+      struct tasks<in1, in2, out> output = {
+        tasksBegin, 
+        in1Begin,
+        input2,
+        userFunction,
+        outBegin
+      };
+
+      // Advance the output iterator to output in the correct place next time.
+      advance(outBegin, num_tasks);
+
+      return output;
+    };
+
+  private:
     mutex m;
 
-    typename vector<int>::iterator in1Begin;
-    typename vector<int>::iterator in1End;
+    typename vector<in1>::iterator in1Begin;
+    typename vector<in1>::iterator in1End;
 
-    vector<int>* input2;
+    vector<in2>* input2;
 
-    int (*userFunction) (int, vector<int>);
+    out (*userFunction) (in1, vector<in2>);
 
-    typename vector<int>::iterator outBegin;
+    typename vector<out>::iterator outBegin;
 };
-
-/*template <typename in1, typename in2, typename out>
-tasks<in1, in2, out> getTasks(BagOfTasks<in1, in2, out>& bot, uint32_t num)
-{
-  // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
-  lock_guard<mutex> lock(bot.m);
-
-  // Record where we should start in our task list.
-  typename vector<in1>::iterator tasksBegin = bot.in1Begin;
-
-  uint32_t num_tasks;
-
-  // Calculate number of tasks to return.
-  if (num < bot.in1End - bot.in1Begin)
-  {
-    num_tasks = num;
-  }
-  else
-  {
-    num_tasks = bot.in1End - bot.in1Begin;
-  }
-
-  // Advance our iterator so it now marks the end of our tasks.
-  advance(bot.in1Begin, num_tasks);
-
-  // Create tasks data structure to return.
-  struct tasks<in1, in2, out> output = {
-    tasksBegin, 
-    bot.in1Begin,
-    bot.input2,
-    bot.userFunction,
-    bot.outBegin
-  };
-
-  // Advance the output iterator to output in the correct place next time.
-  advance(bot.outBegin, num_tasks);
-
-  return output;
-}
-
-
-
-/*ostream& operator << (ostream& os, const BagOfTasks& b)
-{
-  lock_guard<mutex> lock(b->m);
-
-  return os << "Bag of tasks: " << endl << endl
-            << "First value of in1: " << b.in1Begin[0] << endl 
-            << "Last value of in1:  " << (b.in1End - 1)[0] << endl
-            << "First value of in2: " << b.input2[0][0] << endl 
-            << "Last value of in2:  " << b.input2[0][0] << endl;
-            // << "First result: "       << b->userFunction(*(in1Begin), input2);
-}*/
-
-
-/*
-template <typename in1, typename in2, typename out>
-tasks<in1, in2, out> BagOfTasks::getTasks(uint32_t num)
-{
-  // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released. 
-  lock_guard<mutex> lock(this->m);
-
-  // Record where we should start in our task list.
-  typename vector<in1>::iterator tasksBegin = in1Begin;
-
-  uint32_t num_tasks;
-
-  // Calculate number of tasks to return.
-  if (num < in1End - in1Begin)
-  {
-    num_tasks = num;
-  }
-  else
-  {
-    num_tasks = in1End - in1Begin;
-  }
-
-  // Advance our iterator so it now marks the end of our tasks.
-  advance(in1Begin, num_tasks);
-
-  // Create tasks data structure to return.
-  struct tasks<in1, in2, out> output = {
-    tasksBegin, 
-    in1Begin,
-    input2,
-    userFunction,
-    outBegin
-  };
-
-  // Advance the output iterator to output in the correct place next time.
-  advance(outBegin, num_tasks);
-
-  return output;
-}
 
 
 
@@ -265,7 +236,7 @@ struct thread_data
 
 template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
-{/*
+{
   // Pointer to store personal data
   struct thread_data<in1, in2, out> *my_data;
   my_data = (struct thread_data<in1, in2, out> *) threadarg;
@@ -277,7 +248,7 @@ void *mapArrayThread(void *threadarg)
   print("[Thread ", my_data->threadId, "] Hello! \n");
 
   // Get tasks
-  tasks<in1, in2, out> my_tasks = (*my_data->bot).template getTasks<in1, in2, out>(my_data->chunkSize);
+  tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunkSize);
 
   // Run between iterator ranges, stepping through input1 and output vectors
   for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
@@ -291,7 +262,7 @@ void *mapArrayThread(void *threadarg)
   }
 
   metrics_thread_finished(my_data->threadId);
-*/
+
   pthread_exit(NULL);
 }
 
