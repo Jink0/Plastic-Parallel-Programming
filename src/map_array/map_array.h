@@ -1,27 +1,24 @@
 #ifndef MAP_ARRAY_H
 #define MAP_ARRAY_H
 
-#include <iostream>  // cout
-#include <vector>    // Vectors
-#include <assert.h>  // Assert functions
-#include <pthread.h> // Thread and mutex functions
-#include <mutex>     // mutex
-#include <unistd.h>  // For sleep()
-
-#include <cxxabi.h>  // For demangling typenames (gcc only)
-
-#include <boost/thread.hpp>
+#include <iostream>         // cout
+#include <vector>           // Vectors
+#include <mutex>            // mutexes
+#include <pthread.h>        // Thread and mutex functions
+#include <unistd.h>         // sleep()
+#include <cxxabi.h>         // Demangling typenames (gcc only)
+#include <boost/thread.hpp> // boost::thread::hardware_concurrency();
 
 using namespace std;
 
-#include <metrics.h>
-
-
+#include <metrics.h> // Our metrics library
 
 /*
  * This file contrains the definition of the map array pattern. Note - all the definitions are in the header file, as 
  * you cannot seperate the definition of a template class from its declaration and put it inside a .cpp file.
  */
+
+
 
 /*
  * Mutexed print function:
