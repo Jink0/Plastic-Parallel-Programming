@@ -311,7 +311,7 @@ void *mapArrayThread(void *threadarg)
 
 template <typename in1, typename in2, typename out>
 void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, 
-               string output_filename, parameters params = parameters())
+               string output_filename = "", parameters params = parameters())
 {
   Ms(print("Metrics on!\n\n"));
 

@@ -354,8 +354,7 @@ int main(int argc, char *argv[])
         vector<int> output(as);
 
         // Start mapArray.
-        map_array(input1, input2, collatz, output, exParamsVector[i].output_filename);
-        // map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
+        map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
 
         for (uint32_t i = 0; i < as; i++) 
         {
