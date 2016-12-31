@@ -11,7 +11,15 @@
 
 using namespace std;
 
-#include <metrics.h> // Our metrics library
+#ifdef METRICS
+  #define Ms( x ) x
+#else
+  #define Ms( x ) 
+#endif
+
+#ifdef METRICS
+  #include <metrics.h> // Our metrics library
+#endif
 
 /*
  * This file contrains the definition of the map array pattern. Note - all the definitions are in the header file, as 
@@ -264,7 +272,7 @@ void *mapArrayThread(void *threadarg)
   my_data = (struct thread_data<in1, in2, out> *) threadarg;
 
   // Initialise metrics
-  metrics_thread_start(my_data->threadId);
+  Ms(metrics_thread_start(my_data->threadId));
 
   // Print starting parameters
   print("[Thread ", my_data->threadId, "] Hello! \n");
@@ -275,15 +283,15 @@ void *mapArrayThread(void *threadarg)
   // Run between iterator ranges, stepping through input1 and output vectors
   for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
   {
-    metrics_starting_work(my_data->threadId);
+    Ms(metrics_starting_work(my_data->threadId));
     
     // Run user function
     *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
 
-     metrics_finishing_work(my_data->threadId);
+     Ms(metrics_finishing_work(my_data->threadId));
   }
 
-  metrics_thread_finished(my_data->threadId);
+  Ms(metrics_thread_finished(my_data->threadId));
 
   pthread_exit(NULL);
 }
@@ -305,8 +313,10 @@ template <typename in1, typename in2, typename out>
 void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, 
                string output_filename, parameters params = parameters())
 {
+  Ms(print("Metrics on!\n\n"));
+
   // Initialise metrics.
-  metrics_init(params.num_threads, output_filename + ".csv");
+  Ms(metrics_init(params.num_threads, output_filename + ".csv"));
 
   // Check input sizes.
   // if (input2.size() != output.size())
@@ -382,11 +392,11 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     print("[Main] Joined with thread ", i, "\n");
   }
 
-  metrics_finalise();
+  Ms(metrics_finalise());
 
-  metrics_calc();
+  Ms(metrics_calc());
 
-  metrics_exit();
+  Ms(metrics_exit());
 }
 
 #endif /* MAP_ARRAY_H */
