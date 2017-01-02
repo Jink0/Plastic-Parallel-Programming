@@ -57,6 +57,14 @@ void printExperimentParameters(vector<eParameters> exParamsVector)
         {
             print("Dynamic_individual\n\n\n");
         }
+        else if (exParamsVector[i].params.schedule == 3)
+        {
+            print("Tapered\n\n\n");
+        }
+        else if (exParamsVector[i].params.schedule == 4)
+        {
+            print("Auto\n\n\n");
+        }
     }
 }
 
@@ -107,6 +115,14 @@ vector<eParameters> processConfig(char *argv[])
     else if (sched.compare("Dynamic_individual") == 0)
     {
         defaultParams.params.schedule = Dynamic_individual;
+    }
+    else if (sched.compare("Tapered") == 0)
+    {
+        defaultParams.params.schedule = Tapered;
+    }
+    else if (sched.compare("Auto") == 0)
+    {
+        defaultParams.params.schedule = Auto;
     }
     else
     {
@@ -346,7 +362,7 @@ int main(int argc, char *argv[])
             // input2[i] = (double) 1. / i;
             // input1[i] = (int) i + 1;
             // input2[i] = (int) i + 1;
-            input1[i] = 100000;
+            input1[i] = 10000;
             input2[i] = 87736;
         }
 
@@ -358,8 +374,10 @@ int main(int argc, char *argv[])
 
         for (uint32_t i = 0; i < as; i++) 
         {
-            //print(output[i]);
+            print(output[i]);
         }
+
+        print("\n\n");
     }
 
     return 0;

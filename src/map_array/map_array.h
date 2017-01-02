@@ -89,7 +89,7 @@ enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
 // Parameters with default values.
 struct parameters 
 {
-    parameters(): task_dist(1), schedule(Dynamic_chunks) 
+    parameters(): task_dist(1), schedule(Tapered) 
     { 
       // Retreive the number of CPUs using the boost library.
       num_threads = boost::thread::hardware_concurrency();
@@ -252,10 +252,12 @@ template <typename in1, typename in2, typename out>
 struct thread_data
 {
   // Id of this thread.
-  int        threadId;
+  int threadId;
 
   // Starting chunk size of tasks to retreive.
-  uint32_t   chunkSize;
+  uint32_t chunk_size;
+
+  bool tapered_schedule = false;
 
   // Pointer to the shared bag of tasks object.
   BagOfTasks<in1, in2, out> *bot;
@@ -278,22 +280,126 @@ void *mapArrayThread(void *threadarg)
   print("[Thread ", my_data->threadId, "] Hello! \n");
 
   // Get tasks
-  tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunkSize);
+  tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
 
-  // Run between iterator ranges, stepping through input1 and output vectors
-  for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
+  uint32_t tapered_chunk_size = my_data->chunk_size / 2;
+
+  // While we have tasks to do;
+  while (my_tasks.in1End - my_tasks.in1Begin > 0)
   {
-    Ms(metrics_starting_work(my_data->threadId));
+    // Run between iterator ranges, stepping through input1 and output vectors
+    for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
+    {
+      Ms(metrics_starting_work(my_data->threadId));
     
-    // Run user function
-    *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
+      // Run user function
+      *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
 
-     Ms(metrics_finishing_work(my_data->threadId));
+      Ms(metrics_finishing_work(my_data->threadId));
+    }
+
+    // Get more tasks!
+    if (my_data->tapered_schedule)
+    {
+      my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
+
+      print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
+
+      if (tapered_chunk_size > 1)
+      {
+        tapered_chunk_size = tapered_chunk_size / 2;
+      }
+    }
+    else
+    {
+      my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+
+      print("[Thread ", my_data->threadId, "] Chunk size: ", my_data->chunk_size, "\n");
+    }
+
   }
 
   Ms(metrics_thread_finished(my_data->threadId));
 
   pthread_exit(NULL);
+}
+
+
+vector<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
+{
+  vector<uint32_t> output(num_threads);
+
+  switch (sched)
+  {
+    case Static:
+      {
+        // Calculate info for data partitioning.
+        uint32_t quotient  = num_tasks / num_threads;
+        uint32_t remainder = num_tasks % num_threads;
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          // If we still have remainder tasks, add one to this thread.
+          if (i < remainder) 
+          { 
+            output[i] = quotient + 1;
+          }
+          else
+          {
+            output[i] = quotient;
+          }
+        }
+      }
+
+      break;
+
+    case Dynamic_chunks:
+      {
+        if (chunk_size == 0)
+        {
+          chunk_size = num_tasks / (num_threads * 10);
+        }
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output[i] = chunk_size;
+        }
+      }
+
+      break;
+
+    case Dynamic_individual:
+      {
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output[i] = 1;
+        }
+      }
+
+      break;
+
+    case Tapered:
+      {
+        // Calculate info for data partitioning.
+        uint32_t quotient  = num_tasks / (num_threads * 2);
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output[i] = quotient;
+        }
+      }
+
+      break;
+
+    case Auto:
+      {
+        print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
+      }
+
+      break;
+  }
+
+  return output;
 }
 
 
@@ -331,24 +437,21 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
-  struct  thread_data<in1, in2, out> thread_data_array[params.num_threads];
+  struct thread_data<in1, in2, out> thread_data_array[params.num_threads];
 
   // Calculate info for data partitioning.
-  uint32_t length    = input1.size();
-  uint32_t quotient  = length / params.num_threads;
-  uint32_t remainder = length % params.num_threads;
+  vector<uint32_t> schedules = calc_schedules(input1.size(), params.num_threads, params.schedule);
 
   // Set thread data values.
   for (long i = 0; i < params.num_threads; i++)
   {
-    thread_data_array[i].threadId   = i;
-    thread_data_array[i].chunkSize  = quotient;
-    thread_data_array[i].bot = &bot;
+    thread_data_array[i].threadId    = i;
+    thread_data_array[i].chunk_size  = schedules[i];
+    thread_data_array[i].bot         = &bot;
 
-    // If we still have remainder tasks, add one to this thread.
-    if (i < remainder) 
-    { 
-      thread_data_array[i].chunkSize++; 
+    if (params.schedule == Tapered)
+    {
+      thread_data_array[i].tapered_schedule = true;
     }
   }
 
