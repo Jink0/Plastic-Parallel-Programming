@@ -135,6 +135,85 @@ string type_name()
 
 
 
+vector<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
+{
+  vector<uint32_t> output(num_threads);
+
+  switch (sched)
+  {
+    case Static:
+      {
+        // Calculate info for data partitioning.
+        uint32_t quotient  = num_tasks / num_threads;
+        uint32_t remainder = num_tasks % num_threads;
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          // If we still have remainder tasks, add one to this thread.
+          if (i < remainder) 
+          { 
+            output[i] = quotient + 1;
+          }
+          else
+          {
+            output[i] = quotient;
+          }
+        }
+      }
+
+      break;
+
+    case Dynamic_chunks:
+      {
+        if (chunk_size == 0)
+        {
+          chunk_size = num_tasks / (num_threads * 10);
+        }
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output[i] = chunk_size;
+        }
+      }
+
+      break;
+
+    case Dynamic_individual:
+      {
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output[i] = 1;
+        }
+      }
+
+      break;
+
+    case Tapered:
+      {
+        // Calculate info for data partitioning.
+        uint32_t quotient  = num_tasks / (num_threads * 2);
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output[i] = quotient;
+        }
+      }
+
+      break;
+
+    case Auto:
+      {
+        print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
+      }
+
+      break;
+  }
+
+  return output;
+}
+
+
+
 // Structure to contain a group of tasks.
 template <typename in1, typename in2, typename out>
 struct tasks
@@ -257,10 +336,14 @@ struct thread_data
   // Starting chunk size of tasks to retreive.
   uint32_t chunk_size;
 
+  // Check for tapered schedule.
   bool tapered_schedule = false;
 
   // Pointer to the shared bag of tasks object.
   BagOfTasks<in1, in2, out> *bot;
+
+  // Flag which main thread will set to indicate new instructions.
+  bool check_for_new_instructions = false;
 };
 
 
@@ -325,84 +408,6 @@ void *mapArrayThread(void *threadarg)
 }
 
 
-vector<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
-{
-  vector<uint32_t> output(num_threads);
-
-  switch (sched)
-  {
-    case Static:
-      {
-        // Calculate info for data partitioning.
-        uint32_t quotient  = num_tasks / num_threads;
-        uint32_t remainder = num_tasks % num_threads;
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          // If we still have remainder tasks, add one to this thread.
-          if (i < remainder) 
-          { 
-            output[i] = quotient + 1;
-          }
-          else
-          {
-            output[i] = quotient;
-          }
-        }
-      }
-
-      break;
-
-    case Dynamic_chunks:
-      {
-        if (chunk_size == 0)
-        {
-          chunk_size = num_tasks / (num_threads * 10);
-        }
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output[i] = chunk_size;
-        }
-      }
-
-      break;
-
-    case Dynamic_individual:
-      {
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output[i] = 1;
-        }
-      }
-
-      break;
-
-    case Tapered:
-      {
-        // Calculate info for data partitioning.
-        uint32_t quotient  = num_tasks / (num_threads * 2);
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output[i] = quotient;
-        }
-      }
-
-      break;
-
-    case Auto:
-      {
-        print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
-      }
-
-      break;
-  }
-
-  return output;
-}
-
-
 
 /*
  *  Implementation of the mapArray parallel programming pattern. Currently uses all available cores and splits tasks 
@@ -423,14 +428,6 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   // Initialise metrics.
   Ms(metrics_init(params.num_threads, output_filename + ".csv"));
-
-  // Check input sizes.
-  // if (input2.size() != output.size())
-  // {
-    // Resize output if needed
-    // output.clear();
-    // output.resize(input2.size());
-  // }
 
   // Print the number of processors we can detect.
   print("[Main] Found ", params.num_threads, " processors\n");
@@ -479,8 +476,19 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     }
   }
 
+
+
+
+  
+
+
+
+
+
+
   // Free attribute and join with the other threads.
   pthread_attr_destroy(&attr);
+
   for (long i = 0; i < params.num_threads; i++)
   {
     rc = pthread_join(threads[i], NULL);
