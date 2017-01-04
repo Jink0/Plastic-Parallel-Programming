@@ -41,7 +41,7 @@ void printExperimentParameters(vector<eParameters> exParamsVector)
     for (uint32_t i = 0; i < exParamsVector.size(); i++)
     {
         print(exParamsVector[i].output_filename, ":\n",
-              "\n\tNumber of threads: ", exParamsVector[i].params.num_threads,
+              "\n\tNumber of threads: ", exParamsVector[i].params.thread_pinnings.size(),
               "\n\tTask distribution: ", exParamsVector[i].params.task_dist,
               "\n\tSchedule:          ");
 
@@ -96,8 +96,17 @@ vector<eParameters> processConfig(char *argv[])
     // Default experiment parameters container.
     struct eParameters defaultParams;
 
+    uint32_t num_threads = propTree.get<int>(pt::ptree::path_type(     "DEFAULTS/numThreads", '/'));
+
+    vector<uint32_t> thread_pinnings;
+
+    for (uint32_t i = 0; i < num_threads; i++)
+    {
+        thread_pinnings.push_back(i);
+    }
+
     // Read values from property tree.
-    defaultParams.params.num_threads = propTree.get<int>(pt::ptree::path_type(     "DEFAULTS/numThreads", '/'));
+    defaultParams.params.thread_pinnings = thread_pinnings;
     defaultParams.params.task_dist   = propTree.get<int>(pt::ptree::path_type(     "DEFAULTS/taskDistribution", '/'));
     defaultParams.array_size         = propTree.get<uint32_t>(pt::ptree::path_type("DEFAULTS/arraySize", '/'));
 
@@ -160,11 +169,20 @@ vector<eParameters> processConfig(char *argv[])
         // use the default value. NOTE - SHOULD CHANGE SO WE DETECT IF NO NEW VALS TO CALCULATE num_experiments PROGRAMATICALLY
         if (n_threads)
         {
-            current.params.num_threads = static_cast<int>(*n_threads);
+            // current.params.num_threads = static_cast<int>(*n_threads);
+
+            vector<uint32_t> thread_pinnings;
+
+            for (uint32_t i = 0; i < static_cast<uint32_t>(*n_threads); i++)
+            {
+                thread_pinnings.push_back(i);
+            }
+
+            current.params.thread_pinnings = thread_pinnings;
         }
         else
         {
-            current.params.num_threads = defaultParams.params.num_threads;
+            current.params.thread_pinnings = defaultParams.params.thread_pinnings;
         }
 
         if (t_dist)

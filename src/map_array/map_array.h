@@ -92,11 +92,16 @@ struct parameters
     parameters(): task_dist(1), schedule(Tapered) 
     { 
       // Retreive the number of CPUs using the boost library.
-      num_threads = boost::thread::hardware_concurrency();
+      uint32_t num_threads = boost::thread::hardware_concurrency();
+
+      for (uint32_t i = 0; i < num_threads; i++)
+      {
+        thread_pinnings.push_back(i);
+      }
     }
 
-    // Number of threads to use.
-    int num_threads;
+    // How many threads to pin where.
+    vector<uint32_t> thread_pinnings;
 
     // Distribution of the tasks.
     int task_dist;
@@ -326,12 +331,32 @@ class BagOfTasks {
 
 
 
+int stick_this_thread_to_cpu(uint32_t core_id) {
+   uint32_t num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+
+   if (core_id >= num_cores)
+      return EINVAL;
+
+   cpu_set_t cpuset;
+   CPU_ZERO(&cpuset);
+   CPU_SET(core_id, &cpuset);
+
+   pthread_t current_thread = pthread_self();    
+
+   return pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
+}
+
+
+
 // Data struct to pass to each thread.
 template <typename in1, typename in2, typename out>
 struct thread_data
 {
   // Id of this thread.
   int threadId;
+
+  // CPU for thread to run on.
+  uint32_t cpu_affinity;
 
   // Starting chunk size of tasks to retreive.
   uint32_t chunk_size;
@@ -355,6 +380,8 @@ void *mapArrayThread(void *threadarg)
   // Pointer to store personal data
   struct thread_data<in1, in2, out> *my_data;
   my_data = (struct thread_data<in1, in2, out> *) threadarg;
+
+  stick_this_thread_to_cpu(my_data->cpu_affinity);
 
   // Initialise metrics
   Ms(metrics_thread_start(my_data->threadId));
@@ -427,24 +454,25 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   Ms(print("Metrics on!\n\n"));
 
   // Initialise metrics.
-  Ms(metrics_init(params.num_threads, output_filename + ".csv"));
+  Ms(metrics_init(params.thread_pinnings.size(), output_filename + ".csv"));
 
   // Print the number of processors we can detect.
-  print("[Main] Found ", params.num_threads, " processors\n");
+  print("[Main] Found ", params.thread_pinnings.size(), " processors\n");
 
   BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
-  struct thread_data<in1, in2, out> thread_data_array[params.num_threads];
+  struct thread_data<in1, in2, out> thread_data_array[params.thread_pinnings.size()];
 
   // Calculate info for data partitioning.
-  vector<uint32_t> schedules = calc_schedules(input1.size(), params.num_threads, params.schedule);
+  vector<uint32_t> schedules = calc_schedules(input1.size(), params.thread_pinnings.size(), params.schedule);
 
   // Set thread data values.
-  for (long i = 0; i < params.num_threads; i++)
+  for (long i = 0; i < params.thread_pinnings.size(); i++)
   {
-    thread_data_array[i].threadId    = i;
-    thread_data_array[i].chunk_size  = schedules[i];
-    thread_data_array[i].bot         = &bot;
+    thread_data_array[i].threadId     = i;
+    thread_data_array[i].chunk_size   = schedules[i];
+    thread_data_array[i].bot          = &bot;
+    thread_data_array[i].cpu_affinity = params.thread_pinnings[i];
 
     if (params.schedule == Tapered)
     {
@@ -453,7 +481,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   }
 
   // Variables for creating and managing threads.
-  pthread_t threads[params.num_threads];
+  pthread_t threads[params.thread_pinnings.size()];
   pthread_attr_t attr;
   int rc;
 
@@ -462,7 +490,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   // Create all our needed threads.
-  for (long i = 0; i < params.num_threads; i++)
+  for (long i = 0; i < params.thread_pinnings.size(); i++)
   {
     print("[Main] Creating thread ", i , "\n");
 
@@ -489,7 +517,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // Free attribute and join with the other threads.
   pthread_attr_destroy(&attr);
 
-  for (long i = 0; i < params.num_threads; i++)
+  for (long i = 0; i < params.thread_pinnings.size(); i++)
   {
     rc = pthread_join(threads[i], NULL);
 
