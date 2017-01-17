@@ -9,6 +9,10 @@
 #include <cxxabi.h>         // Demangling typenames (gcc only)
 #include <boost/thread.hpp> // boost::thread::hardware_concurrency();
 
+#include <zmq.hpp>
+#include <string>
+#include <iostream>
+
 using namespace std;
 
 #ifdef METRICS
@@ -467,7 +471,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   vector<uint32_t> schedules = calc_schedules(input1.size(), params.thread_pinnings.size(), params.schedule);
 
   // Set thread data values.
-  for (long i = 0; i < params.thread_pinnings.size(); i++)
+  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
   {
     thread_data_array[i].threadId     = i;
     thread_data_array[i].chunk_size   = schedules[i];
@@ -490,7 +494,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
   // Create all our needed threads.
-  for (long i = 0; i < params.thread_pinnings.size(); i++)
+  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
   {
     print("[Main] Creating thread ", i , "\n");
 
@@ -507,6 +511,28 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
 
 
+
+
+
+  //  Prepare our context and socket
+  zmq::context_t context (1);
+  zmq::socket_t socket (context, ZMQ_REQ);
+
+  std::cout << "Connecting to hello world server…" << std::endl;
+  socket.connect ("tcp://localhost:5555");
+
+  //  Do 10 requests, waiting each time for a response
+  for (int request_nbr = 0; request_nbr != 10; request_nbr++) {
+    zmq::message_t request (5);
+    memcpy (request.data (), "Hello", 5);
+    std::cout << "Sending Hello " << request_nbr << "…" << std::endl;
+    socket.send (request);
+
+    //  Get the reply.
+    zmq::message_t reply;
+    socket.recv (&reply);
+    std::cout << "Received World " << request_nbr << std::endl;
+  }
   
 
 
@@ -517,7 +543,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // Free attribute and join with the other threads.
   pthread_attr_destroy(&attr);
 
-  for (long i = 0; i < params.thread_pinnings.size(); i++)
+  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
   {
     rc = pthread_join(threads[i], NULL);
 
