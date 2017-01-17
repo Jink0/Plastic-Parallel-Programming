@@ -9,26 +9,37 @@
 
 #include <unistd.h>
 
+using namespace std;
+using namespace zmq;
+
 int main () {
     //  Prepare our context and socket
-    zmq::context_t context (1);
-    zmq::socket_t socket (context, ZMQ_PAIR);
+    context_t context (1);
+    socket_t socket (context, ZMQ_REP);
     socket.bind ("tcp://*:5555");
 
-    while (true) {
-        zmq::message_t request;
+    uint32_t socket_start_number = 5556;
 
-        //  Wait for next request from client
-        socket.recv (&request);
-        std::cout << "Received Hello" << std::endl;
+    while (true) {
+        message_t msg;
+
+        //  Wait for next message from client
+        socket.recv (&msg);
+
+        uint32_t app_pid = *(static_cast<uint32_t*>(msg.data()));
+
+        cout << "Received socket request from PID " << app_pid << endl;
 
         //  Do some 'work'
-        sleep(1);
+        sleep(2);
 
-        //  Send reply back to client
-        zmq::message_t reply (5);
-        memcpy (reply.data (), "World", 5);
-        socket.send (reply);
+        //  Send reply back to client.
+        message_t reply (sizeof(socket_start_number));
+        memcpy(reply.data(), &socket_start_number, sizeof(socket_start_number));
+        cout << "Sending PID " << app_pid << " socket number " << socket_start_number << "..." << endl;
+        socket.send(reply);
+
+        socket_start_number++;
     }
     return 0;
 }

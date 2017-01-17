@@ -508,33 +508,38 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     }
   }
 
+  // Get our PID to send to the controller.
+  uint32_t pid = pthread_self();
 
-
-
-
-
+  using namespace zmq;
 
   //  Prepare our context and socket
-  zmq::context_t context (1);
-  zmq::socket_t socket (context, ZMQ_PAIR);
+  context_t context(1);
+  socket_t socket(context, ZMQ_REQ);
 
-  std::cout << "Connecting to hello world server…" << std::endl;
-  socket.connect ("tcp://localhost:5555");
+  print("Requesting socket from controller...\n");
+  socket.connect("tcp://localhost:5555");
 
-  //  Do 10 requests, waiting each time for a response
-  for (int request_nbr = 0; request_nbr != 10; request_nbr++) {
-    zmq::message_t request (5);
-    memcpy (request.data (), "Hello", 5);
-    std::cout << "Sending Hello " << request_nbr << "…" << std::endl;
-    socket.send (request);
+  message_t msg (sizeof(pid));
+  memcpy(msg.data(), &pid, sizeof(pid));
+  print("Sending PID ", pid, "...\n");
+  socket.send(msg);
 
-    //  Get the reply.
-    zmq::message_t reply;
-    socket.recv (&reply);
-    std::cout << "Received World " << request_nbr << std::endl;
-  }
+  //  Get the reply.
+  message_t reply;
+  socket.recv(&reply);
+
+  uint32_t socket_num = *(static_cast<uint32_t*>(reply.data()));
+
+  print("Received new socket number ", socket_num, "\n");
 
   socket.close();
+
+  print("Connecting to controller on socket number ", socket_num, "\n");
+  socket.connect("tcp://localhost:" + socket_num);
+
+
+  sleep(5);
   
 
 
