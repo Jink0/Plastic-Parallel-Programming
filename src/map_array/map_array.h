@@ -516,7 +516,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   //  Prepare our context and socket
   zmq::context_t context (1);
-  zmq::socket_t socket (context, ZMQ_REQ);
+  zmq::socket_t socket (context, ZMQ_PAIR);
 
   std::cout << "Connecting to hello world server…" << std::endl;
   socket.connect ("tcp://localhost:5555");
@@ -533,6 +533,8 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     socket.recv (&reply);
     std::cout << "Received World " << request_nbr << std::endl;
   }
+
+  socket.close();
   
 
 

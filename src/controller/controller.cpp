@@ -6,18 +6,13 @@
 #include <zmq.hpp>
 #include <string>
 #include <iostream>
-#ifndef _WIN32
-#include <unistd.h>
-#else
-#include <windows.h>
 
-#define sleep(n)    Sleep(n)
-#endif
+#include <unistd.h>
 
 int main () {
     //  Prepare our context and socket
     zmq::context_t context (1);
-    zmq::socket_t socket (context, ZMQ_REP);
+    zmq::socket_t socket (context, ZMQ_PAIR);
     socket.bind ("tcp://*:5555");
 
     while (true) {
