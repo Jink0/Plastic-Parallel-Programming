@@ -9,6 +9,10 @@
 
 #include <unistd.h>
 
+#include <boost/thread.hpp> // boost::thread::hardware_concurrency();
+
+#include <comms.h>
+
 using namespace std;
 using namespace zmq;
 
@@ -18,28 +22,38 @@ int main () {
     socket_t socket (context, ZMQ_REP);
     socket.bind ("tcp://*:5555");
 
-    uint32_t socket_start_number = 5556;
-
     while (true) {
         message_t msg;
 
         //  Wait for next message from client
         socket.recv (&msg);
 
-        uint32_t app_pid = *(static_cast<uint32_t*>(msg.data()));
+        struct message syn = *(static_cast<struct message*>(msg.data()));
 
-        cout << "Received socket request from PID " << app_pid << endl;
+        switch (syn.header) {
+            case APP_SYN:
+                cout << "Received SYN from PID " << syn.pid << endl;
 
-        //  Do some 'work'
-        sleep(2);
+                struct message ack;
 
-        //  Send reply back to client.
-        message_t reply (sizeof(socket_start_number));
-        memcpy(reply.data(), &socket_start_number, sizeof(socket_start_number));
-        cout << "Sending PID " << app_pid << " socket number " << socket_start_number << "..." << endl;
-        socket.send(reply);
+                ack.header = CON_ACK;
+                ack.settings.schedule = Tapered;
 
-        socket_start_number++;
+                uint32_t num_threads = boost::thread::hardware_concurrency();
+
+                for (uint32_t i = 0; i < num_threads; i++)
+                {
+                    ack.settings.thread_pinnings.push_back(i);
+                }
+
+                //  Send ACK back to client.
+                message_t reply (sizeof(ack));
+                memcpy(reply.data(), &ack, sizeof(ack));
+                cout << "Sending ACK to PID    " << syn.pid << endl;
+                socket.send(reply);
+
+                break;
+        }
     }
     return 0;
 }

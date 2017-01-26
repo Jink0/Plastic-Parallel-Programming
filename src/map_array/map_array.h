@@ -13,6 +13,8 @@
 #include <string>
 #include <iostream>
 
+#include <comms.h>
+
 using namespace std;
 
 #ifdef METRICS
@@ -77,16 +79,6 @@ print(const Args& ...args)
     lock_guard<mutex> _(get_cout_mutex());
     return print(cout, args...);
 }
-
-
-
-/* Different possible schedules Static             - Give each thread equal portions.
-                                Dynamic_chunks     - Threads dynamically retrive a chunk of the tasks when they can.
-                                Dynamic_individual - Threads retrieve a single task when they can.
-                                Tapered            - Chunk size starts off large and decreases to better handle load 
-                                                     imbalance between iterations.
-                                Auto               - Automatically try to figure out the best schedule. */
-enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
 
 
 
@@ -520,32 +512,33 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   print("Requesting socket from controller...\n");
   socket.connect("tcp://localhost:5555");
 
-  message_t msg (sizeof(pid));
-  memcpy(msg.data(), &pid, sizeof(pid));
-  print("Sending PID ", pid, "...\n");
+  struct message syn;
+
+  syn.header = APP_SYN;
+  syn.pid    = pid;
+
+  message_t msg (sizeof(syn));
+  memcpy(msg.data(), &syn, sizeof(syn));
+
+  print("Sending SYN with PID ", pid, "...\n");
   socket.send(msg);
 
   //  Get the reply.
   message_t reply;
   socket.recv(&reply);
 
-  uint32_t socket_num = *(static_cast<uint32_t*>(reply.data()));
+  //struct message ack = *(static_cast<struct message*>(reply.data()));
 
-  print("Received new socket number ", socket_num, "\n");
-
-  socket.close();
-
-  print("Connecting to controller on socket number ", socket_num, "\n");
-  socket.connect("tcp://localhost:" + socket_num);
+  print("Received ACK, processing whilst awaiting instructions\n");
 
 
-  sleep(5);
+
   
 
 
 
 
-
+  socket.close();
 
   // Free attribute and join with the other threads.
   pthread_attr_destroy(&attr);
