@@ -17,9 +17,17 @@ using namespace std;
                                 Auto               - Automatically try to figure out the best schedule. */
 enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
 
+string Schedules[5] {
+	"Static",
+	"Dynamic_chunks", 
+	"Dynamic_individual", 
+	"Tapered", 
+	"Auto"
+};
+
 struct settings {
 	// How many threads to pin where.
-    vector<uint32_t> thread_pinnings;
+    //vector<uint32_t> thread_pinnings;
 
     // Schedule to use.
     Schedule schedule;

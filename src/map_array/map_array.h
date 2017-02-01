@@ -258,6 +258,8 @@ class BagOfTasks {
     // Destructor
     ~BagOfTasks() {};
 
+    bool threadTerminateVar;
+
     // Overloads << operator for easy printing with streams.
     friend ostream& operator<< (ostream &outS, BagOfTasks<in1, in2, out> &bot)
     {
@@ -391,7 +393,7 @@ void *mapArrayThread(void *threadarg)
   uint32_t tapered_chunk_size = my_data->chunk_size / 2;
 
   // While we have tasks to do;
-  while (my_tasks.in1End - my_tasks.in1Begin > 0)
+  while (my_tasks.in1End - my_tasks.in1Begin > 0 )
   {
     // Run between iterator ranges, stepping through input1 and output vectors
     for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
@@ -404,23 +406,26 @@ void *mapArrayThread(void *threadarg)
       Ms(metrics_finishing_work(my_data->threadId));
     }
 
-    // Get more tasks!
-    if (my_data->tapered_schedule)
+    // If we should still be running (no new schedule), get more tasks!
+    if ((*my_data->bot).threadTerminateVar == false) //my_data->threadId
     {
-      my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
-
-      print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
-
-      if (tapered_chunk_size > 1)
+      if (my_data->tapered_schedule)
       {
-        tapered_chunk_size = tapered_chunk_size / 2;
-      }
-    }
-    else
-    {
-      my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+        my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
 
-      print("[Thread ", my_data->threadId, "] Chunk size: ", my_data->chunk_size, "\n");
+        print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
+
+        if (tapered_chunk_size > 1)
+        {
+          tapered_chunk_size = tapered_chunk_size / 2;
+        }
+      }
+      else
+      {
+        my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+
+        print("[Thread ", my_data->threadId, "] Chunk size: ", my_data->chunk_size, "\n");
+      }
     }
 
   }
@@ -456,6 +461,8 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   print("[Main] Found ", params.thread_pinnings.size(), " processors\n");
 
   BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
+
+  bot.threadTerminateVar = false;
 
   struct thread_data<in1, in2, out> thread_data_array[params.thread_pinnings.size()];
 
@@ -514,8 +521,9 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   struct message syn;
 
-  syn.header = APP_SYN;
-  syn.pid    = pid;
+  syn.header            = APP_SYN;
+  syn.pid               = pid;
+  syn.settings.schedule = params.schedule;
 
   message_t msg (sizeof(syn));
   memcpy(msg.data(), &syn, sizeof(syn));
@@ -523,15 +531,86 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   print("Sending SYN with PID ", pid, "...\n");
   socket.send(msg);
 
-  //  Get the reply.
+  // Get the reply.
   message_t reply;
   socket.recv(&reply);
 
-  //struct message ack = *(static_cast<struct message*>(reply.data()));
+  struct message ack = *(static_cast<struct message*>(reply.data()));
 
-  print("Received ACK, processing whilst awaiting instructions\n");
+  print("Received ACK from controller!\n");
 
+  if (ack.settings.schedule != params.schedule) {
+    print("New schedule received! Changing to ", Schedules[ack.settings.schedule], "\n");
 
+    bot.threadTerminateVar = true;
+
+    // Free attribute and join with the other threads.
+    pthread_attr_destroy(&attr);
+
+    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+    {
+      rc = pthread_join(threads[i], NULL);
+
+      if (rc)
+      {
+        // If we couldn't create a new thread, throw an error and exit.
+        print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
+        exit(-1);
+      }
+
+      print("[Main] Joined with thread ", i, "\n");
+    }
+
+    // Update parameters
+    params.schedule = ack.settings.schedule;
+
+    // Restart map_array
+    
+    // Calculate info for data partitioning.
+    schedules = calc_schedules(input1.size(), params.thread_pinnings.size(), params.schedule);
+
+    // Set thread data values.
+    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+    {
+      thread_data_array[i].threadId     = i;
+      thread_data_array[i].chunk_size   = schedules[i];
+      thread_data_array[i].bot          = &bot;
+      thread_data_array[i].cpu_affinity = params.thread_pinnings[i];
+
+      if (params.schedule == Tapered)
+      {
+        thread_data_array[i].tapered_schedule = true;
+      }
+    }
+
+    // Variables for creating and managing threads.
+    pthread_t threads[params.thread_pinnings.size()];
+    pthread_attr_t attr;
+    int rc;
+
+    // Initialize and set thread detached attribute to joinable.
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+    // Create all our needed threads.
+    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+    {
+      print("[Main] Creating thread ", i , "\n");
+
+      rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_array[i]);
+
+      if (rc)
+      {
+        // If we couldn't create a new thread, throw an error and exit.
+        print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+        exit(-1);
+      }
+    }
+  }
+
+  //print("SLEEPING\n");
+
+  //sleep(20);
 
   
 

@@ -32,24 +32,30 @@ int main () {
 
         switch (syn.header) {
             case APP_SYN:
-                cout << "Received SYN from PID " << syn.pid << endl;
+                cout << "Received SYN from PID:  " << syn.pid << endl;
+                cout << "   With schedule:       " << Schedules[syn.settings.schedule] << endl;
+                cout << "   And thread pinnings: " << endl << endl;
 
                 struct message ack;
 
-                ack.header = CON_ACK;
-                ack.settings.schedule = Tapered;
+                ack.header            = CON_ACK;
+                ack.settings.schedule = Static;
 
-                uint32_t num_threads = boost::thread::hardware_concurrency();
+                //uint32_t num_threads = boost::thread::hardware_concurrency();
 
-                for (uint32_t i = 0; i < num_threads; i++)
-                {
-                    ack.settings.thread_pinnings.push_back(i);
-                }
+                //for (uint32_t i = 0; i < num_threads; i++)
+                //{
+                //    ack.settings.thread_pinnings.push_back(i);
+                //}
 
                 //  Send ACK back to client.
                 message_t reply (sizeof(ack));
                 memcpy(reply.data(), &ack, sizeof(ack));
-                cout << "Sending ACK to PID    " << syn.pid << endl;
+
+                cout << "Sending ACK to PID:     " << syn.pid << endl;
+                cout << "   With schedule:       " << Schedules[ack.settings.schedule] << endl;
+                cout << "   And thread pinnings: " << endl << endl;
+
                 socket.send(reply);
 
                 break;
