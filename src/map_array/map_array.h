@@ -278,6 +278,10 @@ class BagOfTasks {
 
     uint32_t numTasksRemaining()
     {
+      // Get mutex. 
+      lock_guard<mutex> lock(m);
+
+      // Return value.
       return in1End - in1Begin;
     }
 
@@ -475,12 +479,14 @@ void *mapArrayThread(void *threadarg)
 
 
 
-void join_with_threads(pthread_t threads[], uint32_t threads_size, uint32_t num_threads_to_join) {
+void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join) {
   int rc;
   
   for (uint32_t i = 0; i < num_threads_to_join; i++)
   {
-    rc = pthread_join(threads[threads_size - i - 1], NULL);
+    rc = pthread_join(threads.back(), NULL);
+
+    threads.pop_back();
 
     if (rc)
     {
@@ -489,7 +495,7 @@ void join_with_threads(pthread_t threads[], uint32_t threads_size, uint32_t num_
       exit(-1);
     }
 
-    print("[Main] Joined with thread ", threads_size - i - 1, "\n");
+    print("[Main] Joined with thread ", threads.size() - i - 1, "\n");
   }
 }
 
@@ -524,21 +530,22 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   // Calculate info for data partitioning.
   deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
-  // Initialize and set thread detached attribute to joinable.
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
   // Variables for creating and managing threads.
-  int rc;
-  pthread_t threads[params.thread_pinnings.size()];
+  deque<pthread_t> threads(params.thread_pinnings.size());
 
   // Create all our needed threads.
   for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
   {
     print("[Main] Creating thread ", i , "\n");
 
-    rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+    int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+
+    // Create thread name.
+    char thread_name[16];
+    sprintf(thread_name, "MA Thread %u", i);
+
+    // Set thread name to something recognisable.
+    pthread_setname_np(threads.at(i), thread_name);
 
     if (rc)
     {
@@ -587,7 +594,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     bot.threadTerminateVar = true;
 
     // Joining with threads.
-    join_with_threads(threads, params.thread_pinnings.size(), params.thread_pinnings.size());
+    join_with_threads(threads, params.thread_pinnings.size());
 
     // Update parameters.
     params.schedule = ack.settings.schedule;
@@ -598,15 +605,16 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     // Recalculate info for data partitioning.
     thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
-    // Variable for creating and managing threads.
-    pthread_t threads[params.thread_pinnings.size()];
+    // Reset thread ids.
+    threads.clear();
+    threads.resize(params.thread_pinnings.size());
 
     // Create all our needed threads.
     for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
     {
       print("[Main] Creating thread ", i , "\n");
 
-      rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+      int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
 
       if (rc)
       {
@@ -619,7 +627,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   socket.close();
 
-  join_with_threads(threads, params.thread_pinnings.size(), params.thread_pinnings.size());
+  join_with_threads(threads, params.thread_pinnings.size());
 
   Ms(metrics_finalise());
 
