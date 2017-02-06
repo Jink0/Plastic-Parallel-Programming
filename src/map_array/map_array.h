@@ -3,6 +3,7 @@
 
 #include <iostream>         // cout
 #include <vector>           // Vectors
+#include <deque>            // Double queues
 #include <mutex>            // mutexes
 #include <pthread.h>        // Thread and mutex functions
 #include <unistd.h>         // sleep()
@@ -275,6 +276,11 @@ class BagOfTasks {
                   << "Number of tasks - " << bot.in1End - bot.in1Begin << endl << endl;
     };
 
+    uint32_t numTasksRemaining()
+    {
+      return in1End - in1Begin;
+    }
+
     // Returns tasks of the specified number or less. 
     tasks<in1, in2, out> getTasks(uint32_t num)
     {
@@ -371,6 +377,38 @@ struct thread_data
 
 
 
+template <typename in1, typename in2, typename out>
+deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, parameters params) 
+{
+  // Calculate info for data partitioning.
+  vector<uint32_t> schedules = calc_schedules(input1_size, params.thread_pinnings.size(), params.schedule);
+
+  // Output thread data
+  deque<thread_data<in1, in2, out>> output;
+
+  // Set thread data values.
+  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+  {
+    struct thread_data<in1, in2, out> iter_data;
+
+    iter_data.threadId     = i;
+    iter_data.chunk_size   = schedules[i];
+    iter_data.bot          = &bot;
+    iter_data.cpu_affinity = params.thread_pinnings[i];
+
+    if (params.schedule == Tapered)
+    {
+      iter_data.tapered_schedule = true;
+    }
+
+    output.push_front(iter_data);
+  }
+
+  return output;
+}
+
+
+
 // Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
 void *mapArrayThread(void *threadarg)
@@ -437,6 +475,25 @@ void *mapArrayThread(void *threadarg)
 
 
 
+void join_with_threads(pthread_t threads[], uint32_t threads_size, uint32_t num_threads_to_join) {
+  int rc;
+  
+  for (uint32_t i = 0; i < num_threads_to_join; i++)
+  {
+    rc = pthread_join(threads[threads_size - i - 1], NULL);
+
+    if (rc)
+    {
+      // If we couldn't create a new thread, throw an error and exit.
+      print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
+      exit(-1);
+    }
+
+    print("[Main] Joined with thread ", threads_size - i - 1, "\n");
+  }
+}
+
+
 /*
  *  Implementation of the mapArray parallel programming pattern. Currently uses all available cores and splits tasks 
  *  evenly. If the output vector is not big enough, it will be resized.
@@ -464,40 +521,24 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   bot.threadTerminateVar = false;
 
-  struct thread_data<in1, in2, out> thread_data_array[params.thread_pinnings.size()];
-
   // Calculate info for data partitioning.
-  vector<uint32_t> schedules = calc_schedules(input1.size(), params.thread_pinnings.size(), params.schedule);
-
-  // Set thread data values.
-  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-  {
-    thread_data_array[i].threadId     = i;
-    thread_data_array[i].chunk_size   = schedules[i];
-    thread_data_array[i].bot          = &bot;
-    thread_data_array[i].cpu_affinity = params.thread_pinnings[i];
-
-    if (params.schedule == Tapered)
-    {
-      thread_data_array[i].tapered_schedule = true;
-    }
-  }
-
-  // Variables for creating and managing threads.
-  pthread_t threads[params.thread_pinnings.size()];
-  pthread_attr_t attr;
-  int rc;
+  deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
   // Initialize and set thread detached attribute to joinable.
+  pthread_attr_t attr;
   pthread_attr_init(&attr);
   pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+  // Variables for creating and managing threads.
+  int rc;
+  pthread_t threads[params.thread_pinnings.size()];
 
   // Create all our needed threads.
   for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
   {
     print("[Main] Creating thread ", i , "\n");
 
-    rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_array[i]);
+    rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
 
     if (rc)
     {
@@ -542,62 +583,30 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   if (ack.settings.schedule != params.schedule) {
     print("New schedule received! Changing to ", Schedules[ack.settings.schedule], "\n");
 
+    // Terminating threads.
     bot.threadTerminateVar = true;
 
-    // Free attribute and join with the other threads.
-    pthread_attr_destroy(&attr);
+    // Joining with threads.
+    join_with_threads(threads, params.thread_pinnings.size(), params.thread_pinnings.size());
 
-    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-    {
-      rc = pthread_join(threads[i], NULL);
-
-      if (rc)
-      {
-        // If we couldn't create a new thread, throw an error and exit.
-        print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
-        exit(-1);
-      }
-
-      print("[Main] Joined with thread ", i, "\n");
-    }
-
-    // Update parameters
+    // Update parameters.
     params.schedule = ack.settings.schedule;
+    // UPDATE THREAD PINNINGS HERE
 
-    // Restart map_array
+    // Restart map_array:
     
-    // Calculate info for data partitioning.
-    schedules = calc_schedules(input1.size(), params.thread_pinnings.size(), params.schedule);
+    // Recalculate info for data partitioning.
+    thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
-    // Set thread data values.
-    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-    {
-      thread_data_array[i].threadId     = i;
-      thread_data_array[i].chunk_size   = schedules[i];
-      thread_data_array[i].bot          = &bot;
-      thread_data_array[i].cpu_affinity = params.thread_pinnings[i];
-
-      if (params.schedule == Tapered)
-      {
-        thread_data_array[i].tapered_schedule = true;
-      }
-    }
-
-    // Variables for creating and managing threads.
+    // Variable for creating and managing threads.
     pthread_t threads[params.thread_pinnings.size()];
-    pthread_attr_t attr;
-    int rc;
-
-    // Initialize and set thread detached attribute to joinable.
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     // Create all our needed threads.
     for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
     {
       print("[Main] Creating thread ", i , "\n");
 
-      rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_array[i]);
+      rc = pthread_create(&threads[i], &attr, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
 
       if (rc)
       {
@@ -608,33 +617,9 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
     }
   }
 
-  //print("SLEEPING\n");
-
-  //sleep(20);
-
-  
-
-
-
-
   socket.close();
 
-  // Free attribute and join with the other threads.
-  pthread_attr_destroy(&attr);
-
-  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-  {
-    rc = pthread_join(threads[i], NULL);
-
-    if (rc)
-    {
-      // If we couldn't create a new thread, throw an error and exit.
-      print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
-      exit(-1);
-    }
-
-    print("[Main] Joined with thread ", i, "\n");
-  }
+  join_with_threads(threads, params.thread_pinnings.size(), params.thread_pinnings.size());
 
   Ms(metrics_finalise());
 
