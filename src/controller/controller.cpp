@@ -16,6 +16,38 @@
 using namespace std;
 using namespace zmq;
 
+enum Message_type {
+    Sending, Receving
+};
+
+void print_messages(Message_type type, struct message mess) {
+    switch (type) {
+        case Sending:
+            cout << "Sending ACK to PID:     ";
+            break;
+
+        case Receving:
+            cout << "Received SYN from PID:  ";
+            break;
+
+        default:
+            break;
+    }
+
+    cout << mess.pid << endl;
+    cout << "   With schedule:       " << Schedules[mess.settings.schedule] << endl;
+    cout << "   And thread pinnings: ";
+
+    uint32_t i_w = 0;
+
+    while (mess.settings.thread_pinnings[i_w] != -1) {
+        cout << mess.settings.thread_pinnings[i_w] << ' ';
+        i_w++;
+    }
+
+    cout << endl << endl;
+}
+
 int main () {
     //  Prepare our context and socket
     context_t context (1);
@@ -32,29 +64,28 @@ int main () {
 
         switch (syn.header) {
             case APP_SYN:
-                cout << "Received SYN from PID:  " << syn.pid << endl;
-                cout << "   With schedule:       " << Schedules[syn.settings.schedule] << endl;
-                cout << "   And thread pinnings: " << endl << endl;
-
+                print_messages(Receving, syn);
+                    
                 struct message ack;
 
                 ack.header            = CON_ACK;
+                ack.pid               = syn.pid;
                 ack.settings.schedule = Static;
 
-                //uint32_t num_threads = boost::thread::hardware_concurrency();
+                fill_n(ack.settings.thread_pinnings, MAX_NUM_THREADS, -1);
 
-                //for (uint32_t i = 0; i < num_threads; i++)
-                //{
-                //    ack.settings.thread_pinnings.push_back(i);
-                //}
+                uint32_t num_threads = boost::thread::hardware_concurrency();
+
+                for (uint32_t i = 0; i < num_threads; i++)
+                {
+                    ack.settings.thread_pinnings[i] = i;
+                }
 
                 //  Send ACK back to client.
                 message_t reply (sizeof(ack));
                 memcpy(reply.data(), &ack, sizeof(ack));
 
-                cout << "Sending ACK to PID:     " << syn.pid << endl;
-                cout << "   With schedule:       " << Schedules[ack.settings.schedule] << endl;
-                cout << "   And thread pinnings: " << endl << endl;
+                print_messages(Sending, ack);
 
                 socket.send(reply);
 

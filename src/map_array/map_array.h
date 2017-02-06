@@ -569,9 +569,12 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   struct message syn;
 
-  syn.header            = APP_SYN;
-  syn.pid               = pid;
-  syn.settings.schedule = params.schedule;
+  syn.header                   = APP_SYN;
+  syn.pid                      = pid;
+  syn.settings.schedule        = params.schedule;
+
+  fill_n(syn.settings.thread_pinnings, MAX_NUM_THREADS, -1);
+  copy(params.thread_pinnings.begin(), params.thread_pinnings.end(), syn.settings.thread_pinnings);
 
   message_t msg (sizeof(syn));
   memcpy(msg.data(), &syn, sizeof(syn));
@@ -598,7 +601,14 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
     // Update parameters.
     params.schedule = ack.settings.schedule;
-    // UPDATE THREAD PINNINGS HERE
+    params.thread_pinnings.clear();
+
+    uint32_t i_w = 0;
+
+    while (ack.settings.thread_pinnings[i_w] != -1) {
+        params.thread_pinnings.push_back(ack.settings.thread_pinnings[i_w]);
+        i_w++;
+    }
 
     // Restart map_array:
     

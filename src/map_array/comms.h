@@ -5,7 +5,9 @@
 
 using namespace std;
 
-#define DEFAULT_PORT 6666
+#define DEFAULT_PORT 5555
+
+#define MAX_NUM_THREADS 128
 
 // Structures that are used to pass messages between the controller and applications.
 
@@ -27,7 +29,7 @@ string Schedules[5] {
 
 struct settings {
 	// How many threads to pin where.
-    //vector<uint32_t> thread_pinnings;
+    int thread_pinnings[MAX_NUM_THREADS];
 
     // Schedule to use.
     Schedule schedule;
