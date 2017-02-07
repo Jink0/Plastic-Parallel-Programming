@@ -1,8 +1,6 @@
 #ifndef COMMS_H
 #define COMMS_H
 
-#include <vector> // Vectors
-
 using namespace std;
 
 #define DEFAULT_PORT 5555

@@ -398,7 +398,7 @@ int main(int argc, char *argv[])
         print("\n\n");
     }
 
-    sleep(5);
+    sleep(10);
 
     return 0;
 }

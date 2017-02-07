@@ -515,7 +515,7 @@ template <typename in1, typename in2, typename out>
 void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, 
                string output_filename = "", parameters params = parameters())
 {
-  Ms(print("Metrics on!\n\n"));
+  Ms(print("[Main] Metrics on!\n\n"));
 
   // Initialise metrics.
   Ms(metrics_init(params.thread_pinnings.size(), output_filename + ".csv"));
@@ -564,7 +564,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   context_t context(1);
   socket_t socket(context, ZMQ_REQ);
 
-  print("Requesting socket from controller...\n");
+  print("[Main] Requesting socket from controller...\n");
   socket.connect("tcp://localhost:5555");
 
   struct message syn;
