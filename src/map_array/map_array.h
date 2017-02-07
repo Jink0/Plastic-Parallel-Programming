@@ -579,7 +579,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   message_t msg (sizeof(syn));
   memcpy(msg.data(), &syn, sizeof(syn));
 
-  print("Sending SYN with PID ", pid, "...\n");
+  print("[Main] Sending SYN with PID ", pid, "...\n");
   socket.send(msg);
 
   // Get the reply.
@@ -588,27 +588,40 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   struct message ack = *(static_cast<struct message*>(reply.data()));
 
-  print("Received ACK from controller!\n");
+  print("[Main] Received ACK from controller!\n");
 
-  if (ack.settings.schedule != params.schedule) {
-    print("New schedule received! Changing to ", Schedules[ack.settings.schedule], "\n");
-
+  if (ack.settings.schedule != params.schedule) 
+  {
     // Terminating threads.
     bot.threadTerminateVar = true;
 
     // Joining with threads.
     join_with_threads(threads, params.thread_pinnings.size());
 
+    // Reset terminate variable.
+    bot.threadTerminateVar = false;
+
     // Update parameters.
     params.schedule = ack.settings.schedule;
+
+    // Clear previous thread pinnings.
     params.thread_pinnings.clear();
 
     uint32_t i_w = 0;
+    stringstream thread_pinnings_stringstream;
 
-    while (ack.settings.thread_pinnings[i_w] != -1) {
+    while (ack.settings.thread_pinnings[i_w] != -1) 
+    {
+        // Record and update thread pinnings.
+        thread_pinnings_stringstream << ack.settings.thread_pinnings[i_w] << " ";
         params.thread_pinnings.push_back(ack.settings.thread_pinnings[i_w]);
         i_w++;
     }
+
+    print("\n[Main] New schedule received!",
+          "\n[Main] Changing schedule to: ", Schedules[ack.settings.schedule], 
+          "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
+          "\n\n");
 
     // Restart map_array:
     
