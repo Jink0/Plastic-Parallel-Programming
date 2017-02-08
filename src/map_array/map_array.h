@@ -98,7 +98,7 @@ struct parameters
     }
 
     // How many threads to pin where.
-    vector<uint32_t> thread_pinnings;
+    deque<int> thread_pinnings;
 
     // Distribution of the tasks.
     int task_dist;
@@ -122,7 +122,7 @@ string type_name()
     // Attempt to demangle 
     char *dmName = abi::__cxa_demangle(mName.c_str(), NULL, NULL, &status);
 
-    // If successful,
+    // If successful;
     if(status == 0) 
     {
         // Record name.
@@ -137,9 +137,9 @@ string type_name()
 
 
 
-vector<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
+deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
 {
-  vector<uint32_t> output(num_threads);
+  deque<uint32_t> output(num_threads);
 
   switch (sched)
   {
@@ -216,38 +216,46 @@ vector<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedu
 
 
 
+// Thread control enum. threads either run (execute), change strategies (update), or stop (terminte).
+enum Thread_Control {Execute, Update, Terminate};
+
+
+
 // Structure to contain a group of tasks.
 template <typename in1, typename in2, typename out>
 struct tasks
 {
   // Start of input.
-  typename vector<in1>::iterator in1Begin;
+  typename deque<in1>::iterator in1Begin;
 
   // End of input.
-  typename vector<in1>::iterator in1End;
+  typename deque<in1>::iterator in1End;
 
-  // Pointer to shared input2 vector.
-  vector<in2>* input2;
+  // Pointer to shared input2 deque.
+  deque<in2>* input2;
 
   // User function pointer.
-  out (*userFunction) (in1, vector<in2>);
+  out (*userFunction) (in1, deque<in2>);
 
   // Start of output.
-  typename vector<out>::iterator outBegin;
+  typename deque<out>::iterator outBegin;
 };
 
 
 
-// Bag of tasks class.
+// Bag of tasks class. Also contains shard variables for communicating with worker threads.
 template <class in1, class in2, class out>
 class BagOfTasks {
   public:
+    // Variables to control if threads terminate.
+    deque<Thread_Control> thread_control;
+
     // Constructor
-    BagOfTasks(typename vector<in1>::iterator in1B, 
-               typename vector<in1>::iterator in1E, 
-               vector<in2>* in2p, 
-               out (*userF) (in1, vector<in2>), 
-               typename vector<out>::iterator outB) :
+    BagOfTasks(typename deque<in1>::iterator in1B, 
+               typename deque<in1>::iterator in1E, 
+               deque<in2>* in2p, 
+               out (*userF) (in1, deque<in2>), 
+               typename deque<out>::iterator outB) :
               
                in1Begin(in1B),
                in1End(in1E),
@@ -258,8 +266,6 @@ class BagOfTasks {
 
     // Destructor
     ~BagOfTasks() {};
-
-    bool threadTerminateVar;
 
     // Overloads << operator for easy printing with streams.
     friend ostream& operator<< (ostream &outS, BagOfTasks<in1, in2, out> &bot)
@@ -292,7 +298,7 @@ class BagOfTasks {
       lock_guard<mutex> lock(m);
 
       // Record where we should start in our task list.
-      typename vector<in1>::iterator tasksBegin = in1Begin;
+      typename deque<in1>::iterator tasksBegin = in1Begin;
 
       uint32_t num_tasks;
 
@@ -327,14 +333,14 @@ class BagOfTasks {
   private:
     mutex m;
 
-    typename vector<in1>::iterator in1Begin;
-    typename vector<in1>::iterator in1End;
+    typename deque<in1>::iterator in1Begin;
+    typename deque<in1>::iterator in1End;
 
-    vector<in2>* input2;
+    deque<in2>* input2;
 
-    out (*userFunction) (in1, vector<in2>);
+    out (*userFunction) (in1, deque<in2>);
 
-    typename vector<out>::iterator outBegin;
+    typename deque<out>::iterator outBegin;
 };
 
 
@@ -385,7 +391,7 @@ template <typename in1, typename in2, typename out>
 deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, parameters params) 
 {
   // Calculate info for data partitioning.
-  vector<uint32_t> schedules = calc_schedules(input1_size, params.thread_pinnings.size(), params.schedule);
+  deque<uint32_t> schedules = calc_schedules(input1_size, params.thread_pinnings.size(), params.schedule);
 
   // Output thread data
   deque<thread_data<in1, in2, out>> output;
@@ -396,9 +402,9 @@ deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTa
     struct thread_data<in1, in2, out> iter_data;
 
     iter_data.threadId     = i;
-    iter_data.chunk_size   = schedules[i];
+    iter_data.chunk_size   = schedules.at(i);
     iter_data.bot          = &bot;
-    iter_data.cpu_affinity = params.thread_pinnings[i];
+    iter_data.cpu_affinity = params.thread_pinnings.at(i);
 
     if (params.schedule == Tapered)
     {
@@ -448,8 +454,8 @@ void *mapArrayThread(void *threadarg)
       Ms(metrics_finishing_work(my_data->threadId));
     }
 
-    // If we should still be running (no new schedule), get more tasks!
-    if ((*my_data->bot).threadTerminateVar == false) //my_data->threadId
+    // If we should still be executing, get more tasks!
+    if ((*my_data->bot).thread_control.at(my_data->threadId) == Execute)
     {
       if (my_data->tapered_schedule)
       {
@@ -479,12 +485,13 @@ void *mapArrayThread(void *threadarg)
 
 
 
-void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join) {
-  int rc;
-  
+void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join) 
+{
+  int inital_threads_max_index = threads.size() - 1;
+
   for (uint32_t i = 0; i < num_threads_to_join; i++)
   {
-    rc = pthread_join(threads.back(), NULL);
+    int rc = pthread_join(threads.back(), NULL);
 
     threads.pop_back();
 
@@ -495,24 +502,33 @@ void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join) {
       exit(-1);
     }
 
-    print("[Main] Joined with thread ", threads.size() - i - 1, "\n");
+    print("[Main] Joined with thread ", inital_threads_max_index - i, "\n");
   }
 }
 
 
+template <typename in>
+bool compare_arrays(in arr1[], in arr2[])
+{
+  print("\n\n\n\n", (sizeof(arr1)/sizeof(*arr1)), "\n\n\n\n");
+  return true;
+}
+
+
+
 /*
  *  Implementation of the mapArray parallel programming pattern. Currently uses all available cores and splits tasks 
- *  evenly. If the output vector is not big enough, it will be resized.
+ *  evenly. If the output deque is not big enough, it will be resized.
  *
- *  vector<in1>& input1                              - First input vector to be iterated over.
- *  vector<in2>& input2                              - Second input vector to be passed to user function.
- *  out          (*user_function) (in1, vector<in2>) - User function pointer to a function which takes .
- *                                                     (in1, vector<in2>) and returns an out type.
- *  vector<out>& output                              - Vector to store output in.
+ *  deque<in1>& input1                              - First input deque to be iterated over.
+ *  deque<in2>& input2                              - Second input deque to be passed to user function.
+ *  out          (*user_function) (in1, deque<in2>) - User function pointer to a function which takes .
+ *                                                     (in1, deque<in2>) and returns an out type.
+ *  deque<out>& output                              - deque to store output in.
  */
 
 template <typename in1, typename in2, typename out>
-void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (in1, vector<in2>), vector<out>& output, 
+void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1, deque<in2>), deque<out>& output, 
                string output_filename = "", parameters params = parameters())
 {
   Ms(print("[Main] Metrics on!\n\n"));
@@ -525,7 +541,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
-  bot.threadTerminateVar = false;
+  bot.thread_control.assign(params.thread_pinnings.size(), Execute);
 
   // Calculate info for data partitioning.
   deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
@@ -564,7 +580,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   context_t context(1);
   socket_t socket(context, ZMQ_REQ);
 
-  print("[Main] Requesting socket from controller...\n");
+  print("\n[Main] Requesting socket from controller...\n\n");
   socket.connect("tcp://localhost:5555");
 
   struct message syn;
@@ -579,7 +595,7 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
   message_t msg (sizeof(syn));
   memcpy(msg.data(), &syn, sizeof(syn));
 
-  print("[Main] Sending SYN with PID ", pid, "...\n");
+  print("\n[Main] Sending SYN with PID ", pid, "...\n\n");
   socket.send(msg);
 
   // Get the reply.
@@ -588,18 +604,43 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
 
   struct message ack = *(static_cast<struct message*>(reply.data()));
 
-  print("[Main] Received ACK from controller!\n");
+  print("\n[Main] Received ACK from controller!\n\n");
+
+  //compare_arrays<uint32_t>(&params.thread_pinnings[0], ack.settings.thread_pinnings);
 
   if (ack.settings.schedule != params.schedule) 
   {
+    // Calculate new number of threads.
+    uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(ack.settings.thread_pinnings), end(ack.settings.thread_pinnings), -1);
+
+    // If we have a surplus of threads;
+    if (params.thread_pinnings.size() > new_num_threads)
+    {
+      uint32_t iterator = bot.thread_control.size() - 1;
+
+      // Set excess threads to terminate.
+      while(iterator > new_num_threads - 1)
+      {
+        bot.thread_control.at(iterator) = Terminate;
+      }
+
+      // Join with terminating threads.
+      join_with_threads(threads, params.thread_pinnings.size() - new_num_threads);
+
+      // Cleanup thread control vars.
+      bot.thread_control.resize(new_num_threads);
+    }
+    
+    if (params.thread_pinnings.size() < new_num_threads)
+    {
+
+    }
+
     // Terminating threads.
-    bot.threadTerminateVar = true;
+    bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
 
     // Joining with threads.
     join_with_threads(threads, params.thread_pinnings.size());
-
-    // Reset terminate variable.
-    bot.threadTerminateVar = false;
 
     // Update parameters.
     params.schedule = ack.settings.schedule;
@@ -624,6 +665,9 @@ void map_array(vector<in1>& input1, vector<in2>& input2, out (*user_function) (i
           "\n\n");
 
     // Restart map_array:
+
+    // Reset terminate variables.
+    bot.thread_control.assign(params.thread_pinnings.size(), Execute);
     
     // Recalculate info for data partitioning.
     thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);

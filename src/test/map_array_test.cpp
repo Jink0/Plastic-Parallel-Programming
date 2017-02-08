@@ -33,10 +33,10 @@ struct eParameters {
 
 
 /*
- * Prints the parameters of each experiment in the experiment vector.
+ * Prints the parameters of each experiment in the experiment deque.
  */
 
-void printExperimentParameters(vector<eParameters> exParamsVector) 
+void printExperimentParameters(deque<eParameters> exParamsVector) 
 {
     for (uint32_t i = 0; i < exParamsVector.size(); i++)
     {
@@ -74,7 +74,7 @@ void printExperimentParameters(vector<eParameters> exParamsVector)
  * Reads the given config file and generates all of our experiment parameters.
  */
 
-vector<eParameters> processConfig(char *argv[])
+deque<eParameters> processConfig(char *argv[])
 {
     /*
      * Read experiment parameters.
@@ -96,11 +96,11 @@ vector<eParameters> processConfig(char *argv[])
     // Default experiment parameters container.
     struct eParameters defaultParams;
 
-    uint32_t num_threads = propTree.get<int>(pt::ptree::path_type(     "DEFAULTS/numThreads", '/'));
+    int num_threads = propTree.get<int>(pt::ptree::path_type(     "DEFAULTS/numThreads", '/'));
 
-    vector<uint32_t> thread_pinnings;
+    deque<int> thread_pinnings;
 
-    for (uint32_t i = 0; i < num_threads; i++)
+    for (int i = 0; i < num_threads; i++)
     {
         thread_pinnings.push_back(i);
     }
@@ -142,11 +142,11 @@ vector<eParameters> processConfig(char *argv[])
 
 
     /*
-     * Generate vector of experiment parameters.
+     * Generate deque of experiment parameters.
      */
 
-    // Vector of experiment parameters.
-    vector<eParameters> exParamsVector;
+    // deque of experiment parameters.
+    deque<eParameters> exParamsVector;
 
     for (uint32_t i = 0; i < num_experiments; i++)
     {
@@ -171,9 +171,9 @@ vector<eParameters> processConfig(char *argv[])
         {
             // current.params.num_threads = static_cast<int>(*n_threads);
 
-            vector<uint32_t> thread_pinnings;
+            deque<int> thread_pinnings;
 
-            for (uint32_t i = 0; i < static_cast<uint32_t>(*n_threads); i++)
+            for (int i = 0; i < static_cast<int>(*n_threads); i++)
             {
                 thread_pinnings.push_back(i);
             }
@@ -237,12 +237,12 @@ vector<eParameters> processConfig(char *argv[])
             // Set current output file
             current.output_filename = ("Experiment" + to_string(i + 1) + "_Repeat" + to_string(r));
 
-            // Store current parameters in output vector.
+            // Store current parameters in output deque.
             exParamsVector.push_back(current);
         }
     }
 
-    // Return complete experiment vector.
+    // Return complete experiment deque.
     return exParamsVector;
 }
 
@@ -287,7 +287,7 @@ void createFolderAndMove()
  * Test user function
  */
 
-int returnOne(int in1, vector<int> in2)
+int returnOne(int in1, deque<int> in2)
 {
     return 1;
 }
@@ -298,7 +298,7 @@ int returnOne(int in1, vector<int> in2)
  * Test user function
  */
 
-int oneTouch(int in1, vector<int> in2)
+int oneTouch(int in1, deque<int> in2)
 {
     return in1 + in2[0];
 }
@@ -309,7 +309,7 @@ int oneTouch(int in1, vector<int> in2)
  * Test user function
  */
 
-int collatz(int weight, vector<int> seeds) 
+int collatz(int weight, deque<int> seeds) 
 {
     for (int i = 0; i < weight; i++)
     {
@@ -350,7 +350,7 @@ int main(int argc, char *argv[])
     }
 
     // Process given configuration file.
-    vector<eParameters> exParamsVector = processConfig(argv);
+    deque<eParameters> exParamsVector = processConfig(argv);
 
     // Print our experiment parameters.
     printExperimentParameters(exParamsVector);
@@ -370,8 +370,8 @@ int main(int argc, char *argv[])
         uint32_t as = exParamsVector[i].array_size;
 
         // Experiment input vectors.
-        vector<int> input1(as);
-        vector<int> input2(as);
+        deque<int> input1(as);
+        deque<int> input2(as);
 
         // Generate data for vectors.
         for (uint32_t i = 0; i < as; i++) 
@@ -384,8 +384,8 @@ int main(int argc, char *argv[])
             input2[i] = 87736;
         }
 
-        // Output vector.
-        vector<int> output(as);
+        // Output deque.
+        deque<int> output(as);
 
         // Start mapArray.
         map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
