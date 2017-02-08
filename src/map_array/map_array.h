@@ -154,11 +154,11 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
           // If we still have remainder tasks, add one to this thread.
           if (i < remainder) 
           { 
-            output[i] = quotient + 1;
+            output.at(i) = quotient + 1;
           }
           else
           {
-            output[i] = quotient;
+            output.at(i) = quotient;
           }
         }
       }
@@ -174,7 +174,7 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
 
         for (uint32_t i = 0; i < num_threads; i++)
         {
-          output[i] = chunk_size;
+          output.at(i) = chunk_size;
         }
       }
 
@@ -184,7 +184,7 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
       {
         for (uint32_t i = 0; i < num_threads; i++)
         {
-          output[i] = 1;
+          output.at(i) = 1;
         }
       }
 
@@ -197,7 +197,7 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
 
         for (uint32_t i = 0; i < num_threads; i++)
         {
-          output[i] = quotient;
+          output.at(i) = quotient;
         }
       }
 
