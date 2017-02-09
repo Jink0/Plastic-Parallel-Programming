@@ -507,11 +507,40 @@ void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join)
 }
 
 
-template <typename in>
-bool compare_arrays(in arr1[], in arr2[])
+
+enum Thread_Pinnings_Differences {LESS_THREADS_DIFFERENT_PINNINGS, EQUAL_THREADS_DIFFERENT_PINNINGS, MORE_THREADS_DIFFERENT_PINNINGS,
+                                  LESS_THREADS_SAME_PINNINGS, EQUAL_THREADS_SAME_PINNINGS, MORE_THREADS_SAME_PINNINGS};
+
+Thread_Pinnings_Differences compare_thread_pinnings(deque<int>& dq, int arr[MAX_NUM_THREADS])
 {
-  print("\n\n\n\n", (sizeof(arr1)/sizeof(*arr1)), "\n\n\n\n");
-  return true;
+  bool different_pinnings = false;
+
+  uint32_t arr_size = 0;
+
+  while (arr[arr_size] = -1)
+  {
+    arr_size++;
+  }
+
+  arr_size++;
+
+  for (uint32_t i = 0 ; i < dq.size() ; i++)
+  {
+    if (dq.at(i) != arr[i])
+    {
+      different_pinnings = true;
+    }
+  }
+
+  if (different_pinnings)
+  {
+    if (arr_size < dq.size())
+    {
+      return 
+    }
+  }
+
+  return LESS_THREADS_DIFFERENT_PINNINGS;
 }
 
 
@@ -606,7 +635,9 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   print("\n[Main] Received ACK from controller!\n\n");
 
-  //compare_arrays<uint32_t>(&params.thread_pinnings[0], ack.settings.thread_pinnings);
+  deque<int> ack_thread_pinnings = ack.settings.thread_pinnings;
+
+  compare_thread_pinnings(params.thread_pinnings, ack.settings.thread_pinnings);
 
   if (ack.settings.schedule != params.schedule) 
   {
