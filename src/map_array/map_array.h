@@ -485,7 +485,44 @@ void *mapArrayThread(void *threadarg)
 
 
 
-void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join) 
+template <typename in1, typename in2, typename out>
+void create_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_create, deque<thread_data<in1, in2, out>> &thread_data_deque)
+{
+  // Compute iterator.
+  uint32_t i = threads.size();
+
+  if (i > 0)
+  {
+    i--;
+  }
+
+  // Resize threads container for our new threads.
+  threads.resize(threads.size() + num_threads_to_create);
+
+  for (; i < threads.size(); i++)
+  {
+    print("[Main] Creating thread ", i , "\n");
+
+    int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+
+    // Create thread name.
+    char thread_name[16];
+    sprintf(thread_name, "MA Thread %u", i);
+
+    // Set thread name to something recognisable.
+    pthread_setname_np(threads.at(i), thread_name);
+
+    if (rc)
+    {
+      // If we couldn't create a new thread, throw an error and exit.
+      print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+      exit(-1);
+    }
+  }
+} 
+
+
+void join_with_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_join) 
 {
   int inital_threads_max_index = threads.size() - 1;
 
@@ -504,43 +541,6 @@ void join_with_threads(deque<pthread_t> threads, uint32_t num_threads_to_join)
 
     print("[Main] Joined with thread ", inital_threads_max_index - i, "\n");
   }
-}
-
-
-
-enum Thread_Pinnings_Differences {LESS_THREADS_DIFFERENT_PINNINGS, EQUAL_THREADS_DIFFERENT_PINNINGS, MORE_THREADS_DIFFERENT_PINNINGS,
-                                  LESS_THREADS_SAME_PINNINGS, EQUAL_THREADS_SAME_PINNINGS, MORE_THREADS_SAME_PINNINGS};
-
-Thread_Pinnings_Differences compare_thread_pinnings(deque<int>& dq, int arr[MAX_NUM_THREADS])
-{
-  bool different_pinnings = false;
-
-  uint32_t arr_size = 0;
-
-  while (arr[arr_size] = -1)
-  {
-    arr_size++;
-  }
-
-  arr_size++;
-
-  for (uint32_t i = 0 ; i < dq.size() ; i++)
-  {
-    if (dq.at(i) != arr[i])
-    {
-      different_pinnings = true;
-    }
-  }
-
-  if (different_pinnings)
-  {
-    if (arr_size < dq.size())
-    {
-      return 
-    }
-  }
-
-  return LESS_THREADS_DIFFERENT_PINNINGS;
 }
 
 
@@ -576,29 +576,10 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
   // Variables for creating and managing threads.
-  deque<pthread_t> threads(params.thread_pinnings.size());
+  deque<pthread_t> threads;
 
   // Create all our needed threads.
-  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-  {
-    print("[Main] Creating thread ", i , "\n");
-
-    int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
-
-    // Create thread name.
-    char thread_name[16];
-    sprintf(thread_name, "MA Thread %u", i);
-
-    // Set thread name to something recognisable.
-    pthread_setname_np(threads.at(i), thread_name);
-
-    if (rc)
-    {
-      // If we couldn't create a new thread, throw an error and exit.
-      print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-      exit(-1);
-    }
-  }
+  create_n_threads<in1, in2, out>(threads, params.thread_pinnings.size(), thread_data_deque);
 
   // Get our PID to send to the controller.
   uint32_t pid = pthread_self();
@@ -635,43 +616,77 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   print("\n[Main] Received ACK from controller!\n\n");
 
-  deque<int> ack_thread_pinnings = ack.settings.thread_pinnings;
+  uint32_t existing_thread_count = threads.size();
 
-  compare_thread_pinnings(params.thread_pinnings, ack.settings.thread_pinnings);
+  deque<bool> needs_to_update(existing_thread_count, false);
 
   if (ack.settings.schedule != params.schedule) 
   {
-    // Calculate new number of threads.
-    uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(ack.settings.thread_pinnings), end(ack.settings.thread_pinnings), -1);
+    // Update schedule.
+    params.schedule = ack.settings.schedule;
 
-    // If we have a surplus of threads;
-    if (params.thread_pinnings.size() > new_num_threads)
+    // Set all existing threads to update.
+    for (uint32_t i = 0; i < existing_thread_count; i++)
     {
-      uint32_t iterator = bot.thread_control.size() - 1;
-
-      // Set excess threads to terminate.
-      while(iterator > new_num_threads - 1)
-      {
-        bot.thread_control.at(iterator) = Terminate;
-      }
-
-      // Join with terminating threads.
-      join_with_threads(threads, params.thread_pinnings.size() - new_num_threads);
-
-      // Cleanup thread control vars.
-      bot.thread_control.resize(new_num_threads);
+      needs_to_update.at(i) = true;
     }
-    
-    if (params.thread_pinnings.size() < new_num_threads)
-    {
+  }
 
+  uint32_t iter = 0;
+
+  while (iter < MAX_NUM_THREADS && ack.settings.thread_pinnings[iter] != -1)
+  {
+    int val = ack.settings.thread_pinnings[iter];
+
+    if (iter < existing_thread_count && val != params.thread_pinnings.at(iter))
+    {
+      needs_to_update.at(iter) = true;
+      params.thread_pinnings.at(iter) = val;
     }
 
+    if (iter >= existing_thread_count)
+    {
+      params.thread_pinnings.push_back(val);
+    }
+
+    iter++;
+  }
+
+  // iter now contains the new number of threads.
+
+  // If we have a surplus of threads, terminate the excess ones.
+  if (iter < existing_thread_count)
+  {
+    // Reduce size of thread_pinnings deque.
+    params.thread_pinnings.resize(iter);
+
+    // Terminating threads.
+    for (uint32_t i = 0; i < existing_thread_count - iter; i++)
+    {
+      bot.thread_control.at(iter + i) = Terminate;
+    }
+
+    // Joining with threads.
+    join_with_n_threads(threads, existing_thread_count - iter);
+  }
+
+  // Recalculate info for data partitioning.
+  thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
+
+  // TELL THREADS TO UPDATE
+
+  if (iter > existing_thread_count)
+  {
+    // CREATE NEW THREADS.
+  }
+
+  if (ack.settings.schedule != params.schedule) 
+  {
     // Terminating threads.
     bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
 
     // Joining with threads.
-    join_with_threads(threads, params.thread_pinnings.size());
+    join_with_n_threads(threads, params.thread_pinnings.size());
 
     // Update parameters.
     params.schedule = ack.settings.schedule;
@@ -705,27 +720,14 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
     // Reset thread ids.
     threads.clear();
-    threads.resize(params.thread_pinnings.size());
 
     // Create all our needed threads.
-    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-    {
-      print("[Main] Creating thread ", i , "\n");
-
-      int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
-
-      if (rc)
-      {
-        // If we couldn't create a new thread, throw an error and exit.
-        print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-        exit(-1);
-      }
-    }
+    create_n_threads<in1, in2, out>(threads, params.thread_pinnings.size(), thread_data_deque);
   }
 
   socket.close();
 
-  join_with_threads(threads, params.thread_pinnings.size());
+  join_with_n_threads(threads, params.thread_pinnings.size());
 
   Ms(metrics_finalise());
 
