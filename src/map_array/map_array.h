@@ -454,6 +454,19 @@ void *mapArrayThread(void *threadarg)
       Ms(metrics_finishing_work(my_data->threadId));
     }
 
+    /*if ((*my_data->bot).thread_control.at(my_data->threadId) == Update)
+    {
+      my_data = (struct thread_data<in1, in2, out> *) threadarg;
+
+      stick_this_thread_to_cpu(my_data->cpu_affinity);
+
+      tapered_chunk_size = my_data->chunk_size / 2;
+
+      print("[Thread ", my_data->threadId, "] Update detected! \n");
+
+      (*my_data->bot).thread_control.at(my_data->threadId) = Execute;
+    }*/
+
     // If we should still be executing, get more tasks!
     if ((*my_data->bot).thread_control.at(my_data->threadId) == Execute)
     {
@@ -616,7 +629,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   print("\n[Main] Received ACK from controller!\n\n");
 
-  uint32_t existing_thread_count = threads.size();
+  /*uint32_t existing_thread_count = threads.size();
 
   deque<bool> needs_to_update(existing_thread_count, false);
 
@@ -660,6 +673,8 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     // Reduce size of thread_pinnings deque.
     params.thread_pinnings.resize(iter);
 
+    needs_to_update.resize(iter);
+
     // Terminating threads.
     for (uint32_t i = 0; i < existing_thread_count - iter; i++)
     {
@@ -674,11 +689,18 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
   // TELL THREADS TO UPDATE
+  for(uint32_t i = 0; i < needs_to_update.size(); i++)
+  {
+    if (needs_to_update.at(i) == true)
+    {
+      bot.thread_control.at(i) = Update;
+    }
+  }
 
   if (iter > existing_thread_count)
   {
     // CREATE NEW THREADS.
-  }
+  }*/
 
   if (ack.settings.schedule != params.schedule) 
   {
