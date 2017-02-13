@@ -472,18 +472,20 @@ void *mapArrayThread(void *threadarg)
       Ms(metrics_finishing_work(my_data->threadId));
     }
 
-    /*if ((*my_data->bot).thread_control.at(my_data->threadId) == Update)
+    if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Update)
     {
-      my_data = (struct thread_data<in1, in2, out> *) threadarg;
+      print("[Thread ", my_data->threadId, "] Update detected! \n");
+
+      my_data->cpu_affinity     = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).cpu_affinity;
+      my_data->chunk_size       = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).chunk_size;
+      my_data->tapered_schedule = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).tapered_schedule;
 
       stick_this_thread_to_cpu(my_data->cpu_affinity);
 
       tapered_chunk_size = my_data->chunk_size / 2;
 
-      print("[Thread ", my_data->threadId, "] Update detected! \n");
-
-      (*my_data->bot).thread_control.at(my_data->threadId) = Execute;
-    }*/
+      (*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control = Execute;
+    }
 
     // If we should still be executing, get more tasks!
     if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Execute)
@@ -503,10 +505,9 @@ void *mapArrayThread(void *threadarg)
       {
         my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
 
-        print("[Thread ", my_data->threadId, "] Chunk size: ", my_data->chunk_size, "\n");
+        print("[Thread ", my_data->threadId, "] Requested ", my_data->chunk_size, " tasks, received ", my_tasks.in1End - my_tasks.in1Begin, "\n");
       }
     }
-
   }
 
   Ms(metrics_thread_finished(my_data->threadId));
@@ -734,13 +735,13 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   if (ack.settings.schedule != params.schedule) 
   {
     // Terminating threads.
-    for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
-    {
-      bot.thread_control_and_updates.at(i).thread_control = Terminate;
-    }
+    //for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
+    //{
+      //bot.thread_control_and_updates.at(i).thread_control = Terminate;
+    //}
 
     // Joining with threads.
-    join_with_n_threads(threads, params.thread_pinnings.size());
+    //join_with_n_threads(threads, params.thread_pinnings.size());
 
     // Update parameters.
     params.schedule = ack.settings.schedule;
@@ -767,19 +768,33 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     // Restart map_array:
 
     // Reset terminate variables.
-    for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
-    {
-      bot.thread_control_and_updates.at(i).thread_control = Execute;
-    }
+    //for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
+    //{
+      //bot.thread_control_and_updates.at(i).thread_control = Execute;
+    //}
     
     // Recalculate info for data partitioning.
     thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
+    // Copy thread data to update deque.
+  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+  {
+    bot.thread_control_and_updates.at(i).cpu_affinity     = thread_data_deque.at(i).cpu_affinity;
+    bot.thread_control_and_updates.at(i).chunk_size       = thread_data_deque.at(i).chunk_size;
+    bot.thread_control_and_updates.at(i).tapered_schedule = thread_data_deque.at(i).tapered_schedule;
+    bot.thread_control_and_updates.at(i).thread_control   = thread_data_deque.at(i).thread_control;
+  }
+
+  for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
+  {
+    bot.thread_control_and_updates.at(i).thread_control = Update;
+  }
+
     // Reset thread ids.
-    threads.clear();
+    //threads.clear();
 
     // Create all our needed threads.
-    create_n_threads<in1, in2, out>(threads, params.thread_pinnings.size(), thread_data_deque);
+    //create_n_threads<in1, in2, out>(threads, params.thread_pinnings.size(), thread_data_deque);
   }
 
   socket.close();
