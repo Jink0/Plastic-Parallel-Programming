@@ -217,7 +217,25 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
 
 
 // Thread control enum. threads either run (execute), change strategies (update), or stop (terminte).
-enum Thread_Control {Execute, Update, Terminate};
+enum Thread_Control_Enum {Execute, Update, Terminate};
+
+
+
+// Data struct for thread data updates.
+struct thread_data_update_struct
+{
+  // CPU for thread to run on.
+  uint32_t cpu_affinity;
+
+  // Starting chunk size of tasks to retreive.
+  uint32_t chunk_size;
+
+  // Check for tapered schedule.
+  bool tapered_schedule = false;
+
+  // Thread control variable.
+  Thread_Control_Enum thread_control = Execute;
+};
 
 
 
@@ -247,8 +265,8 @@ struct tasks
 template <class in1, class in2, class out>
 class BagOfTasks {
   public:
-    // Variables to control if threads terminate.
-    deque<Thread_Control> thread_control;
+    // Deque for updating thread data.
+    deque<thread_data_update_struct> thread_control_and_updates;
 
     // Constructor
     BagOfTasks(typename deque<in1>::iterator in1B, 
@@ -381,8 +399,8 @@ struct thread_data
   // Pointer to the shared bag of tasks object.
   BagOfTasks<in1, in2, out> *bot;
 
-  // Flag which main thread will set to indicate new instructions.
-  bool check_for_new_instructions = false;
+  // Thread control variable.
+  Thread_Control_Enum thread_control = Execute;
 };
 
 
@@ -468,7 +486,7 @@ void *mapArrayThread(void *threadarg)
     }*/
 
     // If we should still be executing, get more tasks!
-    if ((*my_data->bot).thread_control.at(my_data->threadId) == Execute)
+    if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Execute)
     {
       if (my_data->tapered_schedule)
       {
@@ -583,10 +601,21 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
 
-  bot.thread_control.assign(params.thread_pinnings.size(), Execute);
-
   // Calculate info for data partitioning.
   deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
+
+  // Copy thread data to update deque.
+  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+  {
+    thread_data_update_struct iter_data;
+
+    iter_data.cpu_affinity     = thread_data_deque.at(i).cpu_affinity;
+    iter_data.chunk_size       = thread_data_deque.at(i).chunk_size;
+    iter_data.tapered_schedule = thread_data_deque.at(i).tapered_schedule;
+    iter_data.thread_control   = thread_data_deque.at(i).thread_control;
+
+    bot.thread_control_and_updates.push_front(iter_data);
+  }
 
   // Variables for creating and managing threads.
   deque<pthread_t> threads;
@@ -705,7 +734,10 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   if (ack.settings.schedule != params.schedule) 
   {
     // Terminating threads.
-    bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
+    for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
+    {
+      bot.thread_control_and_updates.at(i).thread_control = Terminate;
+    }
 
     // Joining with threads.
     join_with_n_threads(threads, params.thread_pinnings.size());
@@ -735,7 +767,10 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     // Restart map_array:
 
     // Reset terminate variables.
-    bot.thread_control.assign(params.thread_pinnings.size(), Execute);
+    for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
+    {
+      bot.thread_control_and_updates.at(i).thread_control = Execute;
+    }
     
     // Recalculate info for data partitioning.
     thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
