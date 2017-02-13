@@ -29,61 +29,116 @@ using namespace std;
 #endif
 
 /*
- * This file contrains the definition of the map array pattern. Note - all the definitions are in the header file, as 
- * you cannot seperate the definition of a template class from its declaration and put it inside a .cpp file.
+ * This file contains the declaration and definition of the map array pattern. Note - all definitions must be in the 
+ * header file, as you cannot separate the definition of a template class from its declaration and have them in 
+ * different files.
  */
 
+// Structure declarations:
+
+// Parameters struct for the parameters of map array.
+struct parameters;
+
+// Structure to contain data for a group of tasks, along with their associated work function.
+template <typename in1, typename in2, typename out>
+struct tasks;
+
+// Data struct to pass to each thread.
+template <typename in1, typename in2, typename out>
+struct thread_data;
+
+// Data struct for thread data updates, allows for graceful switching (without needing to kill threads to update).
+struct thread_data_update_struct;
 
 
-/*
- * Mutexed print function:
- */
 
-// With nothing to add to the output stream, just return the stream.
+
+
+// Class declarations:
+
+// Bag of tasks class. Also contains shared variables for communicating with worker threads.
+template <class in1, class in2, class out>
+class BagOfTasks;
+
+
+
+
+
+// Function declarations:
+
+// Mutexed print function, the main print function defaults to the cout output stream, and takes a series of arguments
+// to print. Template allows for many different types of argument.
+template <class ...Args>
 ostream&
-print_rec(ostream& outS)
-{
-    return outS;
-}
+print(const Args& ...args);
+
+// Retrieve the print mutex. Must be done using this non-templated function, so that we have one mutex across all 
+// instantiations of the templated function.
+mutex&
+get_cout_mutex();
+
+// Handles case when given an output stream.
+template <class ...Args>
+ostream&
+print(ostream& outS, const Args& ...args);
 
 // Recursively print arguments.
 template <class A0, class ...Args>
 ostream&
-print_rec(ostream& outS, const A0& a0, const Args& ...args)
-{
-    outS << a0;
-    return print_rec(outS, args...);
-}
+print_rec(ostream& outS, const A0& a0, const Args& ...args);
 
-// Case when given an output stream.
-template <class ...Args>
+// With nothing to add to the output stream, just return the stream.
 ostream&
-print(ostream& outS, const Args& ...args)
-{
-    return print_rec(outS, args...);
-}
-
-// Retrieve the mutex. Must be done using this non-templated function, so that we have one mutex across all 
-// instantiations of the templated function.
-mutex&
-get_cout_mutex()
-{
-    static mutex m;
-    return m;
-}
-
-// The main print function defaults to the cout output stream.
-template <class ...Args>
-ostream&
-print(const Args& ...args)
-{
-    lock_guard<mutex> _(get_cout_mutex());
-    return print(cout, args...);
-}
+print_rec(ostream& outS);
 
 
 
-// Parameters with default values.
+// Returns the type name given to the template. Example usage: type_name<int>() returns "int". Used for printing.
+template<typename T>
+string type_name();
+
+
+
+// Calculates all thread data for given parameters.
+template <typename in1, typename in2, typename out>
+deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, 
+                                                   parameters params);
+
+// Calculates chunk sizes for given schedule and number of threads.
+deque<uint32_t> calc_chunks(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0);
+
+
+
+// Main mapArray function. If the output deque is not big enough, it will be resized. 
+// Note - Has default output_filename = "" and params = parameters()
+template <typename in1, typename in2, typename out>
+void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1, deque<in2>), deque<out>& output, 
+               string output_filename = "", parameters params = parameters());
+
+// Creates n threads, appending them to any current threads in terms of the &threads variable and in thread number.
+template <typename in1, typename in2, typename out>
+void create_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_create, 
+                      deque<thread_data<in1, in2, out>> &thread_data_deque);
+
+// Joins with the last n threads.
+void join_with_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_join);
+
+// Function to start each thread of mapArray on.
+template <typename in1, typename in2, typename out>
+void *mapArrayThread(void *threadarg);
+
+// Pins calling thread to a particular CPU core.
+int stick_this_thread_to_cpu(uint32_t core_id);
+
+
+
+
+
+/*
+ * Structure definitions:
+ */
+
+// Parameters struct for the parameters of map array.
 struct parameters 
 {
     parameters(): task_dist(1), schedule(Tapered) 
@@ -109,137 +164,7 @@ struct parameters
 
 
 
-// Returns the typename given to the template. Example usage: typename<int>() returns "int".
-template<typename T>
-string type_name()
-{
-    // Variable to store status.
-    int status;
-
-    // Mangled name of type T.
-    string mName = typeid(T).name();
-
-    // Attempt to demangle 
-    char *dmName = abi::__cxa_demangle(mName.c_str(), NULL, NULL, &status);
-
-    // If successful;
-    if(status == 0) 
-    {
-        // Record name.
-        mName = dmName;
-
-        // Free memory.
-        free(dmName);
-    }   
-
-    return mName;
-}
-
-
-
-deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
-{
-  deque<uint32_t> output(num_threads);
-
-  switch (sched)
-  {
-    case Static:
-      {
-        // Calculate info for data partitioning.
-        uint32_t quotient  = num_tasks / num_threads;
-        uint32_t remainder = num_tasks % num_threads;
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          // If we still have remainder tasks, add one to this thread.
-          if (i < remainder) 
-          { 
-            output.at(i) = quotient + 1;
-          }
-          else
-          {
-            output.at(i) = quotient;
-          }
-        }
-      }
-
-      break;
-
-    case Dynamic_chunks:
-      {
-        if (chunk_size == 0)
-        {
-          chunk_size = num_tasks / (num_threads * 10);
-        }
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output.at(i) = chunk_size;
-        }
-      }
-
-      break;
-
-    case Dynamic_individual:
-      {
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output.at(i) = 1;
-        }
-      }
-
-      break;
-
-    case Tapered:
-      {
-        // Calculate info for data partitioning.
-        uint32_t quotient  = num_tasks / (num_threads * 2);
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output.at(i) = quotient;
-        }
-      }
-
-      break;
-
-    case Auto:
-      {
-        print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
-      }
-
-      break;
-  }
-
-  return output;
-}
-
-
-
-// Thread control enum. threads either run (execute), change strategies (update), or stop (terminte).
-enum Thread_Control_Enum {Execute, Update, Terminate};
-
-
-
-// Data struct for thread data updates.
-struct thread_data_update_struct
-{
-  // CPU for thread to run on.
-  uint32_t cpu_affinity;
-
-  // Starting chunk size of tasks to retreive.
-  uint32_t chunk_size;
-
-  // Check for tapered schedule.
-  bool tapered_schedule = false;
-
-  // Thread control variable.
-  Thread_Control_Enum thread_control = Execute;
-};
-
-
-
-// Structure to contain a group of tasks.
+// Structure to contain data for a group of tasks, along with their associated work function.
 template <typename in1, typename in2, typename out>
 struct tasks
 {
@@ -261,7 +186,59 @@ struct tasks
 
 
 
-// Bag of tasks class. Also contains shard variables for communicating with worker threads.
+// Thread control enum. threads either run (execute), change strategies (update), or stop (terminate).
+enum Thread_Control_Enum {Execute, Update, Terminate};
+
+// Data struct to pass to each thread.
+template <typename in1, typename in2, typename out>
+struct thread_data
+{
+  // Id of this thread.
+  int threadId;
+
+  // CPU for thread to run on.
+  uint32_t cpu_affinity;
+
+  // Starting chunk size of tasks to retrieve.
+  uint32_t chunk_size;
+
+  // Check for tapered schedule.
+  bool tapered_schedule = false;
+
+  // Pointer to the shared bag of tasks object.
+  BagOfTasks<in1, in2, out> *bot;
+
+  // Thread control variable.
+  Thread_Control_Enum thread_control = Execute;
+};
+
+
+
+// Data struct for thread data updates, allows for graceful switching (without needing to kill threads to update).
+struct thread_data_update_struct
+{
+  // CPU for thread to run on.
+  uint32_t cpu_affinity;
+
+  // Starting chunk size of tasks to retrieve.
+  uint32_t chunk_size;
+
+  // Check for tapered schedule.
+  bool tapered_schedule = false;
+
+  // Thread control variable.
+  Thread_Control_Enum thread_control = Execute;
+};
+
+
+
+
+
+/*
+ * Class definitions:
+ */
+
+// Bag of tasks class. Also contains shared variables for communicating with worker threads.
 template <class in1, class in2, class out>
 class BagOfTasks {
   public:
@@ -363,53 +340,103 @@ class BagOfTasks {
 
 
 
-int stick_this_thread_to_cpu(uint32_t core_id) {
-   uint32_t num_cores = sysconf(_SC_NPROCESSORS_ONLN);
 
-   if (core_id >= num_cores)
-      return EINVAL;
 
-   cpu_set_t cpuset;
-   CPU_ZERO(&cpuset);
-   CPU_SET(core_id, &cpuset);
+/*
+ * Function definitions:
+ */
 
-   pthread_t current_thread = pthread_self();    
-
-   return pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
+// Mutexed print function, the main print function defaults to the cout output stream, and takes a series of arguments
+// to print. Template allows for many different types of argument.
+template <class ...Args>
+ostream&
+print(const Args& ...args)
+{
+    lock_guard<mutex> _(get_cout_mutex());
+    return print(cout, args...);
 }
 
 
 
-// Data struct to pass to each thread.
-template <typename in1, typename in2, typename out>
-struct thread_data
+// Retrieve the print mutex. Must be done using this non-templated function, so that we have one mutex across all 
+// instantiations of the templated function.
+mutex&
+get_cout_mutex()
 {
-  // Id of this thread.
-  int threadId;
-
-  // CPU for thread to run on.
-  uint32_t cpu_affinity;
-
-  // Starting chunk size of tasks to retreive.
-  uint32_t chunk_size;
-
-  // Check for tapered schedule.
-  bool tapered_schedule = false;
-
-  // Pointer to the shared bag of tasks object.
-  BagOfTasks<in1, in2, out> *bot;
-
-  // Thread control variable.
-  Thread_Control_Enum thread_control = Execute;
-};
+    static mutex m;
+    return m;
+}
 
 
 
+// Handles case when given an output stream.
+template <class ...Args>
+ostream&
+print(ostream& outS, const Args& ...args)
+{
+    return print_rec(outS, args...);
+}
+
+
+
+// Recursively print arguments.
+template <class A0, class ...Args>
+ostream&
+print_rec(ostream& outS, const A0& a0, const Args& ...args)
+{
+    outS << a0;
+    return print_rec(outS, args...);
+}
+
+
+
+// With nothing to add to the output stream, just return the stream.
+ostream&
+print_rec(ostream& outS)
+{
+    return outS;
+}
+
+
+
+
+
+// Returns the type name given to the template. Example usage: type_name<int>() returns "int". Used for printing.
+template<typename T>
+string type_name()
+{
+    // Variable to store status.
+    int status;
+
+    // Mangled name of type T.
+    string mName = typeid(T).name();
+
+    // Attempt to demangle 
+    char *dmName = abi::__cxa_demangle(mName.c_str(), NULL, NULL, &status);
+
+    // If successful;
+    if(status == 0) 
+    {
+        // Record name.
+        mName = dmName;
+
+        // Free memory.
+        free(dmName);
+    }   
+
+    return mName;
+}
+
+
+
+
+
+// Calculates all thread data for given parameters.
 template <typename in1, typename in2, typename out>
 deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, parameters params) 
 {
   // Calculate info for data partitioning.
-  deque<uint32_t> schedules = calc_schedules(input1_size, params.thread_pinnings.size(), params.schedule);
+  deque<uint32_t> chunks = calc_chunks(input1_size, params.thread_pinnings.size(), params.schedule);
 
   // Output thread data
   deque<thread_data<in1, in2, out>> output;
@@ -420,7 +447,7 @@ deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTa
     struct thread_data<in1, in2, out> iter_data;
 
     iter_data.threadId     = i;
-    iter_data.chunk_size   = schedules.at(i);
+    iter_data.chunk_size   = chunks.at(i);
     iter_data.bot          = &bot;
     iter_data.cpu_affinity = params.thread_pinnings.at(i);
 
@@ -437,160 +464,104 @@ deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTa
 
 
 
-// Function to start each thread of mapArray on.
-template <typename in1, typename in2, typename out>
-void *mapArrayThread(void *threadarg)
+// Calculates chunk sizes for given schedule and number of threads. Default chunk size = 0.
+deque<uint32_t> calc_chunks(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size)
 {
-  // Pointer to store personal data
-  struct thread_data<in1, in2, out> *my_data;
-  my_data = (struct thread_data<in1, in2, out> *) threadarg;
+  deque<uint32_t> output(num_threads);
 
-  stick_this_thread_to_cpu(my_data->cpu_affinity);
-
-  // Initialise metrics
-  Ms(metrics_thread_start(my_data->threadId));
-
-  // Print starting parameters
-  print("[Thread ", my_data->threadId, "] Hello! \n");
-
-  // Get tasks
-  tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
-
-  uint32_t tapered_chunk_size = my_data->chunk_size / 2;
-
-  // While we have tasks to do;
-  while (my_tasks.in1End - my_tasks.in1Begin > 0 )
+  switch (sched)
   {
-    // Run between iterator ranges, stepping through input1 and output vectors
-    for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
-    {
-      Ms(metrics_starting_work(my_data->threadId));
-    
-      // Run user function
-      *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
-
-      Ms(metrics_finishing_work(my_data->threadId));
-    }
-
-    if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Update)
-    {
-      print("[Thread ", my_data->threadId, "] Update detected! \n");
-
-      my_data->cpu_affinity     = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).cpu_affinity;
-      my_data->chunk_size       = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).chunk_size;
-      my_data->tapered_schedule = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).tapered_schedule;
-
-      stick_this_thread_to_cpu(my_data->cpu_affinity);
-
-      tapered_chunk_size = my_data->chunk_size / 2;
-
-      (*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control = Execute;
-    }
-
-    // If we should still be executing, get more tasks!
-    if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Execute)
-    {
-      if (my_data->tapered_schedule)
+    case Static:
       {
-        my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
+        // Calculate info for data partitioning.
+        uint32_t quotient  = num_tasks / num_threads;
+        uint32_t remainder = num_tasks % num_threads;
 
-        print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
-
-        if (tapered_chunk_size > 1)
+        for (uint32_t i = 0; i < num_threads; i++)
         {
-          tapered_chunk_size = tapered_chunk_size / 2;
+          // If we still have remainder tasks, add one to this thread.
+          if (i < remainder) 
+          { 
+            output.at(i) = quotient + 1;
+          }
+          else
+          {
+            output.at(i) = quotient;
+          }
         }
       }
-      else
+
+      break;
+
+    case Dynamic_chunks:
       {
-        my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+        if (chunk_size == 0)
+        {
+          chunk_size = num_tasks / (num_threads * 10);
+        }
 
-        print("[Thread ", my_data->threadId, "] Requested ", my_data->chunk_size, " tasks, received ", my_tasks.in1End - my_tasks.in1Begin, "\n");
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output.at(i) = chunk_size;
+        }
       }
-    }
+
+      break;
+
+    case Dynamic_individual:
+      {
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output.at(i) = 1;
+        }
+      }
+
+      break;
+
+    case Tapered:
+      {
+        // Calculate info for data partitioning.
+        uint32_t quotient  = num_tasks / (num_threads * 2);
+
+        for (uint32_t i = 0; i < num_threads; i++)
+        {
+          output.at(i) = quotient;
+        }
+      }
+
+      break;
+
+    case Auto:
+      {
+        print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
+      }
+
+      break;
   }
 
-  Ms(metrics_thread_finished(my_data->threadId));
-
-  pthread_exit(NULL);
+  return output;
 }
 
 
-
-template <typename in1, typename in2, typename out>
-void create_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_create, deque<thread_data<in1, in2, out>> &thread_data_deque)
-{
-  // Compute iterator.
-  uint32_t i = threads.size();
-
-  if (i > 0)
-  {
-    i--;
-  }
-
-  // Resize threads container for our new threads.
-  threads.resize(threads.size() + num_threads_to_create);
-
-  for (; i < threads.size(); i++)
-  {
-    print("[Main] Creating thread ", i , "\n");
-
-    int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
-
-    // Create thread name.
-    char thread_name[16];
-    sprintf(thread_name, "MA Thread %u", i);
-
-    // Set thread name to something recognisable.
-    pthread_setname_np(threads.at(i), thread_name);
-
-    if (rc)
-    {
-      // If we couldn't create a new thread, throw an error and exit.
-      print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-      exit(-1);
-    }
-  }
-} 
-
-
-void join_with_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_join) 
-{
-  int inital_threads_max_index = threads.size() - 1;
-
-  for (uint32_t i = 0; i < num_threads_to_join; i++)
-  {
-    int rc = pthread_join(threads.back(), NULL);
-
-    threads.pop_back();
-
-    if (rc)
-    {
-      // If we couldn't create a new thread, throw an error and exit.
-      print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
-      exit(-1);
-    }
-
-    print("[Main] Joined with thread ", inital_threads_max_index - i, "\n");
-  }
-}
 
 
 
 /*
- *  Implementation of the mapArray parallel programming pattern. Currently uses all available cores and splits tasks 
- *  evenly. If the output deque is not big enough, it will be resized.
+ * Implementation of the mapArray parallel programming pattern. If the output deque is not big enough, it will be 
+ * resized.
  *
- *  deque<in1>& input1                              - First input deque to be iterated over.
- *  deque<in2>& input2                              - Second input deque to be passed to user function.
- *  out          (*user_function) (in1, deque<in2>) - User function pointer to a function which takes .
- *                                                     (in1, deque<in2>) and returns an out type.
- *  deque<out>& output                              - deque to store output in.
+ * deque<in1>& input1                              - First input deque to be iterated over.
+ * deque<in2>& input2                              - Second input deque to be passed to user function.
+ * out          (*user_function) (in1, deque<in2>) - User function pointer to a function which takes (in1, deque<in2>) 
+ *                                                   and returns an out type.
+ * deque<out>& output                              - deque to store output in.
+ *
+ * Note - Has default output_filename = "" and params = parameters().
  */
 
 template <typename in1, typename in2, typename out>
 void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1, deque<in2>), deque<out>& output, 
-               string output_filename = "", parameters params = parameters())
+               string output_filename, parameters params)
 {
   Ms(print("[Main] Metrics on!\n\n"));
 
@@ -806,6 +777,167 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   Ms(metrics_calc());
 
   Ms(metrics_exit());
+}
+
+
+
+// Creates n threads, appending them to any current threads in terms of the &threads variable and in thread number.
+template <typename in1, typename in2, typename out>
+void create_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_create, deque<thread_data<in1, in2, out>> &thread_data_deque)
+{
+  // Compute iterator.
+  uint32_t i = threads.size();
+
+  if (i > 0)
+  {
+    i--;
+  }
+
+  // Resize threads container for our new threads.
+  threads.resize(threads.size() + num_threads_to_create);
+
+  for (; i < threads.size(); i++)
+  {
+    print("[Main] Creating thread ", i , "\n");
+
+    int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+
+    // Create thread name.
+    char thread_name[16];
+    sprintf(thread_name, "MA Thread %u", i);
+
+    // Set thread name to something recognisable.
+    pthread_setname_np(threads.at(i), thread_name);
+
+    if (rc)
+    {
+      // If we couldn't create a new thread, throw an error and exit.
+      print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+      exit(-1);
+    }
+  }
+} 
+
+
+
+// Joins with the last n threads.
+void join_with_n_threads(deque<pthread_t> &threads, uint32_t num_threads_to_join) 
+{
+  int inital_threads_max_index = threads.size() - 1;
+
+  for (uint32_t i = 0; i < num_threads_to_join; i++)
+  {
+    int rc = pthread_join(threads.back(), NULL);
+
+    threads.pop_back();
+
+    if (rc)
+    {
+      // If we couldn't create a new thread, throw an error and exit.
+      print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
+      exit(-1);
+    }
+
+    print("[Main] Joined with thread ", inital_threads_max_index - i, "\n");
+  }
+}
+
+
+
+// Function to start each thread of mapArray on.
+template <typename in1, typename in2, typename out>
+void *mapArrayThread(void *threadarg)
+{
+  // Pointer to store personal data
+  struct thread_data<in1, in2, out> *my_data;
+  my_data = (struct thread_data<in1, in2, out> *) threadarg;
+
+  stick_this_thread_to_cpu(my_data->cpu_affinity);
+
+  // Initialize metrics
+  Ms(metrics_thread_start(my_data->threadId));
+
+  // Print starting parameters
+  print("[Thread ", my_data->threadId, "] Hello! \n");
+
+  // Get tasks
+  tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+
+  uint32_t tapered_chunk_size = my_data->chunk_size / 2;
+
+  // While we have tasks to do;
+  while (my_tasks.in1End - my_tasks.in1Begin > 0 )
+  {
+    // Run between iterator ranges, stepping through input1 and output vectors
+    for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
+    {
+      Ms(metrics_starting_work(my_data->threadId));
+    
+      // Run user function
+      *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
+
+      Ms(metrics_finishing_work(my_data->threadId));
+    }
+
+    if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Update)
+    {
+      print("[Thread ", my_data->threadId, "] Update detected! \n");
+
+      my_data->cpu_affinity     = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).cpu_affinity;
+      my_data->chunk_size       = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).chunk_size;
+      my_data->tapered_schedule = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).tapered_schedule;
+
+      stick_this_thread_to_cpu(my_data->cpu_affinity);
+
+      tapered_chunk_size = my_data->chunk_size / 2;
+
+      (*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control = Execute;
+    }
+
+    // If we should still be executing, get more tasks!
+    if ((*my_data->bot).thread_control_and_updates.at(my_data->threadId).thread_control == Execute)
+    {
+      if (my_data->tapered_schedule)
+      {
+        my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
+
+        print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
+
+        if (tapered_chunk_size > 1)
+        {
+          tapered_chunk_size = tapered_chunk_size / 2;
+        }
+      }
+      else
+      {
+        my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+
+        print("[Thread ", my_data->threadId, "] Requested ", my_data->chunk_size, " tasks, received ", my_tasks.in1End - my_tasks.in1Begin, "\n");
+      }
+    }
+  }
+
+  Ms(metrics_thread_finished(my_data->threadId));
+
+  pthread_exit(NULL);
+}
+
+
+
+// Pins calling thread to a particular CPU core.
+int stick_this_thread_to_cpu(uint32_t core_id) {
+   uint32_t num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+
+   if (core_id >= num_cores)
+      return EINVAL;
+
+   cpu_set_t cpuset;
+   CPU_ZERO(&cpuset);
+   CPU_SET(core_id, &cpuset);
+
+   pthread_t current_thread = pthread_self();    
+
+   return pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
 }
 
 #endif /* MAP_ARRAY_H */
