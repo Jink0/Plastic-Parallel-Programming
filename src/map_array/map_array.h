@@ -606,8 +606,6 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   print("\n[Main] Received ACK from controller!\n\n");
 
-  //compare_arrays<uint32_t>(&params.thread_pinnings[0], ack.settings.thread_pinnings);
-
   if (ack.settings.schedule != params.schedule) 
   {
     // Calculate new number of threads.
