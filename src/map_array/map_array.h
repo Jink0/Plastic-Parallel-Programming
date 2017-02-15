@@ -544,160 +544,6 @@ deque<uint32_t> calc_chunks(uint32_t num_tasks, uint32_t num_threads, Schedule s
 
 
 
-// Returns a list of bools indicating wether threads need to update.
-template <typename in1, typename in2, typename out>
-deque<bool> calculate_updates(deque<pthread_t> &threads, struct message ack, BagOfTasks<in1, in2, out> &bot, parameters &params)
-{
-  uint32_t existing_thread_count = threads.size();
-
-  deque<bool> needs_to_update(existing_thread_count, false);
-
-  // Check for different schedule.
-  if (ack.settings.schedule != params.schedule) 
-  {
-    // Update schedule.
-    params.schedule = ack.settings.schedule;
-
-    // Set all existing threads to update.
-    for (uint32_t i = 0; i < existing_thread_count; i++)
-    {
-      needs_to_update.at(i) = true;
-    }
-  }
-
-  uint32_t iter = 0;
-
-  // Check for different thread pinnings and a different thread number.
-  while (iter < MAX_NUM_THREADS && ack.settings.thread_pinnings[iter] != -1)
-  {
-    int val = ack.settings.thread_pinnings[iter];
-
-    // If we're still at less threads and have a different pinning;
-    if (iter < existing_thread_count && val != params.thread_pinnings.at(iter))
-    {
-      // Mark thread to update.
-      needs_to_update.at(iter) = true;
-
-      // Update value.
-      params.thread_pinnings.at(iter) = val;
-    }
-
-    // If we havev new threads;
-    if (iter >= existing_thread_count)
-    {
-      // Expand thread pinnings.
-      params.thread_pinnings.push_back(val);
-    }
-
-    iter++;
-  }
-
-  // iter now contains the new number of threads.
-
-  // If we have a surplus of threads, terminate the excess ones.
-  if (iter < existing_thread_count)
-  {
-    // Reduce size of thread_pinnings deque.
-    params.thread_pinnings.resize(iter);
-
-    needs_to_update.resize(iter);
-
-    // Terminating threads.
-    for (uint32_t i = 0; i < existing_thread_count - iter; i++)
-    {
-      bot.thread_control.at(iter + i) = Terminate;
-    }
-
-    // Joining with threads.
-    join_with_n_threads(threads, existing_thread_count - iter);
-  }
-
-  // Recalculate info for data partitioning.
-  bot.thread_control_and_updates = calc_thread_data(bot.numTasksRemaining(), bot, params);
-
-  // TELL THREADS TO UPDATE
-  for(uint32_t i = 0; i < needs_to_update.size(); i++)
-  {
-    if (needs_to_update.at(i) == true)
-    {
-      bot.thread_control.at(i) = Update;
-    }
-  }
-
-  if (iter > existing_thread_count)
-  {
-    // CREATE NEW THREADS.
-  }
-
-  /*if (ack.settings.schedule != params.schedule) 
-  {
-    // Terminating threads.
-    //for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
-    //{
-      //bot.thread_control_and_updates.at(i).thread_control = Terminate;
-    //}
-
-    // Joining with threads.
-    //join_with_n_threads(threads, params.thread_pinnings.size());
-
-    // Update parameters.
-    params.schedule = ack.settings.schedule;
-
-    // Clear previous thread pinnings.
-    params.thread_pinnings.clear();
-
-    uint32_t i_w = 0;
-    stringstream thread_pinnings_stringstream;
-
-    while (ack.settings.thread_pinnings[i_w] != -1) 
-    {
-        // Record and update thread pinnings.
-        thread_pinnings_stringstream << ack.settings.thread_pinnings[i_w] << " ";
-        params.thread_pinnings.push_back(ack.settings.thread_pinnings[i_w]);
-        i_w++;
-    }
-
-    print("\n[Main] New schedule received!",
-          "\n[Main] Changing schedule to: ", Schedules[ack.settings.schedule], 
-          "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
-          "\n\n");
-
-    // Restart map_array:
-
-    // Reset terminate variables.
-    //for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
-    //{
-      //bot.thread_control_and_updates.at(i).thread_control = Execute;
-    //}
-    
-    // Recalculate info for data partitioning.
-    thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
-
-    // Copy thread data to update deque.
-  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-  {
-    bot.thread_control_and_updates.at(i).cpu_affinity     = thread_data_deque.at(i).cpu_affinity;
-    bot.thread_control_and_updates.at(i).chunk_size       = thread_data_deque.at(i).chunk_size;
-    bot.thread_control_and_updates.at(i).tapered_schedule = thread_data_deque.at(i).tapered_schedule;
-    bot.thread_control_and_updates.at(i).thread_control   = thread_data_deque.at(i).thread_control;
-  }
-
-  for (uint32_t i = 0; i < bot.thread_control_and_updates.size(); i++)
-  {
-    bot.thread_control_and_updates.at(i).thread_control = Update;
-  }
-
-    // Reset thread ids.
-    //threads.clear();
-
-    // Create all our needed threads.
-    //create_n_threads<in1, in2, out>(threads, params.thread_pinnings.size(), thread_data_deque);
-  }*/
-
-  return false;
-}
-
-
 /*
  * Implementation of the mapArray parallel programming pattern. If the output deque is not big enough, it will be 
  * resized.
@@ -738,7 +584,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     iter_data.tapered_schedule = thread_data_deque.at(i).tapered_schedule;
     iter_data.thread_control   = thread_data_deque.at(i).thread_control;
 
-    bot.thread_control_and_updates.push_front(iter_data);
+    bot.thread_control_and_updates.push_back(iter_data);
   }
 
   // Variables for creating and managing threads.
@@ -782,10 +628,12 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   print("\n[Main] Received ACK from controller!\n\n");
 
-  if (ack.settings.schedule != params.schedule) 
+  if (true) // (Check if we need to update) 
   {
     // Update parameters.
     params.schedule = ack.settings.schedule;
+
+    uint32_t current_num_threads = params.thread_pinnings.size();
 
     // Clear previous thread pinnings.
     params.thread_pinnings.clear();
@@ -797,7 +645,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     {
         // Record and update thread pinnings.
         thread_pinnings_stringstream << ack.settings.thread_pinnings[i_w] << " ";
-        params.thread_pinnings.push_back(ack.settings.thread_pinnings[i_w]);
+        params.thread_pinnings.push_front(ack.settings.thread_pinnings[i_w]);
         i_w++;
     }
 
@@ -805,6 +653,25 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
           "\n[Main] Changing schedule to: ", Schedules[ack.settings.schedule], 
           "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
           "\n\n");
+
+    uint32_t new_num_threads = params.thread_pinnings.size();
+
+
+
+    if (current_num_threads > new_num_threads)
+    {
+      uint32_t diff = current_num_threads - new_num_threads;
+
+      for (uint32_t i = bot.thread_control_and_updates.size() - 1; i >= new_num_threads; i--)
+      {
+        print("[Main] Terminating thread ", i, "\n");
+        bot.thread_control_and_updates.at(i).thread_control = Terminate;
+      }
+
+      join_with_n_threads(threads, diff);
+
+      bot.thread_control_and_updates.resize(new_num_threads);
+    }
     
     // Recalculate info for data partitioning.
     thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
@@ -825,6 +692,8 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   }
 
   socket.close();
+
+  print("\n\n\n", params.thread_pinnings.size(), "\n\n\n");
 
   join_with_n_threads(threads, params.thread_pinnings.size());
 
@@ -910,6 +779,8 @@ void *mapArrayThread(void *threadarg)
 
   stick_this_thread_to_cpu(my_data->cpu_affinity);
 
+  print("[Thread ", my_data->threadId, "] Pinning to ", my_data->cpu_affinity, "\n");
+
   // Initialize metrics
   Ms(metrics_thread_start(my_data->threadId));
 
@@ -944,6 +815,7 @@ void *mapArrayThread(void *threadarg)
       my_data->tapered_schedule = (*my_data->bot).thread_control_and_updates.at(my_data->threadId).tapered_schedule;
 
       stick_this_thread_to_cpu(my_data->cpu_affinity);
+      print("[Thread ", my_data->threadId, "] Pinning to ", my_data->cpu_affinity, "\n");
 
       tapered_chunk_size = my_data->chunk_size / 2;
 
