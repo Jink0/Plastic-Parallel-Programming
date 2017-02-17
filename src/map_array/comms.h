@@ -34,10 +34,11 @@ struct settings {
 };
 
 // Message headers
-#define APP_SYN 0
+#define CON_DATA_REP 0
+#define CON_UPDT_SND 1
 
-#define CON_ACK 10
-#define CON_SET 11
+#define APP_DATA_SND 10
+#define APP_UPDT_REP 11
 
 struct message {
 	int header = -1;
