@@ -553,7 +553,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     char thread_name[16];
     sprintf(thread_name, "MA Thread %u", i);
 
-    // Set thread name to something recognisable.
+    // Set thread name to something recognizable.
     pthread_setname_np(threads.at(i), thread_name);
 
     if (rc)
@@ -571,37 +571,43 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   //  Prepare our context and socket
   context_t context(1);
-  socket_t socket(context, ZMQ_DEALER);
+  socket_t socket(context, ZMQ_PAIR);
+  
+  //s_set_id(req_socket);
+  //req_socket.setsockopt(ZMQ_IDENTITY, to_string(pid));
 
-  s_set_id(socket);
-
-  print("\n[Main] Requesting socket from controller...\n\n");
+  print("\n[Main] Requesting req_socket from controller...\n\n");
   socket.connect("tcp://localhost:5555");
 
-  s_sendmore(socket, "");
+  s_send(socket, "Hello");
+
+  print("\nSent Hello\n\n");
+
+  string str = s_recv(socket);
+        
+  print("Received ", str, "\n\n");
+
+  str = s_recv(socket);
+        
+  print("Received ", str, "\n\n");
+
+  str = s_recv(socket);
+        
+  print("Received ", str, "\n\n");
+
+  s_send(socket, "End");
+
+  print("\nSent End\n\n");
+        
+  
 
 
 
+  //s_send(req_socket, "Hello2");
 
-  s_send(socket, "Hi Boss");
+  //print("\nSent Hello2\n\n");
 
-  //  Get workload from broker, until finished
-  s_recv(socket);     //  Envelope delimiter
-  string workload = s_recv(socket);
-
-  print(workload);
-
-  sleep(1);
-
-  s_recv(socket);     //  Envelope delimiter
-  workload = s_recv(socket);
-
-  print(workload);
-
-
-
-
-  struct message syn;
+  /*struct message syn;
 
   syn.header                   = APP_DATA_SND;
   syn.pid                      = pid;
@@ -611,18 +617,42 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   copy(params.thread_pinnings.begin(), params.thread_pinnings.end(), syn.settings.thread_pinnings);
 
-  //message_t msg (sizeof(syn));
-  //memcpy(msg.data(), &syn, sizeof(syn));
+  message_t msg (sizeof(syn));
+  memcpy(msg.data(), &syn, sizeof(syn));
 
   print("\n[Main] Sending SYN with PID ", pid, "...\n\n");
-  //socket.send(msg);
+  req_socket.send(msg);
+
+  message_t reply;
+  req_socket.recv(&reply);
+  //req_socket.recv(&reply);
+  //req_socket.recv(&reply);
+
+  struct message ack = *(static_cast<struct message*>(reply.data()));
+
+  print(ack.pid, "\n\n");
+
+  //message_t reply2;
+  //req_socket.recv(&reply2);
+  //req_socket.recv(&reply2);
+  //reply2 = s_recv(req_socket);
+
+  //struct message ac = *(static_cast<struct message*>(reply2.data()));
+
+  //print(ac.pid, "\n\n");
+
+
+
+
+
+
 
   //while (bot.numTasksRemaining() > 0)
   //{
     // Get the reply.
 
   /*message_t reply;
-    socket.recv(&reply);
+    req_socket.recv(&reply);
 
     struct message ack = *(static_cast<struct message*>(reply.data()));
 
@@ -713,7 +743,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     }*/
   //}
 
-  socket.close();
+  //socket.close();
 
   join_with_threads(threads, params.thread_pinnings.size());
 
