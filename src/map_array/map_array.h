@@ -9,9 +9,6 @@
 #include <unistd.h>         // sleep()
 #include <cxxabi.h>         // Demangling typenames (gcc only)
 #include <boost/thread.hpp> // boost::thread::hardware_concurrency();
-
-//#include <zmq.hpp>
-#include "zhelpers.hpp"
 #include <string>
 #include <iostream>
 
@@ -571,179 +568,117 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   //  Prepare our context and socket
   context_t context(1);
-  socket_t socket(context, ZMQ_PAIR);
-  
-  //s_set_id(req_socket);
-  //req_socket.setsockopt(ZMQ_IDENTITY, to_string(pid));
+  socket_t  socket(context, ZMQ_PAIR);
 
-  print("\n[Main] Requesting req_socket from controller...\n\n");
   socket.connect("tcp://localhost:5555");
 
-  s_send(socket, "Hello");
-
-  print("\nSent Hello\n\n");
-
-  string str = s_recv(socket);
+  print("\n[Main] Registering with controller...\n\n");
         
-  print("Received ", str, "\n\n");
+  struct message rgstr;
 
-  str = s_recv(socket);
-        
-  print("Received ", str, "\n\n");
+  rgstr.header                   = APP_REG;
+  rgstr.pid                      = pid;
+  rgstr.settings.schedule        = params.schedule;
 
-  str = s_recv(socket);
-        
-  print("Received ", str, "\n\n");
+  fill_n(rgstr.settings.thread_pinnings, MAX_NUM_THREADS, -1);
 
-  s_send(socket, "End");
+  copy(params.thread_pinnings.begin(), params.thread_pinnings.end(), rgstr.settings.thread_pinnings);
 
-  print("\nSent End\n\n");
-        
-  
-
-
-
-  //s_send(req_socket, "Hello2");
-
-  //print("\nSent Hello2\n\n");
-
-  /*struct message syn;
-
-  syn.header                   = APP_DATA_SND;
-  syn.pid                      = pid;
-  syn.settings.schedule        = params.schedule;
-
-  fill_n(syn.settings.thread_pinnings, MAX_NUM_THREADS, -1);
-
-  copy(params.thread_pinnings.begin(), params.thread_pinnings.end(), syn.settings.thread_pinnings);
-
-  message_t msg (sizeof(syn));
-  memcpy(msg.data(), &syn, sizeof(syn));
-
-  print("\n[Main] Sending SYN with PID ", pid, "...\n\n");
-  req_socket.send(msg);
-
-  message_t reply;
-  req_socket.recv(&reply);
-  //req_socket.recv(&reply);
-  //req_socket.recv(&reply);
-
-  struct message ack = *(static_cast<struct message*>(reply.data()));
-
-  print(ack.pid, "\n\n");
-
-  //message_t reply2;
-  //req_socket.recv(&reply2);
-  //req_socket.recv(&reply2);
-  //reply2 = s_recv(req_socket);
-
-  //struct message ac = *(static_cast<struct message*>(reply2.data()));
-
-  //print(ac.pid, "\n\n");
-
-
-
-
+  m_send(socket, rgstr);
 
 
 
   //while (bot.numTasksRemaining() > 0)
-  //{
+  for (uint32_t i = 0; i < 2; i++)
+  {
     // Get the reply.
+    struct message reply = m_recv(socket);
 
-  /*message_t reply;
-    req_socket.recv(&reply);
+    print("\n[Main] Received new parameters from controller!\n\n");
 
-    struct message ack = *(static_cast<struct message*>(reply.data()));
+    // Calculate new number of threads.
+    /*uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(reply.settings.thread_pinnings), end(reply.settings.thread_pinnings), -1);
 
-    print("\n[Main] Received ACK from controller!\n\n");
-
-    if (ack.settings.schedule != params.schedule) 
+    // If we have a surplus of threads;
+    if (params.thread_pinnings.size() > new_num_threads)
     {
-      // Calculate new number of threads.
-      uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(ack.settings.thread_pinnings), end(ack.settings.thread_pinnings), -1);
+      uint32_t iterator = bot.thread_control.size() - 1;
 
-      // If we have a surplus of threads;
-      if (params.thread_pinnings.size() > new_num_threads)
+      // Set excess threads to terminate.
+      while(iterator > new_num_threads - 1)
       {
-        uint32_t iterator = bot.thread_control.size() - 1;
-
-        // Set excess threads to terminate.
-        while(iterator > new_num_threads - 1)
-        {
-          bot.thread_control.at(iterator) = Terminate;
-        }
-
-        // Join with terminating threads.
-        join_with_threads(threads, params.thread_pinnings.size() - new_num_threads);
-
-        // Cleanup thread control vars.
-        bot.thread_control.resize(new_num_threads);
+        bot.thread_control.at(iterator) = Terminate;
       }
+
+      // Join with terminating threads.
+      join_with_threads(threads, params.thread_pinnings.size() - new_num_threads);
+
+      // Cleanup thread control vars.
+      bot.thread_control.resize(new_num_threads);
+    }
       
-      if (params.thread_pinnings.size() < new_num_threads)
-      {
+    if (params.thread_pinnings.size() < new_num_threads)
+    {
 
-      }
-
-      // Terminating threads.
-      bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
-
-      // Joining with threads.
-      join_with_threads(threads, params.thread_pinnings.size());
-
-      // Update parameters.
-      params.schedule = ack.settings.schedule;
-
-      // Clear previous thread pinnings.
-      params.thread_pinnings.clear();
-
-      uint32_t i_w = 0;
-      stringstream thread_pinnings_stringstream;
-
-      while (ack.settings.thread_pinnings[i_w] != -1) 
-      {
-          // Record and update thread pinnings.
-          thread_pinnings_stringstream << ack.settings.thread_pinnings[i_w] << " ";
-          params.thread_pinnings.push_back(ack.settings.thread_pinnings[i_w]);
-          i_w++;
-      }
-
-      print("\n[Main] New schedule received!",
-            "\n[Main] Changing schedule to: ", Schedules[ack.settings.schedule], 
-            "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
-            "\n\n");
-
-      // Restart map_array:
-
-      // Reset terminate variables.
-      bot.thread_control.assign(params.thread_pinnings.size(), Execute);
-      
-      // Recalculate info for data partitioning.
-      thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
-
-      // Reset thread ids.
-      threads.clear();
-      threads.resize(params.thread_pinnings.size());
-
-      // Create all our needed threads.
-      for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-      {
-        print("[Main] Creating thread ", i , "\n");
-
-        int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
-
-        if (rc)
-        {
-          // If we couldn't create a new thread, throw an error and exit.
-          print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-          exit(-1);
-        }
-      }
     }*/
-  //}
 
-  //socket.close();
+    // Terminating threads.
+    bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
+
+    // Joining with threads.
+    join_with_threads(threads, params.thread_pinnings.size());
+
+    // Update parameters.
+    params.schedule = reply.settings.schedule;
+
+    // Clear previous thread pinnings.
+    params.thread_pinnings.clear();
+
+    uint32_t i_w = 0;
+    stringstream thread_pinnings_stringstream;
+
+    while (reply.settings.thread_pinnings[i_w] != -1) 
+    {
+      // Record and update thread pinnings.
+      thread_pinnings_stringstream << reply.settings.thread_pinnings[i_w] << " ";
+      params.thread_pinnings.push_back(reply.settings.thread_pinnings[i_w]);
+      i_w++;
+    }
+
+    print("\n[Main] New schedule received!",
+          "\n[Main] Changing schedule to: ", Schedules[reply.settings.schedule], 
+          "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
+          "\n\n");
+
+    // Restart map_array:
+
+    // Reset terminate variables.
+    bot.thread_control.assign(params.thread_pinnings.size(), Execute);
+      
+    // Recalculate info for data partitioning.
+    thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
+
+    // Reset thread ids.
+    threads.clear();
+    threads.resize(params.thread_pinnings.size());
+
+    // Create all our needed threads.
+    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+    {
+      print("[Main] Creating thread ", i , "\n");
+
+      int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+
+      if (rc)
+      {
+        // If we couldn't create a new thread, throw an error and exit.
+        print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+        exit(-1);
+      }
+    }
+  }
+
+  socket.close();
 
   join_with_threads(threads, params.thread_pinnings.size());
 

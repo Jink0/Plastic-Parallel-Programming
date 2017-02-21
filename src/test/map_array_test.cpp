@@ -392,13 +392,13 @@ int main(int argc, char *argv[])
 
         for (uint32_t i = 0; i < as; i++) 
         {
-            print(output[i]);
+            //print(output[i]);
         }
 
         print("\n\n");
     }
 
-    sleep(10);
+    //sleep(10);
 
     return 0;
 }
