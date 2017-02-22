@@ -248,6 +248,9 @@ class BagOfTasks {
     // Variables to control if threads terminate.
     deque<Thread_Control> thread_control;
 
+    // Check for if bag is empty.
+    bool empty = false;
+
     // Constructor
     BagOfTasks(typename deque<in1>::iterator in1B, 
                typename deque<in1>::iterator in1E, 
@@ -310,6 +313,11 @@ class BagOfTasks {
         num_tasks = in1End - in1Begin;
       }
 
+      if (num_tasks == 0)
+      {
+        empty = true;
+      }
+
       // Advance our iterator so it now marks the end of our tasks.
       advance(in1Begin, num_tasks);
 
@@ -358,7 +366,7 @@ int stick_this_thread_to_cpu(uint32_t core_id) {
    return pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
 }
 
-
+enum Status {Alive, Sleeping, Terminated};
 
 // Data struct to pass to each thread.
 template <typename in1, typename in2, typename out>
@@ -381,6 +389,8 @@ struct thread_data
 
   // Flag which main thread will set to indicate new instructions.
   bool check_for_new_instructions = false;
+
+  Status status = Alive;
 };
 
 
@@ -570,6 +580,8 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   context_t context(1);
   socket_t  socket(context, ZMQ_PAIR);
 
+  //zmq_setsockopt(socket, ZMQ_RCVTIMEO, 0);
+
   socket.connect("tcp://localhost:5555");
 
   print("\n[Main] Registering with controller...\n\n");
@@ -588,95 +600,106 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
 
 
-  //while (bot.numTasksRemaining() > 0)
-  for (uint32_t i = 0; i < 2; i++)
+  while (bot.empty == false)
   {
-    // Get the reply.
-    struct message reply = m_recv(socket);
+    usleep(5);
 
-    print("\n[Main] Received new parameters from controller!\n\n");
+    // Get message from controller.
+    struct message msg = m_no_block_recv(socket);
 
-    // Calculate new number of threads.
-    /*uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(reply.settings.thread_pinnings), end(reply.settings.thread_pinnings), -1);
-
-    // If we have a surplus of threads;
-    if (params.thread_pinnings.size() > new_num_threads)
+    if (msg.header != -1)
     {
-      uint32_t iterator = bot.thread_control.size() - 1;
+      print("\n[Main] Received new parameters from controller!\n\n");
 
-      // Set excess threads to terminate.
-      while(iterator > new_num_threads - 1)
+      //print(msg.settings.schedule, "\n\n\n");
+
+      // Calculate new number of threads.
+      /*uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.settings.thread_pinnings), end(msg.settings.thread_pinnings), -1);
+
+      // If we have a surplus of threads;
+      if (params.thread_pinnings.size() > new_num_threads)
       {
-        bot.thread_control.at(iterator) = Terminate;
+        uint32_t iterator = bot.thread_control.size() - 1;
+
+        // Set excess threads to terminate.
+        while(iterator > new_num_threads - 1)
+        {
+          bot.thread_control.at(iterator) = Terminate;
+        }
+
+        // Join with terminating threads.
+        join_with_threads(threads, params.thread_pinnings.size() - new_num_threads);
+
+        // Cleanup thread control vars.
+        bot.thread_control.resize(new_num_threads);
+      }
+        
+      if (params.thread_pinnings.size() < new_num_threads)
+      {
+
+      }*/
+
+      // Terminating threads.
+      bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
+
+      // Joining with threads.
+      join_with_threads(threads, params.thread_pinnings.size());
+
+      // Update parameters.
+      params.schedule = msg.settings.schedule;
+
+      // Clear previous thread pinnings.
+      params.thread_pinnings.clear();
+
+      uint32_t i_w = 0;
+      stringstream thread_pinnings_stringstream;
+
+      while (msg.settings.thread_pinnings[i_w] != -1) 
+      {
+        // Record and update thread pinnings.
+        thread_pinnings_stringstream << msg.settings.thread_pinnings[i_w] << " ";
+        params.thread_pinnings.push_back(msg.settings.thread_pinnings[i_w]);
+        i_w++;
       }
 
-      // Join with terminating threads.
-      join_with_threads(threads, params.thread_pinnings.size() - new_num_threads);
+      print("\n[Main] New schedule received!",
+            "\n[Main] Changing schedule to: ", Schedules[msg.settings.schedule], 
+            "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
+            "\n\n");
 
-      // Cleanup thread control vars.
-      bot.thread_control.resize(new_num_threads);
-    }
-      
-    if (params.thread_pinnings.size() < new_num_threads)
-    {
+      // Restart map_array:
 
-    }*/
+      // Reset terminate variables.
+      bot.thread_control.assign(params.thread_pinnings.size(), Execute);
+        
+      // Recalculate info for data partitioning.
+      thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
-    // Terminating threads.
-    bot.thread_control.assign(params.thread_pinnings.size(), Terminate);
+      // Reset thread ids.
+      threads.clear();
+      threads.resize(params.thread_pinnings.size());
 
-    // Joining with threads.
-    join_with_threads(threads, params.thread_pinnings.size());
-
-    // Update parameters.
-    params.schedule = reply.settings.schedule;
-
-    // Clear previous thread pinnings.
-    params.thread_pinnings.clear();
-
-    uint32_t i_w = 0;
-    stringstream thread_pinnings_stringstream;
-
-    while (reply.settings.thread_pinnings[i_w] != -1) 
-    {
-      // Record and update thread pinnings.
-      thread_pinnings_stringstream << reply.settings.thread_pinnings[i_w] << " ";
-      params.thread_pinnings.push_back(reply.settings.thread_pinnings[i_w]);
-      i_w++;
-    }
-
-    print("\n[Main] New schedule received!",
-          "\n[Main] Changing schedule to: ", Schedules[reply.settings.schedule], 
-          "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
-          "\n\n");
-
-    // Restart map_array:
-
-    // Reset terminate variables.
-    bot.thread_control.assign(params.thread_pinnings.size(), Execute);
-      
-    // Recalculate info for data partitioning.
-    thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
-
-    // Reset thread ids.
-    threads.clear();
-    threads.resize(params.thread_pinnings.size());
-
-    // Create all our needed threads.
-    for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-    {
-      print("[Main] Creating thread ", i , "\n");
-
-      int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
-
-      if (rc)
+      // Create all our needed threads.
+      for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
       {
-        // If we couldn't create a new thread, throw an error and exit.
-        print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-        exit(-1);
+        print("[Main] Creating thread ", i , "\n");
+
+        int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+
+        if (rc)
+        {
+          // If we couldn't create a new thread, throw an error and exit.
+          print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+          exit(-1);
+        }
       }
     }
   }
+
+  struct message term;
+  term.header = APP_TERM;
+
+  m_send(socket, term);
 
   socket.close();
 

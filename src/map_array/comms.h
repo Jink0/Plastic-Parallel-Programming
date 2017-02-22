@@ -60,6 +60,24 @@ static struct message m_recv(socket_t &socket) {
     return *(static_cast<struct message*>(msg.data()));
 }
 
+// Receive 0MQ message from socket and convert into a message struct.
+static struct message m_no_block_recv(socket_t &socket) {
+
+    message_t msg;
+    int rc = socket.recv(&msg, ZMQ_NOBLOCK);
+
+    if (rc == 0)
+    {
+        struct message blank;
+
+        blank.header = -1;
+
+        return blank;
+    }
+
+    return *(static_cast<struct message*>(msg.data()));
+}
+
 // Send a message struct.
 static bool m_send(socket_t &socket, const struct message &to_send) {
 
