@@ -62,35 +62,46 @@ int main () {
 
         switch (data.header) {
             case APP_REG:
-                message_printout(Receving, data);
-                    
-                struct message rep;
-
-                rep.header            = CON_REP;
-                rep.pid               = data.pid;
-                rep.settings.schedule = Dynamic_chunks;
-
-                fill_n(rep.settings.thread_pinnings, MAX_NUM_THREADS, -1);
-
-                for (uint32_t i = 0; i < 4; i++)
                 {
-                    rep.settings.thread_pinnings[i] = i;
+                    message_printout(Receving, data);
+                        
+                    struct message rep;
+
+                    rep.header            = CON_REP;
+                    rep.pid               = data.pid;
+                    rep.settings.schedule = Dynamic_chunks;
+
+                    fill_n(rep.settings.thread_pinnings, MAX_NUM_THREADS, -1);
+
+                    for (uint32_t i = 0; i < 4; i++)
+                    {
+                        rep.settings.thread_pinnings[i] = i;
+                    }
+
+                    // Send reply to client.
+                    m_send(socket, rep);
+
+                    message_printout(Sending, rep);
+
+                    rep.settings.schedule = Static;
+
+                    sleep(3);
+
+                    m_send(socket, rep);
+
+                    message_printout(Sending, rep);
+
+                    break;
                 }
 
-                // Send reply to client.
-                m_send(socket, rep);
+            case APP_TERM:
+                {
+                    cout << "PID: " << data.pid << " terminated" << endl << endl;
 
-                message_printout(Sending, rep);
+                    // Remove application from active list.
 
-                rep.settings.schedule = Static;
-
-                sleep(3);
-
-                m_send(socket, rep);
-
-                message_printout(Sending, rep);
-
-                break;
+                    break;
+                }
         }
     }
     return 0;

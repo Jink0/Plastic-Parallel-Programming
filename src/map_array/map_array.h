@@ -580,8 +580,6 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   context_t context(1);
   socket_t  socket(context, ZMQ_PAIR);
 
-  //zmq_setsockopt(socket, ZMQ_RCVTIMEO, 0);
-
   socket.connect("tcp://localhost:5555");
 
   print("\n[Main] Registering with controller...\n\n");
@@ -598,8 +596,6 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   m_send(socket, rgstr);
 
-
-
   while (bot.empty == false)
   {
     usleep(5);
@@ -611,13 +607,11 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
     {
       print("\n[Main] Received new parameters from controller!\n\n");
 
-      //print(msg.settings.schedule, "\n\n\n");
-
       // Calculate new number of threads.
-      /*uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.settings.thread_pinnings), end(msg.settings.thread_pinnings), -1);
+      uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.settings.thread_pinnings), end(msg.settings.thread_pinnings), -1);
 
       // If we have a surplus of threads;
-      if (params.thread_pinnings.size() > new_num_threads)
+      /*if (params.thread_pinnings.size() > new_num_threads)
       {
         uint32_t iterator = bot.thread_control.size() - 1;
 
@@ -698,6 +692,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   struct message term;
   term.header = APP_TERM;
+  term.pid = pid;
 
   m_send(socket, term);
 
