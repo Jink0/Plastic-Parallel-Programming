@@ -1,0 +1,70 @@
+\documentclass{report}
+\usepackage{graphicx}
+\graphicspath{{graphics/}}
+\usepackage{biblatex}
+\addbibresource{references.bib}
+\usepackage{hyperref}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \vspace*{1cm}
+        
+        \Huge
+        An Investigation Into The Performance Of A Plastic Parallel Programming System
+        
+        \vspace{1.5cm}
+        
+        \large
+        \textbf{Mark Jenkins}
+        
+        \vspace{3.5cm}
+
+        \includegraphics[width=0.3\textwidth]{university}
+
+        \vspace{3.5cm}
+        
+        School Of Informatics\\
+        University Of Edinburgh\\
+        2016
+        
+    \end{center}
+\end{titlepage}
+
+\input{abstract}
+
+\tableofcontents
+
+\newpage
+
+\chapter{Introduction}
+\input{chapters/introduction}
+
+\chapter{Background}
+\input{chapters/background}
+
+\chapter{Design}
+\input{chapters/design}
+
+\chapter{Implementation}
+\input{chapters/implementation}
+
+\chapter{Evaluation And Methodology}
+\input{chapters/evaluation}
+
+\chapter{Results}
+\input{chapters/results}
+
+\chapter{Discussion}
+\input{chapters/discussion}
+
+\chapter{Conclusion}
+\input{chapters/conclusion}
+
+\newpage
+
+% \bibliography{references} 
+% \bibliographystyle{ieeetr}
+
+\end{document}
