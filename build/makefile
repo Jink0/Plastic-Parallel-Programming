@@ -1,28 +1,49 @@
-CONTROLLER_DIR  = ../src/controller
-MAP_ARRAY_DIR   = ../src/map_array
-TEST_DIR        = ../src/test
+SRC_DIR   = ../src
+UTILS_DIR = ../utils
 
-BIN_DIR         = ../bin
-DEPENDENCY_FILE = ./dependencies.d
+INCLUDE_DIR = ../include
 
-vpath %.cpp $(CONTROLLER_DIR) $(MAP_ARRAY_DIR) $(TEST_DIR)
-vpath %.h $(MAP_ARRAY_DIR)
+BIN_DIR    = ../bin
+OBJECT_DIR = obj
 
-CPPFLAGS += -Wall -pthread -std=c++11 -I$(MAP_ARRAY_DIR) -g -DMETRICS
 
-LIBS += -lboost_filesystem -lboost_system -lboost_thread -lzmq
 
--include $(DEPENDENCY_FILE)
+GCC       = g++
+CPPFLAGS  = -Wall -pthread -std=c++11 -I$(INCLUDE_DIR) -g -DMETRICS
+LIB_FLAGS = -lboost_filesystem -lboost_system -lboost_thread -lzmq
 
-include $(CONTROLLER_DIR)/makefile
-include $(TEST_DIR)/makefile
 
-.PHONY: dependencies clean
 
-dependencies:
-	$(CXX) -MM -std=c++11 -I$(MAP_ARRAY_DIR) $(wildcard ../src/controller/*.cpp) > $(DEPENDENCY_FILE)
-	$(CXX) -MM -std=c++11 -I$(MAP_ARRAY_DIR) $(wildcard ../src/map_array/*.cpp)  >> $(DEPENDENCY_FILE)
-	$(CXX) -MM -std=c++11 -I$(MAP_ARRAY_DIR) $(wildcard ../src/test/*.cpp) 		 >> $(DEPENDENCY_FILE)
+#_DEPS = map_array_test.hpp utils.hpp
+#DEPS  = $(patsubst %,$(INCLUDE_DIR)/%,$(_DEPS))
+
+
+
+_MAT_OBJ = map_array_test.o utils.o metrics.o workloads.o
+MAT_OBJ  = $(patsubst %,$(OBJECT_DIR)/%,$(_MAT_OBJ))
+
+_C_OBJ = controller.o
+C_OBJ  = $(patsubst %,$(OBJECT_DIR)/%,$(_C_OBJ))
+
+
+
+$(OBJECT_DIR)/%.o: $(UTILS_DIR)/%.cpp #$(DEPS)
+	$(GCC) -c -o $@ $< $(CPPFLAGS)
+
+$(OBJECT_DIR)/%.o: $(SRC_DIR)/%.cpp #$(DEPS)
+	$(GCC) -c -o $@ $< $(CPPFLAGS)
+
+
+
+map_array_test: $(MAT_OBJ)
+	$(GCC) -o $(BIN_DIR)/$@ $^ $(CPPFLAGS) $(LIB_FLAGS)
+
+controller:  $(C_OBJ)
+	$(GCC) -o $(BIN_DIR)/$@ $^ $(CPPFLAGS) $(LIB_FLAGS)
+
+
+
+.PHONY: clean
 
 clean:
-	rm -rf *.o && rm -rf ../bin/*
+	rm -f $(OBJECT_DIR)/*.o $(BIN_DIR)/*

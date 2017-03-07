@@ -11,7 +11,10 @@
 #undef BOOST_NO_CXX11_SCOPED_ENUMS
 
 // Map array library for testing
-#include "map_array.h"
+#include "map_array.hpp"
+
+// Workloads for workload generation
+#include "workloads.hpp"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -283,64 +286,6 @@ void createFolderAndMove()
 
 
 
-/*
- * Test user function
- */
-
-int returnOne(int in1, deque<int> in2)
-{
-    return 1;
-}
-
-
-
-/*
- * Test user function
- */
-
-int oneTouch(int in1, deque<int> in2)
-{
-    return in1 + in2[0];
-}
-
-
-
-/*
- * Test user function
- */
-
-int collatz(int weight, deque<int> seeds) 
-{
-    for (int i = 0; i < weight; i++)
-    {
-        int start = seeds[0];
-
-        if (start < 1) 
-        {
-            fprintf(stderr,"Error, cannot start collatz with %d\n", start);
-            return -1;
-        }
-
-        int count = 0;
-        while (start != 1) 
-        {
-            count++;
-            if (start % 2) 
-            {
-                start = 3 * start + 1;
-            } 
-            else 
-            {
-                start = start/2;
-            }
-        }
-    }
-    
-    return 1;
-}
-
-
-
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -355,14 +300,14 @@ int main(int argc, char *argv[])
     // Print our experiment parameters.
     printExperimentParameters(exParamsVector);
 
-    // Record current filepath before we move so we can copy the config file later.
-    path p(current_path());
+    // Record filepath of the config file before we move so we can copy it later.
+    path p(current_path() /= argv[1]);
 
     // Create a folder for this run's output logs, and change the current working directory to it.
     createFolderAndMove();
 
     // Copy our config file so we know what parameters were used.
-    copy_file(p /= argv[1], current_path() /= argv[1]);
+    copy_file(p, current_path() /= p.filename());
 
     // Run each experiment.
     for (uint32_t i = 0; i < exParamsVector.size(); i++)

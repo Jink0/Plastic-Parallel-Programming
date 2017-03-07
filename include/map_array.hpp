@@ -1,9 +1,9 @@
-#ifndef MAP_ARRAY_H
-#define MAP_ARRAY_H
+#ifndef MAP_ARRAY_HPP
+#define MAP_ARRAY_HPP
 
 #include <iostream>         // cout
 #include <vector>           // Vectors
-#include <deque>            // Double queues
+#include <deque>            // Double ended queues
 #include <mutex>            // mutexes
 #include <pthread.h>        // Thread and mutex functions
 #include <unistd.h>         // sleep()
@@ -12,7 +12,8 @@
 #include <string>
 #include <iostream>
 
-#include <comms.h>
+#include <utils.hpp>
+#include <comms.hpp>
 
 using namespace std;
 
@@ -23,7 +24,7 @@ using namespace std;
 #endif
 
 #ifdef METRICS
-  #include <metrics.h> // Our metrics library
+  #include <metrics.hpp> // Our metrics library
 #endif
 
 /*
@@ -31,23 +32,21 @@ using namespace std;
  * you cannot seperate the definition of a template class from its declaration and put it inside a .cpp file.
  */
 
-
-
 /*
  * Mutexed print function:
  */
 
 // With nothing to add to the output stream, just return the stream.
-ostream&
-print_rec(ostream& outS)
+std::ostream&
+print_rec(std::ostream& outS)
 {
     return outS;
 }
 
 // Recursively print arguments.
 template <class A0, class ...Args>
-ostream&
-print_rec(ostream& outS, const A0& a0, const Args& ...args)
+std::ostream&
+print_rec(std::ostream& outS, const A0& a0, const Args& ...args)
 {
     outS << a0;
     return print_rec(outS, args...);
@@ -55,31 +54,29 @@ print_rec(ostream& outS, const A0& a0, const Args& ...args)
 
 // Case when given an output stream.
 template <class ...Args>
-ostream&
-print(ostream& outS, const Args& ...args)
+std::ostream&
+print(std::ostream& outS, const Args& ...args)
 {
     return print_rec(outS, args...);
 }
 
 // Retrieve the mutex. Must be done using this non-templated function, so that we have one mutex across all 
 // instantiations of the templated function.
-mutex&
+std::mutex&
 get_cout_mutex()
 {
-    static mutex m;
+    static std::mutex m;
     return m;
 }
 
 // The main print function defaults to the cout output stream.
 template <class ...Args>
-ostream&
+std::ostream&
 print(const Args& ...args)
 {
-    lock_guard<mutex> _(get_cout_mutex());
-    return print(cout, args...);
+    std::lock_guard<std::mutex> _(get_cout_mutex());
+    return print(std::cout, args...);
 }
-
-
 
 // Parameters with default values.
 struct parameters 
@@ -351,21 +348,6 @@ class BagOfTasks {
 
 
 
-int stick_this_thread_to_cpu(uint32_t core_id) {
-   uint32_t num_cores = sysconf(_SC_NPROCESSORS_ONLN);
-
-   if (core_id >= num_cores)
-      return EINVAL;
-
-   cpu_set_t cpuset;
-   CPU_ZERO(&cpuset);
-   CPU_SET(core_id, &cpuset);
-
-   pthread_t current_thread = pthread_self();    
-
-   return pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
-}
-
 enum Status {Alive, Sleeping, Terminated};
 
 // Data struct to pass to each thread.
@@ -608,10 +590,10 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
       print("\n[Main] Received new parameters from controller!\n\n");
 
       // Calculate new number of threads.
-      uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.settings.thread_pinnings), end(msg.settings.thread_pinnings), -1);
+      /*uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.settings.thread_pinnings), end(msg.settings.thread_pinnings), -1);
 
       // If we have a surplus of threads;
-      /*if (params.thread_pinnings.size() > new_num_threads)
+      if (params.thread_pinnings.size() > new_num_threads)
       {
         uint32_t iterator = bot.thread_control.size() - 1;
 
@@ -707,4 +689,4 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   Ms(metrics_exit());
 }
 
-#endif /* MAP_ARRAY_H */
+#endif // MAP_ARRAY_HPP

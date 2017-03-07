@@ -1,5 +1,5 @@
-#ifndef COMMS_H
-#define COMMS_H
+#ifndef COMMS_HPP
+#define COMMS_HPP
 
 #include <zmq.hpp> // ZMQ communication library.
 
@@ -52,13 +52,13 @@ struct message {
 };
 
 // Receive 0MQ message from socket and convert into a message struct.
-static struct message m_recv(socket_t &socket) {
+/*static struct message m_recv(socket_t &socket) {
 
     message_t msg;
     socket.recv(&msg);
 
     return *(static_cast<struct message*>(msg.data()));
-}
+}*/
 
 // Receive 0MQ message from socket and convert into a message struct.
 static struct message m_no_block_recv(socket_t &socket) {
@@ -100,4 +100,4 @@ static bool m_send(socket_t &socket, const struct message &to_send) {
     return (rc);
 }*/
 
-#endif
+#endif // COMMS_HPP

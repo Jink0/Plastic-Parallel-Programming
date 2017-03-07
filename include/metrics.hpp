@@ -1,5 +1,5 @@
-#ifndef METRICS_H
-#define METRICS_H
+#ifndef METRICS_HPP
+#define METRICS_HPP
 
 
 
@@ -53,4 +53,4 @@ void metrics_calc(void);
 // Cleanup.
 void metrics_exit(void);
 
-#endif /* METRICS_H */
+#endif // METRICS_HPP

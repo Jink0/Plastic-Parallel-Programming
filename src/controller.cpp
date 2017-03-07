@@ -1,9 +1,3 @@
-//
-//  Hello World server in C++
-//  Binds REP socket to tcp://*:5555
-//  Expects "Hello" from client, replies with "World"
-//
-//#include <zmq.hpp>
 #include <string>
 #include <iostream>
 
@@ -11,7 +5,7 @@
 
 #include <boost/thread.hpp> // boost::thread::hardware_concurrency();
 
-#include <comms.h>
+#include <comms.hpp>
 
 using namespace std;
 using namespace zmq;
