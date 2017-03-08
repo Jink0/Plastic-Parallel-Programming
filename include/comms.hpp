@@ -52,13 +52,13 @@ struct message {
 };
 
 // Receive 0MQ message from socket and convert into a message struct.
-/*static struct message m_recv(socket_t &socket) {
+static struct message m_recv(socket_t &socket) {
 
     message_t msg;
     socket.recv(&msg);
 
     return *(static_cast<struct message*>(msg.data()));
-}*/
+}
 
 // Receive 0MQ message from socket and convert into a message struct.
 static struct message m_no_block_recv(socket_t &socket) {
@@ -88,16 +88,5 @@ static bool m_send(socket_t &socket, const struct message &to_send) {
 
     return rc;
 }
-
-//  Send a message struct as multipart non-terminal.
-/*static bool m_sendmore(socket_t & socket, const struct message &to_send) {
-
-    message_t msg(sizeof(to_send));
-    memcpy(msg.data(), &to_send, sizeof(to_send));
-
-    bool rc = socket.send(msg, ZMQ_SNDMORE);
-
-    return (rc);
-}*/
 
 #endif // COMMS_HPP

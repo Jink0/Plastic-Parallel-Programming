@@ -16,6 +16,8 @@
 // Workloads for workload generation
 #include "workloads.hpp"
 
+#include <utils.hpp>
+
 using namespace std;
 using namespace boost::filesystem;
 
