@@ -9,8 +9,8 @@ OBJECT_DIR = obj
 
 
 GCC       = g++
-CPPFLAGS  = -Wall -pthread -std=c++11 -I$(INCLUDE_DIR) -g -DMETRICS
-LIB_FLAGS = -lboost_filesystem -lboost_system -lboost_thread -lzmq -fopenmp
+CPPFLAGS  = -Wall -pthread -std=c++11 -I$(INCLUDE_DIR) -g -DMETRICS -fopenmp
+LIB_FLAGS = -lboost_filesystem -lboost_system -lboost_thread -lzmq
 
 
 
@@ -23,12 +23,12 @@ _MAT_OBJ = map_array_test.o utils.o metrics.o workloads.o
 MAT_OBJ  = $(patsubst %,$(OBJECT_DIR)/%,$(_MAT_OBJ))
 
 _CON_OBJ = controller.o 
-C_OBJ  = $(patsubst %,$(OBJECT_DIR)/%,$(_CON_OBJ))
+C_OBJ    = $(patsubst %,$(OBJECT_DIR)/%,$(_CON_OBJ))
 
-_SEQ_OBJ = sequential_test.o utils.o workloads.o
+_SEQ_OBJ = sequential_test.o utils.o workloads.o metrics.o
 SEQ_OBJ  = $(patsubst %,$(OBJECT_DIR)/%,$(_SEQ_OBJ))
 
-_PAR_OBJ = parallel_test.o workloads.o
+_PAR_OBJ = parallel_test.o workloads.o metrics.o utils.o
 PAR_OBJ  = $(patsubst %,$(OBJECT_DIR)/%,$(_PAR_OBJ))
 
 

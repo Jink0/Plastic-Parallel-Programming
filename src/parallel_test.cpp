@@ -3,17 +3,24 @@
 // Workloads for workload generation
 #include "workloads.hpp"
 
+#include "metrics.hpp"
+#include "utils.hpp"
+
 #include <stdint.h>
 #include <omp.h>
 #include <iostream>
 
-#define CHUNKSIZE 10
+#define CHUNKSIZE 500
+#define N_THREADS 2
 
 int main(int argc, char *argv[])
 {
+	// Initialise metrics.
+  	metrics_init(N_THREADS, string(argv[1]) + ".csv");
+
 	uint32_t as = 10000;
 
-	/*// Experiment input vectors.
+	// Experiment input vectors.
     deque<int> input1(as);
     deque<int> input2(as);
 
@@ -31,37 +38,46 @@ int main(int argc, char *argv[])
     // Output deque.
     deque<int> output(as);
 
-    // Run between iterator ranges, stepping through input1 and output vectors
-    for (uint32_t i = 0; i < as; i++)
-    { 
-      // Run user function
-      output.at(i) = collatz(input1.at(i), input2);
-    }*/
+    
 
-    int nthreads, tid, i, chunk;
-	float a[as], b[as], c[as];
+    uint32_t nthreads, tid, i;
 
-	/* Some initializations */
-	for (i=0; i < as; i++)
-	  a[i] = b[i] = i * 1.0;
-	chunk = CHUNKSIZE;
+	uint32_t chunk = CHUNKSIZE;
 
-	#pragma omp parallel shared(a,b,c,nthreads,chunk) private(i,tid)
-	  {
+	omp_set_dynamic(0);     // Explicitly disable dynamic teams
+	omp_set_num_threads(N_THREADS); // Use 4 threads for all consecutive parallel regions
+
+	#pragma omp parallel shared(input1, input2, output, nthreads, chunk) private(i,tid) 
+	{
 	  tid = omp_get_thread_num();
-	  if (tid == 0)
-	    {
+	  metrics_thread_start(tid);
+
+	  if (tid == 0) {
 	    nthreads = omp_get_num_threads();
-	    std::cout << "Number of threads = " << nthreads << std::endl;
-	    }
-	  std::cout << "Thread " << tid << " starting...\n";
+	    print("Number of threads = ", nthreads, "\n");
+	  }
+
+	  print("Thread ", tid, " starting...\n");
 
 	  #pragma omp for schedule(dynamic,chunk)
-	  for (i=0; i<as; i++)
-	    {
-	    c[i] = a[i] + b[i];
-	    std::cout << "Thread " << tid << ": c[" << i << "]= " << c[i] << std::endl;
-	    }
+	  for (i = 0; i < as; i++) {
+	  	metrics_starting_work(tid);
+	    output.at(i) = collatz(input1.at(i), input2);
+	    metrics_finishing_work(tid);
 
+	  }
+
+	  metrics_thread_finished(tid);
   	}  /* end of parallel section */
+
+	metrics_finalise();
+
+  	metrics_calc();
+
+  	metrics_exit();
+
+	for (i = 0; i < as; i++) 
+    {
+        //print(output.at(i));
+    }
 }

@@ -51,7 +51,7 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
   Ms(print("[Main] Metrics on!\n\n"));
 
   // Initialise metrics.
-  Ms(metrics_init(params.thread_pinnings.size(), output_filename + ".csv"));
+  Ms(metrics_init(4, output_filename + ".csv"));
 
   // Print the number of processors we can detect.
   print("[Main] Found ", params.thread_pinnings.size(), " processors\n");

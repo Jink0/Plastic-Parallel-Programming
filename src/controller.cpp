@@ -63,7 +63,7 @@ int main () {
 
                     rep.header            = CON_REP;
                     rep.pid               = data.pid;
-                    rep.settings.schedule = Dynamic_chunks;
+                    rep.settings.schedule = Static;
 
                     fill_n(rep.settings.thread_pinnings, MAX_NUM_THREADS, -1);
 
@@ -73,14 +73,6 @@ int main () {
                     }
 
                     // Send reply to client.
-                    m_send(socket, rep);
-
-                    message_printout(Sending, rep);
-
-                    rep.settings.schedule = Static;
-
-                    sleep(3);
-
                     m_send(socket, rep);
 
                     message_printout(Sending, rep);

@@ -3,10 +3,18 @@
 // Workloads for workload generation
 #include "workloads.hpp"
 
+#include "metrics.hpp"
+
+#include "utils.hpp"
+
 #include <stdint.h>
 
 int main(int argc, char *argv[])
 {
+	// Initialise metrics.
+  	metrics_init(1, string(argv[1]) + ".csv");
+  	metrics_thread_start(0);
+
 	uint32_t as = 10000;
 
 	// Experiment input vectors.
@@ -27,10 +35,26 @@ int main(int argc, char *argv[])
     // Output deque.
     deque<int> output(as);
 
-    // Run between iterator ranges, stepping through input1 and output vectors
     for (uint32_t i = 0; i < as; i++)
     { 
+      metrics_starting_work(0);
+  
       // Run user function
       output.at(i) = collatz(input1.at(i), input2);
+
+      metrics_finishing_work(0);
     }
+
+    metrics_thread_finished(0);
+
+    for (uint32_t i = 0; i < as; i++) 
+    {
+        //print(output.at(i));
+    }
+
+    metrics_finalise();
+
+  	metrics_calc();
+
+  	metrics_exit();
 }

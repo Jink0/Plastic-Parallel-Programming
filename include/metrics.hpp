@@ -1,7 +1,7 @@
 #ifndef METRICS_HPP
 #define METRICS_HPP
 
-
+#include <string>
 
 /*
  * Functions for calculating various metrics such as time in overhead/work etc. Each thread can only modify its own
