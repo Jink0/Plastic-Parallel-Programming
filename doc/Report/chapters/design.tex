@@ -1,4 +1,57 @@
 %!TEX root = ../Report.tex
-\section{}
-
 ***Explain pattern implemented, (similar to OpenMP (Loop scheduling) and skepu, add differences to blackbourn's work) details of library (Controller etc), and how it may be used in a real system***
+
+In this chapter, we will discuss the current solutions for easy parallel programming, the design of the system created to investigate this problem, and detail how such a system would be used in a real-world application.
+
+\section{Current Solutions}
+
+Current solutions for parallel programming include:
+
+\begin{itemize}
+	\item Pthreads (POSIX Threads)
+	\item MPI 	   (Message Passing Interface)
+	\item OpenMP   (Open Multi-Processing)
+\end{itemize}
+
+These are the more conventional methods of parallel programming. Pthreads and MPI 
+
+Each of these methods have their own way of dealing with the complications introduced with parallel programming, which range from race conditions to limited scalability. These new problems can certainly be overwhelming to a traditionally sequential application programmer, so much so that there is entire books dedicated to the use of each of these particular parallel programming methods. 
+
+There does exist attempts to make parallel programming simple and easy for a transitioning programmer. They consist of:
+
+\begin{itemize}
+	\item SkePU
+	\item ***Any other skeleton/pattern libraries, or some library that attempts to make parallel programming easy? It would be good to have multiple examples***
+\end{itemize}
+
+These methods simplify the problem, with SkePU utilizing skeleton programming it is the closest to the system we wish to implement.
+***Add a bit more here, talking about how they simplify the process?***
+
+\section{System description}
+
+The ideas described in the background section will be combined, to provide an easy to use skeleton programming library that includes the features of plasticity and contention aware scheduling. To keep it simple, we start with a single parallel pattern, and add then plasticity. This would allow us to experiment with the specifics of an implementation, and how they affect the performance of the system.
+
+Just considering the case with a single program running, (So no contention aware scheduling), we can explore how we can adapt the program using plasticity at runtime to improve performance depending upon the conditions of the the machine (e.g., is there more CPU cores available) and the problem (e.g. do we have many small tasks or few large tasks.) 
+
+In order to explore situations with two parallel programs running simultaneously, our library needs to be able to communicate with other instances, and adapt it's behaviour accordingly. It would also be convenient to have a single place from which we control the aspects of the programs. To this end, our implementation includes a separate controller application, whose job it is to manage the parallel programs running on the machine using our library. With a separate controller, we can easily provide a single, known point of contact for the parallel programs, and compute the individual program parameters with respect to all aspects of the system.
+
+
+The parallel backend that the system is based upon is Pthreads, due to it's wide availability and the level of fine control the programmer has access to.
+
+
+
+***THREAD PINNING!***
+
+
+
+As discussed in the background section, one of the key ides behind the project is that of skeleton programming, using predefined patterns to aid the programmer. The first pattern implemented is the map array pattern, with further patterns left for possible future work. Map-array is similar to the map pattern, in that it applies a given user function to each element in a list, however map-array also allows the function to access a user provided array. This was chosen as the map pattern is likely the most well known pattern and certainly one of the most useful, and map-array provides further functionality on top of this. It also provides a good basis for developing further patterns, and it also allows more complex testing, which will be covered in the evaluation section of this report.
+
+The full test suite of programs includes our parallel library and controller application, and multiple test programs for testing the system with different parameters, and for providing comparable statistics from real-world alternatives, in particular a sequential implementation and an OpenMP implementation.
+
+\section{Real-World Applications}
+
+A real-world version of our library would include multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation). It's feasible that the system could asses both the tasks presented and the environment (e.g. the particulars of the machine), and automatically allocate the resources of the machine so we perform in the most efficient manner.
+
+This system would be useful in any performance orientated application, even when the machine will only be running a single instance, as we can still optimize the implementation to the environment on that machine. It would, however, come into it's own when we have multiple instances running simultaneously on a machine, a common situation with modern multiprogramming machines.
+
+(Could be used on multiple nodes in a distributed system?)
