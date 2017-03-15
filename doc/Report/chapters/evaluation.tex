@@ -1,4 +1,30 @@
 %!TEX root = ../Report.tex
-\section{}
 
 ***Discuss the systems used briefly, runtime of experiments? evaluation methodology (done with nothing else running?, Different array access patterns? How did you create a synthetic workload?)***
+
+To properly evaluate the system, 
+
+
+
+\section{Evaluation Methodology}
+
+The experiments were run on an Ubuntu virtual machine, with four cores, 4096MB of memory, and the rest of the system at idle.
+
+To evaluate the performance of the system, we need to synthesize a real-world workload. One which we can scale, so we can test different sized tasks and varying task distributions. To do this we use the Collatz function to generate a CPU intensive workload. A constant starting number is used, and the sequence is repeated multiple times, to scale the workload.
+
+Multiple different statistics can be collected for each thread:
+
+\begin{enumerate}
+	\item Total runtime
+	\item Time spent doing work
+	\item Time spent in overhead
+	\item Time blocked by main thread
+	\item Number of tasks completed
+\end{enumerate}
+
+assortment of programs
+
+test machine
+repeats
+
+future work - array access patterns
