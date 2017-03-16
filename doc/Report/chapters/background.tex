@@ -1,19 +1,51 @@
 %!TEX root = ../Report.tex
 
-In this chapter, we will explore the three key ideas requisite to this project, such that we can discuss how they are combined and the implications.
+In this chapter, we will detail the current solutions for parallel programming. We will then explore the three key ideas requisite to this project, such that we can discuss how they are combined and the implications.
 
-\section{What Is Co-Scheduling?}
+The main new idea in this project is that of dynamic contention aware scheduling. It has been shown to be an important factor in multiprogramming systems with performance implications (cite LIRA). Plasticity is a technique to respond to this challenge, and take it further. This results in complex code, making it hard to ensure correctness. So we use skeletons to abstract this complexity away from the programmer. It also has the nice side effect of dividing the challenge into a pattern-by-pattern basis.
 
-It is known that in multiprogramming systems, with many programs running simultaneously, the choice of program to socket mapping significantly affects the performance of the system. (cite LIRA Section 2: Motivating Example) In the cite'd(?) case, just considering two programs running on the same socket, we can see from the graph in figure 2 (Cite) that certain programs perform differently with others, with some strange cases where the programs actually display better performance when running in contention with another.
+In this project we will produce such skeletons, and investigate the performance implications of these ideas, as it is not known whether they will have a significant effect.
 
-So with this evidence, we can see that if we take into account these factors in our scheduler, we may obtain better overall performance. The outcome of the LIRA paper concludes that throughput gains of 3-7\% can be seen. Socket aware scheduling in this manner is called co-scheduling. Adding in the plastic programming idea could make this particularly powerful, because we know and control the specifics of the implementations, and not only can we control what program runs where, we can also adjust what implementation the program is using. As an example of how this would work in practice, see the following flow diagram:
 
-\begin{center}
-\vspace{0.5cm}
-\includegraphics[width=1\textwidth]{co-scheduling_flow_diagram}
-\end{center}
 
-NOTE - CHANGE THIS GRAPH TO REFLECT FINAL IMPLEMENTATION
+\section{Current Solutions}
+
+Current solutions for parallel programming include:
+
+\begin{itemize}
+	\item Pthreads (POSIX Threads)
+	\item MPI 	   (Message Passing Interface)
+	\item OpenMP   (Open Multi-Processing)
+\end{itemize}
+
+These are the more conventional methods of parallel programming.
+
+Pthreads provides the highest level of fine grain control, leaving most of the work to the programmer. As such, some parallel processing techniques may only be possible with Pthreads. It is implemented in the POSIX library, and is available with the standard GNU compiler collection (\textbf{gcc}). (***Is this accurate?***)
+
+MPI is a communication protocol, and as such mostly details how threads can communicate. It is the dominant model used in the high performance computing industry today (cite https://dl.acm.org/citation.cfm?id=1188565). It can not only be used to implement a parallel program running on a single machine, but can also be used to model a parallel program running on a distributed memory system.
+
+OpenMP is comprised of compiler directives, runtime library routines, and environment variables. It is mostly used for loop parallelization, and is much higher level. It is also not limited to C.
+
+Each of these methods have their own way of dealing with the complications introduced with parallel programming, which range from race conditions to limited scalability. These new problems can certainly be overwhelming to a traditionally sequential application programmer, so much so that there is entire books dedicated to the use of each of these particular parallel programming methods. 
+
+There does exist attempts to make parallel programming simple and easy for a transitioning programmer. These include:
+
+\begin{itemize}
+	\item SkePU
+	\item The Münster Skeleton Library Muesli
+\end{itemize}
+
+These methods simplify the problem, with both utilizing skeleton programming to do so. Since each SkePU skeleton has multiple implementations, and SkePU automatically selects the expected fastest implementation variant, it is the closest to the system we wish to implement.
+
+
+
+\section{What Is Contention Aware Scheduling?}
+
+It is known that in multiprogramming systems, with many programs running simultaneously, the choice of program to socket mapping significantly affects the performance of the system. (cite LIRA Section 2: Motivating Example) In the cite'd(?) case, just considering two programs running on the same socket, we can see from the graph in figure 2 (Cite) that certain programs perform differently with others, with some strange cases where the programs actually display better performance when running in contention with another. This problem is called co-scheduling.
+
+So with this evidence, we can see that if we take into account these factors in our scheduler, we may obtain better overall performance. The outcome of the LIRA paper concludes that throughput gains of 3-7\% can be seen. Socket/resource aware scheduling in this manner is called a contention aware scheduler. Adding in the plastic programming idea could make this particularly powerful, because we know and control the specifics of the implementations, and not only can we control what program runs where, we can also adjust the implementation the program is using.
+
+
 
 \section{What Is Plastic Programming?}
 
@@ -25,19 +57,15 @@ Such compositions are commonplace, such as the sorting example discussed in the 
 	\includegraphics[width=0.8\textwidth]{plastic_graph}
 \end{center}
 
+
+
 \section{What Is Skeleton Programming?}
 
 Skeleton programming is a high-level programming model. Skeletons allow us to abstract away all the complexity involved in parallel programming, plastic programming, and co-scheduling. The essence of skeleton programming is that the skeleton provides the core structure of an algorithm, the user provides some code (In our case, a function), which then produces a correct program for the task at hand. The skeleton handles the hard-work of providing and optimizing the code (In our case, dealing with parallelism, plasticity, and co-scheduling). The consequences of this are twofold:
 
 \begin{itemize}
-	\item Errors are reduced substantially, as parallel programming is not easy, even without plasticity and co-scheduling.
+	\item Errors are reduced substantially, as parallel programming is not easy, even without plasticity and contention aware scheduling.
 	\item We can assess the program's complexity, since we know the algorithmic details of the skeleton.
 \end{itemize}
 
 Typically, multiple skeletons are combined to produce a more complex program, for example, a common combination is Map and Reduce. The ability to combine skeletons makes them a powerful tool, allowing programmers to easily create clean complex programs.
-
-\section{Summary}
-
-The main new idea in this project is that of co-scheduling. It is an important factor in multiprogramming systems with performance implications. Plasticity is a technique to respond to this challenge, and take it further. This results in complex code, making it hard to ensure correctness. So we use skeletons to hide this complexity from the programmer. It also has the nice side effect of dividing the challenge into a pattern-by-pattern basis.
-
-In this project we will produce such skeletons, and investigate the performance implications of these ideas, as it is not known whether they will have a significant effect.

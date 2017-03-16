@@ -1,41 +1,43 @@
 \boolfalse {citerequest}\boolfalse {citetracker}\boolfalse {pagetracker}\boolfalse {backtracker}\relax 
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {1}Introduction}{2}{chapter.1}
+\contentsline {chapter}{\numberline {1}Introduction}{3}{chapter.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {2}Background}{4}{chapter.2}
+\contentsline {chapter}{\numberline {2}Background}{6}{chapter.2}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {2.1}What Is Co-Scheduling?}{4}{section.2.1}
+\contentsline {section}{\numberline {2.1}Current Solutions}{6}{section.2.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {2.2}What Is Plastic Programming?}{5}{section.2.2}
+\contentsline {section}{\numberline {2.2}What Is Contention Aware Scheduling?}{7}{section.2.2}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {2.3}What Is Skeleton Programming?}{6}{section.2.3}
+\contentsline {section}{\numberline {2.3}What Is Plastic Programming?}{8}{section.2.3}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {2.4}Summary}{7}{section.2.4}
+\contentsline {section}{\numberline {2.4}What Is Skeleton Programming?}{9}{section.2.4}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {3}Design}{8}{chapter.3}
+\contentsline {chapter}{\numberline {3}Design}{10}{chapter.3}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {3.1}Current Solutions}{8}{section.3.1}
+\contentsline {section}{\numberline {3.1}System description}{10}{section.3.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {3.2}System description}{9}{section.3.2}
+\contentsline {section}{\numberline {3.2}Real-World Applications}{11}{section.3.2}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {3.3}Real-World Applications}{10}{section.3.3}
+\contentsline {chapter}{\numberline {4}Implementation}{13}{chapter.4}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {4}Implementation}{11}{chapter.4}
+\contentsline {section}{\numberline {4.1}}{13}{section.4.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {4.1}}{11}{section.4.1}
+\contentsline {chapter}{\numberline {5}Evaluation And Methodology}{14}{chapter.5}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {5}Evaluation And Methodology}{12}{chapter.5}
+\contentsline {section}{\numberline {5.1}Evaluation Methodology}{14}{section.5.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {5.1}}{12}{section.5.1}
+\contentsline {chapter}{\numberline {6}Results}{16}{chapter.6}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {6}Results}{13}{chapter.6}
+\contentsline {section}{\numberline {6.1}}{16}{section.6.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {6.1}}{13}{section.6.1}
+\contentsline {chapter}{\numberline {7}Discussion}{18}{chapter.7}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {7}Discussion}{15}{chapter.7}
+\contentsline {section}{\numberline {7.1}}{18}{section.7.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {7.1}}{15}{section.7.1}
+\contentsline {chapter}{\numberline {8}Future Work}{19}{chapter.8}
 \defcounter {refsection}{0}\relax 
-\contentsline {chapter}{\numberline {8}Conclusion}{16}{chapter.8}
+\contentsline {section}{\numberline {8.1}}{19}{section.8.1}
 \defcounter {refsection}{0}\relax 
-\contentsline {section}{\numberline {8.1}}{16}{section.8.1}
+\contentsline {chapter}{\numberline {9}Conclusion}{20}{chapter.9}
+\defcounter {refsection}{0}\relax 
+\contentsline {section}{\numberline {9.1}}{20}{section.9.1}

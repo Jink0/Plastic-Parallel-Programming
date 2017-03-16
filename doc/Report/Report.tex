@@ -1,6 +1,7 @@
 \documentclass{report}
 \usepackage{graphicx}
 \graphicspath{{graphics/}}
+\usepackage[labelfont=bf]{caption}
 \usepackage{biblatex}
 \addbibresource{references.bib}
 \usepackage{hyperref}
@@ -32,14 +33,14 @@
     \end{center}
 \end{titlepage}
 
+\setlength\parskip{1em}
+\setlength\parindent{0pt}
+
 \input{abstract}
 
 \tableofcontents
 
 \newpage
-
-\setlength\parskip{1em}
-\setlength\parindent{0pt}
 
 \chapter{Introduction}
 \input{chapters/introduction}
@@ -54,13 +55,16 @@
 \input{chapters/implementation}
 
 \chapter{Evaluation And Methodology}
-\input{chapters/evaluation}
+\input{chapters/evaluation_and_methodology}
 
 \chapter{Results}
 \input{chapters/results}
 
 \chapter{Discussion}
 \input{chapters/discussion}
+
+\chapter{Future Work}
+\input{chapters/future_work}
 
 \chapter{Conclusion}
 \input{chapters/conclusion}

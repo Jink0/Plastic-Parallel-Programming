@@ -1,13 +1,18 @@
 %!TEX root = ../Report.tex
 
-***Outline what we will cover in each chapter
-Add overview of precisely what was done***
+***Outline what we will cover in each chapter, Add overview of precisely what was done***
 
-It is recognised that writing correct and efficient parallel programs is hard, (cite \url{http://www.futurechips.org/tips-for-power-coders/parallel-programming.html} or \url{https://parallel.illinois.edu/blog/three-challenges-parallel-programming} or something, \url{https://dl.acm.org/citation.cfm?id=2093943&dl=ACM&coll=DL&CFID=720336161&CFTOKEN=82786616}) as the introduction of parallelism introduces a whole host of new problems, (unreproducible bugs due to race conditions, and difficulty debugging as need to decompose high level instructions into atomic assembly code to understand). The sole purpose of multi-threading is performance, however parallel programs can be slower then their serial counterparts, be it due to dependencies or hardware contention. Overhead must be balanced such that we don't introduce so much more work organizing threads that our performance gains disappear.
+Throughout the history of computing, computer programmers and hardware engineers have exploited parallelism, with software and architectural innovation complementing technological improvements to provide increased performance. Architects have exploited bit and instruction parallelism, and now programmers are increasingly exploiting task/data parallelism in their applications.
 
-Even when we have an ideal parallel program, often hardware is shared between multiple programs and users, leading to resource contention. There may be messages to the effect of "Do not leave applications running on this machine" or "please nice your programs", which may be unseen or ignored.
+It is recognised that writing correct and efficient parallel programs is hard, (cite \url{http://www.futurechips.org/tips-for-power-coders/parallel-programming.html} or \url{https://parallel.illinois.edu/blog/three-challenges-parallel-programming} or something, \url{https://dl.acm.org/citation.cfm?id=2093943&dl=ACM&coll=DL&CFID=720336161&CFTOKEN=82786616}) as the introduction of parallelism introduces a whole host of new problems, (e.g. unreproducible bugs due to race conditions, and difficult debugging as high level instructions need ot be decomposed  into atomic assembly code to understand what is going on). The sole purpose of multi-threading is improved performance, however parallel programs can be slower then their serial counterparts, be it due to dependencies or hardware contention. Overhead must be balanced such that we don't introduce so much more work organizing threads and computations that our performance gains disappear.
 
-The aim of this project is to combine parallel programming with three key ides:
+Utilizing hardware efficiently is a major research challenge, especially considering that, today, a single program or library needs to deal with multiple different incarnations of the task it is trying to run. These arise from different circumstances, ranging from the hardware it is running on to the task size. Creating a ``one size fits all'' solution has become increasingly difficult, especially for high performance parallel applications. As such, there are solutions to help mitigate this problem (cite petabricks), which utilize this idea of plastic programming, that is, changing the specifics of an implementation depending on the circumstances. However, such solutions are only "plastic" at compile time, and during runtime if circumstances change they cannot adapt. In particular, the most common situation a program may encounter would be the sharing of the computer's resources with other programs. This is again exacerbated for high performance parallel programs, as they typically attempt to use all the resources they can get their virtual hands on.
+
+Even when we have an ideal parallel program, often resources are shared between multiple programs and users, leading to resource contention. This is the case for most use cases, from the serious computing resources in data centres, to the low powered hardware of mobile phones. Even in our own computing labs, we have messages to the effect of "Do not leave applications running on this machine" or "please nice your programs", which are often unseen or disregarded.
+
+It is known that in such a situation with two programs, with careful selection of program parameters, we can obtain a better average runtime for both programs (cite lira paper).
+
+The aim of this project is to simplify the challenges of parallel programming and to provide improved performance by utilizing three key ideas:
 
 \begin{itemize}
 	\item Co-Scheduling
@@ -15,4 +20,19 @@ The aim of this project is to combine parallel programming with three key ides:
 	\item Skeleton Programming
 \end{itemize}
 
-And investigate the performance ramifications. Combining these ideas results in these problems becoming particularly tricky, with many different challenges involved in incorporating them.
+And to investigate the performance ramifications. Combining these ideas results in these problems becoming particularly tricky, with many different challenges involved in incorporating them.
+
+The layout of the report is as follows:
+
+***Should this be a list of bullet points?***
+
+\begin{itemize}
+	\item First we will provide an exploration of the ideas behind the report, and provide an overview of how they are combined in the background chapter.
+	\item Then we will detail the thought process behind the design of the solution in the design chapter.
+	\item We will then go into the specifics of the implementation of the design in the implementation chapter.
+	\item We then plan a carefully selected series of experiments to assess this implementation in the evaluation and methodology chapter.
+	\item Then we discuss the results of these experiments and their ramifications in the results chapter.
+	\item Next, we discuss what all this means (***and how it compares to current methods?***) in the discussion chapter. ***Is this chapter neccecary if we discuss our results in the results chapter, and have a conclusion chapter?***
+	\item Then we layout the roadmap of future work for the second part of this two year MInf project, and also work that could be done after that in the future work chapter.
+	\item We then end with providing our final thoughts on the topic in the conclusion chapter.
+\end{itemize}
