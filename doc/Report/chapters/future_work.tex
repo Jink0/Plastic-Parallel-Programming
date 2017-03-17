@@ -16,3 +16,11 @@ task stealing?
 distributed system?
 
 implementing some algorithm for automatic parameter tuning for future work.
+
+\section{Designing For Future Applications}
+
+A real-world version of our library would include multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation). It's feasible that the system could assess both the tasks presented and the environment (e.g. the particulars of the machine), and automatically allocate the resources of the machine so we perform in the most efficient manner.
+
+This system would be useful in any performance orientated application, even when the machine will only be running a single instance, as we can still optimize the implementation to the environment on that machine. It would, however, come into it's own when we have multiple instances running simultaneously on a machine, a common situation with modern multiprogramming machines.
+
+(Could be used on multiple nodes in a distributed system?)

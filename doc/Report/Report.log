@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.1.21)  17 MAR 2017 05:24
+This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.1.21)  17 MAR 2017 17:25
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
 (C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
@@ -553,9 +553,14 @@ File: graphics/optimized_schedule.png Graphic file (type QTm)
 <use  "graphics/optimized_schedule.png" > [12] [13]
 File: graphics/controller_flowchart.png Graphic file (type QTm)
 
-<use  "graphics/controller_flowchart.png" > [14] [15]) [16]
+<use  "graphics/controller_flowchart.png" >
+File: graphics/placeholder_plastic_contention_aware_scheduling.png Graphic file
+ (type QTm)
+
+<use  "graphics/placeholder_plastic_contention_aware_scheduling.png" > [14]
+[15] [16]) [17]
 Chapter 4.
-(chapters/implementation.tex) [17
+(chapters/implementation.tex) [18
 
 ]
 Chapter 5.
@@ -565,26 +570,26 @@ Overfull \hbox (1.63026pt too wide) in paragraph at lines 3--4
 s? eval-u-a-tion method-
  []
 
-[18
+[19
 
-]) [19]
+]) [20]
 Chapter 6.
 (chapters/results.tex
 File: graphics/runtime_by_number_of_threads.png Graphic file (type QTm)
  <use  "graphics/runtime_by_number_of_threads.png" >)
-[20
+[21
 
-] [21]
+] [22]
 Chapter 7.
-(chapters/discussion.tex) [22
+(chapters/discussion.tex) [23
 
 ]
 Chapter 8.
-(chapters/future_work.tex) [23
+(chapters/future_work.tex [24
 
-]
+]) [25]
 Chapter 9.
-(chapters/conclusion.tex) [24
+(chapters/conclusion.tex) [26
 
 ]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 89.
@@ -597,12 +602,12 @@ Package logreq Info: Writing requests to 'Report.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 15314 strings out of 428408
- 242511 string characters out of 3160621
- 684677 words of memory out of 3000000
- 18593 multiletter control sequences out of 15000+200000
+ 15317 strings out of 428408
+ 242663 string characters out of 3160621
+ 684795 words of memory out of 3000000
+ 18595 multiletter control sequences out of 15000+200000
  6898 words of font info for 25 fonts, out of 3000000 for 9000
  1328 hyphenation exceptions out of 8191
  36i,5n,45p,1171b,3426s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on Report.pdf (26 pages).
+Output written on Report.pdf (28 pages).

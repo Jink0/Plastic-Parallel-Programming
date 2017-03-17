@@ -68,11 +68,13 @@ To add contention aware scheduling, we need multiple instances of our library to
 
 Once our programs can communicate, and we can control each aspect of them, we can implement contention aware scheduling. (***Is changing something like the schedule still scheduling?***) For testing purposes, we simply program a set of predefined actions for the controller to take, in order to manually control what each implementation does, as we are only investigating if this can be taken further. We leave implementing some algorithm for automatic parameter tuning for future work.
 
-***Refine from here**
-
-Now that we have contention aware scheduling, we can experiment with multiple programs running on a system at once. An example of how plastic programming and contention aware scheduling is given in figure
+***Refine from here***
 
 As an example of how this would work in practice is in figure \ref{fig:controller_flowchart}.
+
+Now that we have contention aware scheduling, we can experiment with multiple programs running on a system at once. An example of how plastic programming and contention aware scheduling is given in figure \ref{fig:plastic_contention_aware_scheduling}
+
+
 
 \begin{figure}
 	\includegraphics[width=0.8\textwidth]{graphics/controller_flowchart.png}
@@ -80,18 +82,20 @@ As an example of how this would work in practice is in figure \ref{fig:controlle
 	\label{fig:controller_flowchart}
 \end{figure}
 
+\begin{figure}
+	\includegraphics[width=0.8\textwidth]{graphics/placeholder_plastic_contention_aware_scheduling.png}
+	\caption{***Place-holder graph for plastic contention aware scheduling***}
+	\label{fig:plastic_contention_aware_scheduling}
+\end{figure}
+
 
 
 \subsection{Evaluation}
 
-To properly evaluate the outcome of this project, we also need points of comparison in terms of performance. So in addition to our skeleton library and controller application, we also implement a dummy program which can run the library with several different parameters to perform experiments. a sequential and an OpenMP version, in which we can vary similar parameters and produce comparable statistics. (*** If complete, add that they utilize the same testing framework)
+To properly evaluate the outcome of this project, we need some way of testing the libraries performance. To this end, we implemented a placebo program which evaluates the library with a synthetic workload, collecting and recording metrics detailing the libraries performance with different parameters.  
 
+We also need points of comparison in terms of performance. So, in addition to our placebo program, we also implement an equivalent sequential and an OpenMP version, in which we can vary similar parameters and produce comparable statistics. 
 
+(*** If complete, add that they utilize the same testing framework)
 
-\section{Designing For Future Applications}
-
-A real-world version of our library would include multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation). It's feasible that the system could asses both the tasks presented and the environment (e.g. the particulars of the machine), and automatically allocate the resources of the machine so we perform in the most efficient manner.
-
-This system would be useful in any performance orientated application, even when the machine will only be running a single instance, as we can still optimize the implementation to the environment on that machine. It would, however, come into it's own when we have multiple instances running simultaneously on a machine, a common situation with modern multiprogramming machines.
-
-(Could be used on multiple nodes in a distributed system?)
+(***NOTE - designing for future applications has been moved to the future work chapter***)
