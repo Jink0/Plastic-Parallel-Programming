@@ -49,13 +49,17 @@ So with this evidence, we can see that if we take into account these factors in 
 
 \section{What Is Plastic Programming?}
 
-When programming an algorithm, there is often many choices about the specific implementation which can greatly affect performance, and the best choice depends on the circumstances of the problem. We tend to have more choices with parallel programs, but this is the case even for sequential programs. As an example, for a large input size, radix sort would perform best, whereas for a small input size, insertion sort would be better. So naturally, in the interests of performance, we can conceive of a better overall implementation by combining the two approaches, so while the task size is large we would use radix sort, and then once it is reduced we would use insertion sort. 
+When programming an algorithm, there is often many choices about the specific implementation which can greatly affect performance, and the best choice depends on the circumstances of the problem. We tend to have more choices with parallel programs, but this is the case even for sequential programs. As an example, for a sorting problem with a large input size, radix sort would perform best, whereas for a small input size, insertion sort would be better. So naturally, in the interests of performance, we can conceive of a better overall implementation by combining the two approaches, so while the task size is large we would use radix sort, and then once it is reduced we would use insertion sort. An example of this can be seen in figure \ref{fig:plastic_graph}
 
 Such compositions are commonplace, such as the sorting example discussed in the PetaBricks paper (cite petabricks: Introduction, paragraph 2).
 
-\begin{center}
-	\includegraphics[width=0.8\textwidth]{plastic_graph}
-\end{center}
+
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{plastic_graph}
+	\caption{An example of three algorithms with different runtime curves, which combined would provide an improved algorithm}
+	\label{fig:plastic_graph}
+\end{figure}
 
 
 

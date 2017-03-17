@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.1.21)  16 MAR 2017 18:51
+This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.1.21)  17 MAR 2017 05:24
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
 (C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
@@ -62,6 +62,9 @@ Package caption3 Info: TeX engine: e-TeX on input line 67.
 \caption@hangindent=\dimen111
 )
 \c@ContinuedFloat=\count88
+)
+("C:\Program Files\MiKTeX 2.9\tex\latex\placeins\placeins.sty"
+Package: placeins 2005/04/18  v 2.2
 )
 ("C:\Program Files\MiKTeX 2.9\tex\latex\biblatex\biblatex.sty"
 Package: biblatex 2016/12/05 v3.7 programmable bibliographies (PK/JW/AB)
@@ -433,22 +436,22 @@ File: english.lbx 2016/12/05 v3.7 biblatex localization (PK/JW/AB)
  (Report.aux)
 \openout1 = `Report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 9.
-LaTeX Font Info:    ... okay on input line 9.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 21.
+LaTeX Font Info:    ... okay on input line 21.
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
@@ -461,10 +464,10 @@ Package biblatex Info: Automatic encoding selection.
 Package biblatex Info: Trying to load bibliographic data...
 Package biblatex Info: ... file 'Report.bbl' not found.
 No file Report.bbl.
-Package biblatex Info: Reference section=0 on input line 9.
-Package biblatex Info: Reference segment=0 on input line 9.
+Package biblatex Info: Reference section=0 on input line 21.
+Package biblatex Info: Reference segment=0 on input line 21.
 \AtBeginShipoutBox=\box27
-Package hyperref Info: Link coloring OFF on input line 9.
+Package hyperref Info: Link coloring OFF on input line 21.
 ("C:\Program Files\MiKTeX 2.9\tex\latex\hyperref\nameref.sty"
 Package: nameref 2016/05/21 v2.44 Cross-referencing by name of section
 
@@ -473,9 +476,9 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 )
 \c@section@level=\count289
 )
-LaTeX Info: Redefining \ref on input line 9.
-LaTeX Info: Redefining \pageref on input line 9.
-LaTeX Info: Redefining \nameref on input line 9.
+LaTeX Info: Redefining \ref on input line 21.
+LaTeX Info: Redefining \pageref on input line 21.
+LaTeX Info: Redefining \nameref on input line 21.
 
 (Report.out) (Report.out)
 \@outlinefile=\write5
@@ -543,12 +546,16 @@ Chapter 3.
 (chapters/design.tex [10
 
 ] [11]
-File: graphics/system_design_high_level_flow_diagram.png Graphic file (type QTm
-)
+File: graphics/unoptimized_schedule.png Graphic file (type QTm)
+ <use  "graphics/unoptimized_schedule.png" >
+File: graphics/optimized_schedule.png Graphic file (type QTm)
 
-<use  "graphics/system_design_high_level_flow_diagram.png" >) [12]
+<use  "graphics/optimized_schedule.png" > [12] [13]
+File: graphics/controller_flowchart.png Graphic file (type QTm)
+
+<use  "graphics/controller_flowchart.png" > [14] [15]) [16]
 Chapter 4.
-(chapters/implementation.tex) [13
+(chapters/implementation.tex) [17
 
 ]
 Chapter 5.
@@ -558,44 +565,44 @@ Overfull \hbox (1.63026pt too wide) in paragraph at lines 3--4
 s? eval-u-a-tion method-
  []
 
-[14
+[18
 
-]) [15]
+]) [19]
 Chapter 6.
 (chapters/results.tex
 File: graphics/runtime_by_number_of_threads.png Graphic file (type QTm)
  <use  "graphics/runtime_by_number_of_threads.png" >)
-[16
+[20
 
-] [17]
+] [21]
 Chapter 7.
-(chapters/discussion.tex) [18
+(chapters/discussion.tex) [22
 
 ]
 Chapter 8.
-(chapters/future_work.tex) [19
+(chapters/future_work.tex) [23
 
 ]
 Chapter 9.
-(chapters/conclusion.tex) [20
+(chapters/conclusion.tex) [24
 
 ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 77.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 77.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 89.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 89.
  (Report.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 77.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 77.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 89.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 89.
 Package logreq Info: Writing requests to 'Report.run.xml'.
 \openout1 = `Report.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 15286 strings out of 428408
- 242051 string characters out of 3160621
- 684004 words of memory out of 3000000
- 18570 multiletter control sequences out of 15000+200000
+ 15314 strings out of 428408
+ 242511 string characters out of 3160621
+ 684677 words of memory out of 3000000
+ 18593 multiletter control sequences out of 15000+200000
  6898 words of font info for 25 fonts, out of 3000000 for 9000
  1328 hyphenation exceptions out of 8191
  36i,5n,45p,1171b,3426s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on Report.pdf (22 pages).
+Output written on Report.pdf (26 pages).

@@ -1,10 +1,22 @@
 \documentclass{report}
+
 \usepackage{graphicx}
 \graphicspath{{graphics/}}
 \usepackage[labelfont=bf]{caption}
+\usepackage{placeins}
+
+\let\Oldsection\section
+\renewcommand{\section}{\FloatBarrier\Oldsection}
+\let\Oldsubsection\subsection
+\renewcommand{\subsection}{\FloatBarrier\Oldsubsection}
+\let\Oldsubsubsection\subsubsection
+\renewcommand{\subsubsection}{\FloatBarrier\Oldsubsubsection}
+
 \usepackage{biblatex}
 \addbibresource{references.bib}
 \usepackage{hyperref}
+
+
 
 \begin{document}
 
