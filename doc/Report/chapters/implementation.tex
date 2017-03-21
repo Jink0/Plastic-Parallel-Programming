@@ -1,13 +1,36 @@
 %!TEX root = ../Report.tex
 \section{}
 
-***Explain implementation details, (C++ etc), librarys used, cross platform support? Is it easy to modify for the future? So on.***
+In this chapter, we detail specific implementation details of the project, and cover the problems that occurred and how they were solved.
+
+Since the system was developed incrementally, we will cover the implementation in a similar fashion, starting with the implementation of a basic skeleton function, then adding plasticity and contention aware scheduling. Finally, we finish with the programs developed to evaluate the project.
+
+
+
+
+
+C++ was used as it is fast, and provides language constructs such as templates and overloading. (Also b/c I wanted to learn something new, is that relevant?)
 
 threads communicate with shared memory, utilizes bag of tasks etc.
 
 The parallel backend that the system is based upon is Pthreads due to it's wide availability, and the level of fine control allows us to tune all parameters of the program and implement functions which are not possible with other solutions, e.g. detailed metric analysis. 
 
 \subsection{Skeleton Foundation}
+
+
+
 \subsection{Adding Plasticity}
+
+
+
 \subsection{Contention Aware Scheduling}
+
+
+
 \subsection{Evaluation}
+
+map array test application
+
+sequential/parallel implementation
+
+metrics output, and graph generation

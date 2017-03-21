@@ -1,5 +1,10 @@
 %!TEX root = ../Report.tex
-\section{}
+
+
+In this chapter of the report, we discuss the results of the experiments and their ramifications. The structure of this section mirrors that of the experiments section, so that the first results discussed will be the first experiment detailed in \ref{chapter:experimental_methodology_and_program}.
+
+\section{Results}
+\subsection{Experiment 1}
 
 In this experiment, the total run times of three implementations are measured. One sequential implementation, a standard modern parallel implementation utilizing OMP, and our plastic implementation. Our plastic implementation is running with no plasticity for the moment, and with no messaging functionality at all. This is so it is comparable to a standard parallel implementation.
 
@@ -20,3 +25,7 @@ pthread/openMP w/ 2threads vs us w/ 2 threads then 4 (plasticity!)       - highl
 pthread/openMP w/ fixed schedule vs us switching schedules (plasticity!) - highlights importance of schedule choice
 
  Above with skewed task distribution
+
+\section{Discussion}
+
+ ***Discuss the findings of the results, (Mention weird runtimes with many small tasks!)***

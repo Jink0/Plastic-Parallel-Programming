@@ -1,5 +1,4 @@
 %!TEX root = ../Report.tex
-***Explain pattern implemented, (similar to OpenMP (Loop scheduling) and skepu, add differences to blackbourn's work) details of library (Controller etc), and how it may be used in a real system***
 
 In this chapter, we will discuss the design of the system created to investigate this problem, and detail how such a system could be extended for the future.
 
@@ -13,13 +12,13 @@ The ideas described in the background section are combined to produce a skeleton
 
 \subsection{Skeleton Foundation}
 
-As discussed in the background section, one of the key ideas behind the project is that of skeleton programming, using predefined patterns to aid the programmer. The first pattern implemented is the map array pattern, with further patterns left for possible future work. Map-array is similar to the map pattern, in that it applies a given user function to each element in a list, however map-array also allows the function to access a user provided array. This was chosen as the map pattern is likely the most well known pattern and certainly one of the most useful, and map-array provides further functionality on top of this. It also provides a good basis for developing further patterns, and it also allows complex testing, which will be covered in the evaluation section of this report.
+As discussed in the background section, one of the key ideas behind the project is that of skeleton programming, using predefined patterns to aid the programmer. The first pattern implemented is the map array pattern, with further patterns left for possible future work. Map-array is similar to the map pattern described in section \ref{section:background_skeleton_programming}, in that it applies a given user function to each element in a list, however map-array also allows the function to access a user provided array. This was chosen as the map pattern is likely the most well known pattern and certainly one of the most useful, and map-array provides further functionality on top of this. It also provides a good basis for developing further patterns, and it also allows complex testing, which will be covered in the evaluation section of this report.
 
 
 
 \subsection{Adding Plasticity}
 
-To implement plasticity, we add the ability to vary three key aspects of the implementation of map-array:
+To implement plasticity, we add the ability to vary three key aspects of the implementation of a single instance of map-array:
 
 \begin{itemize}
 	\item Thread count - The number of threads we split the tasks between
@@ -33,20 +32,21 @@ The most basic method to divide the tasks is to give an equal amount to each thr
 
 So load balancing a workload is critical to performance in such a multi-threaded application. However, optimizing the task distribution in this manner is non trivial, and it depends upon the computation to be done as well as the number of threads and other resources available at runtime.
 
-A solution to this problem is to provide many different task distributions, and let the user pick or the machine select which distribution to use. These are called schedules, and some common ones are:
+A solution to this problem is to provide many different task distributions, and let the user pick or the machine select which distribution to use. OpenMP documentation calls these schedules, and some examples of these are:
 
 \begin{itemize}
-	\item Static - An equal allocation to all threads
+	\item Static - An equal number of tasks allocated to all threads
 	\item Dynamic individual - Each thread retrieves one task at a time, and once completed, it goes back for more
 	\item Dynamic chunks - Each thread retrieves N tasks at a time, and once completed, it goes back for more
-	\item Tapered - Each thread starts by retrieving N tasks at a time, and as the computation continues, it retrieves less and less
+	\item Tapered - Each thread starts by retrieving N tasks at a time, and as the computation continues, it retrieves fewer and fewer
 \end{itemize}
 
 Thread count and schedule were chosen as they seem the most critical to performance, and thread pinnings was added as this is was investigated in the LIRA paper (cite LIRA) as a factor contention aware scheduling could exploit.
 
-Once we have added plasticity, we can experiment with the specifics of an implementation, and see how they affect the performance of the system. This would be the use case of utilizing our library with no other program running, (So no contention aware scheduling), and we can explore how we can adapt the program using plasticity at runtime in this case. We may be able to improve performance even under these conditions, depending upon the configuration of the the machine (e.g., is there more CPU cores available) and the problem (e.g. do we have many small tasks or few large tasks.) 
+Once we have added plasticity, we can experiment with the specifics of an implementation, and see how they affect the performance of the system. This would be the use case of utilizing our library with no other program running, (So no contention aware scheduling), and we can explore how we can adapt the program using plasticity at runtime in this case. We may be able to improve performance even under these conditions, depending upon the configuration of the machine (e.g., is there more CPU cores available) and the problem (e.g. do we have many small tasks or few large tasks.) 
 
 
+% Remember - Graph fiddling and explanations
 
 \begin{figure}
 	\includegraphics[width=\textwidth]{graphics/unoptimized_schedule.png}
@@ -64,17 +64,17 @@ Once we have added plasticity, we can experiment with the specifics of an implem
 
 \subsection{Contention Aware Scheduling}
 
-To add contention aware scheduling, we need multiple instances of our library to be able to collaborate, and adapt their behaviour accordingly. To do this, we use a separate controller application, with which all instances of our program can communicate. This provides a single known point of contact, and a designated thread for computing program parameters with respect to all aspects of the system. An example of how our programs and the controller program communicate is shown in figure 
+To add contention aware scheduling, we need multiple applications using our library to be able to collaborate, and adapt their behaviour accordingly. To do this, we use a separate controller application, with which all instances of our program can communicate. This provides a single known point of contact, and a designated thread for computing program parameters with respect to all aspects of the system. An example of how our programs and the controller program communicate is shown in figure 
 
-Once our programs can communicate, and we can control each aspect of them, we can implement contention aware scheduling. (***Is changing something like the schedule still scheduling?***) For testing purposes, we simply program a set of predefined actions for the controller to take, in order to manually control what each implementation does, as we are only investigating if this can be taken further. We leave implementing some algorithm for automatic parameter tuning for future work.
-
-***Refine from here***
+Once our programs can communicate, and we can control each aspect of them, we can implement contention aware scheduling. In this phase of the project, we simply program a set of predefined actions for the controller to take, in order to manually control what each implementation does, as we are only investigating if this approach seems promising. We leave implementing some algorithm for automatic parameter tuning for future work.
 
 As an example of how this would work in practice is in figure \ref{fig:controller_flowchart}.
 
 Now that we have contention aware scheduling, we can experiment with multiple programs running on a system at once. An example of how plastic programming and contention aware scheduling is given in figure \ref{fig:plastic_contention_aware_scheduling}
 
 
+
+% More graph fiddling
 
 \begin{figure}
 	\includegraphics[width=0.8\textwidth]{graphics/controller_flowchart.png}
@@ -92,9 +92,11 @@ Now that we have contention aware scheduling, we can experiment with multiple pr
 
 \subsection{Evaluation}
 
-To properly evaluate the outcome of this project, we need some way of testing the libraries performance. To this end, we implemented a placebo program which evaluates the library with a synthetic workload, collecting and recording metrics detailing the libraries performance with different parameters.  
+To properly evaluate the outcome of this project, we need some way of testing the libraries performance. To this end, we implemented a synthetic program which evaluates the library with an artificial workload, collecting and recording metrics detailing the libraries performance with different parameters.  
 
-We also need points of comparison in terms of performance. So, in addition to our placebo program, we also implement an equivalent sequential and an OpenMP version, in which we can vary similar parameters and produce comparable statistics. 
+We also need points of comparison in terms of performance. So, in addition to our synthetic program, we also implement an equivalent sequential and an OpenMP version, in which we can vary similar parameters and produce comparable statistics. 
+
+The detailed experimental program will be discussed in \ref{chapter:experimental_methodology_and_program}.
 
 (*** If complete, add that they utilize the same testing framework)
 
