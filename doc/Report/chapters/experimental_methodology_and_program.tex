@@ -37,26 +37,30 @@ future work - array access patterns
 
 \section{Experiments}
 
+The primary goal of this project is to investigate if we can achieve better performance using our approach to parallel programming compared to other methods. Accordingly, we will focus our experiments on evaluating the performance of the system. To this end, we have created a carefully designed set of experiments to asses the system under different conditions, conditions which may be found in future applications. We also evaluate other approaches to parallel programming in order to directly compare their performance with ours.
 
+In this section, we detail each experiment, with the thought process behind it, how it will be executed, and the expected results if appropriate. The actual results will be presented in chapter \ref{chapter:results}, where we will compare them with our expectations and discuss their implications.
 
-The variables we can change are:
+(*** We stated that a direct goal of this project was to see if we can achieve better performance than a co-scheduling system, but we never compare against one (LIRA) ***)
 
-Input parameters:
+In each experiment we will vary a different set of parameters. These parameters can be partitioned into three separate classes; Input Parameters, Resources Granted, and Skeleton Parameters. More parameters can be added, (e.g. different resources granted,) but this is left for future work, as currently we only want a preliminary investigation into these ideas. The parameters we can change are:
+
+Input Parameters:
 
 \begin{itemize}
 	\item Number of tasks
-	\item Type of tasks (CPU Bottleneck/Memory Bottleneck)
+	\item Type of tasks (CPU Bottleneck/Memory Bottleneck) (*** Should this be included? It is not changed in any experiments yet***)
 	\item Task grain
-	\item Task grain variance
+	\item Task grain distribution
 \end{itemize}
 
-Resources granted:
+Resources Granted:
 
 \begin{itemize}
 	\item Number of CPU cores
 \end{itemize}
 
-Skeleton parameters:
+Skeleton Parameters:
 
 \begin{itemize}
 	\item Number of threads used
@@ -64,8 +68,7 @@ Skeleton parameters:
 	\item Schedule
 \end{itemize}
 
-
-
+*** Add explanation of each parameter, particularly task grain distribution (Uniform/Biased)
 
 Tests:
 
@@ -78,3 +81,193 @@ Above with a single program and multiple programs
 
 Overhead of metrics
 Large array size small tasks peculiarity?
+
+***
+
+\subsection{Experiment 1 - Testing Overhead}
+
+The aim of our first test is to investigate if our method for collecting metrics about the system adds any significant overhead that we must take into account in further tests. To this end, we compare the runtimes of our system both with and without metrics collection, to see if there is any significant difference. The experiment parameters are designed such that it is a worse case scenario, and as a result would produce the most significant difference in runtimes.
+
+
+Expected results
+
+Since we have many small tasks, and metrics functions are called before and after tasks are completed, this should result in the worst case scenario.
+
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 1,000,000 (Large) \\
+		\hline
+		Task Grain & Small \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 1 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & Static \\
+		\hline
+	\end{tabular}
+\caption{Experiment 1 Parameters}
+\label{table:ex1_parameters}
+\end{table}
+
+
+
+
+
+
+\subsection{Experiment 2 - Plasticity And Contention Aware Scheduling Framework Overhead}
+
+This experiment is designed to investigate whether the two main differences of our approach compared to other approaches incur any significant overhead. To do this, we will simulate the overhead of communicating with the controller and switching strategies, without actually changing strategies. Again
+
+
+
+Experiment parameters:
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 1,000,000 (Large) \\
+		\hline
+		Task Grain & Small \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 1 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & Static \\
+		\hline
+	\end{tabular}
+\caption{Experiment 2 Parameters}
+\label{table:ex2_parameters}
+\end{table}
+
+
+
+Whilst I expect that we will incur some overhead, I don't expect it to be significant, and I predict that it will be of constant time and not scale with regards to input size.
+
+
+
+\subsection{Experiment 3 - Absolute Performance}
+
+The purpose of this experiment is to gauge the absolute performance of our system compared to other approaches. This should test if our approach has significantly more overhead than other approaches, and also if the underlying implementation is correct such that performance is on a par with competing approaches. The other two approaches we will test are a purely sequential approach, and another using OpenMP. We will also vary the schedule, again to verify that our implementation is on a par with a current parallel programming method (OpenMP.)
+
+(*** Could also vary plasticity and co-scheduling overhead? ***)
+
+
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		Number of tasks & 500,000 (Medium) \\
+		\hline
+		Task Grain & Medium \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 4 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
+		\hline
+	\end{tabular}
+\caption{Experiment 3 Parameters}
+\label{table:ex3_parameters}
+\end{table}
+
+
+
+Note here that the Static schedule and the Dynamic Chunks schedule with a chunk size of 1 represent opposing ends of an overhead spectrum. With a static schedule, we have the least amount of overhead possible, (good for when the task variance is uniform), and with the Dynamic Chunks schedule and a chunk size of 1, we have the most amount of overhead possible, but since we fetch tasks one at a time, we will have the best task complexity balance across our threads (good for skewed/high variance.)
+
+
+
+\subsection{Experiment 4 - Schedule Choice Importance}
+
+This experiment is designed to highlight the importance of the choice of schedule.
+
+(*** Should the same be done for thread pinnings? And we have already kind of seen importance of number of threads, but should we have another experiment where num threads > num CPU cores?)
+
+
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 500,000 (Medium) \\
+		\hline
+		Task Grain & \specialcell{Small, \\ Large} \\
+		\hline
+		Task Grain Distribution & \specialcell{Uniform, \\ Biased} \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 4 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
+		\hline
+	\end{tabular}
+\caption{Experiment 4 Parameters}
+\label{table:ex4_parameters}
+\end{table}
+
+
+
+Expected results
+
+
+
+\subsection{Experiment 4 - }
+
+This experiment
+
+
+
+(*** These experiment parameters will be neatened up into a table ***)
+
+Experiment parameters:
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 1,000,000 (Large) \\
+		\hline
+		Task Grain & Small \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 4 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & Static \\
+		\hline
+	\end{tabular}
+\caption{Experiment 5 Parameters}
+\label{table:ex5_parameters}
+\end{table}
+
+
+
+Expected results
