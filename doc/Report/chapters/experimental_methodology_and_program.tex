@@ -93,14 +93,11 @@ Expected results
 
 Since we have many small tasks, and metrics functions are called before and after tasks are completed, this should result in the worst case scenario.
 
-\newcommand{\specialcell}[2][c]{%
-  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
-
 \begin{table}
 \centering
 	\begin{tabular}{|c|c|}
 		\hline
-		Number of tasks & 1,000,000 (Large) \\
+		Number of tasks & 50,000 \\
 		\hline
 		Task Grain & Small \\
 		\hline
@@ -136,7 +133,7 @@ Experiment parameters:
 \centering
 	\begin{tabular}{|c|c|}
 		\hline
-		Number of tasks & 1,000,000 (Large) \\
+		Number of tasks & 50,000 \\
 		\hline
 		Task Grain & Small \\
 		\hline
@@ -173,7 +170,7 @@ The purpose of this experiment is to gauge the absolute performance of our syste
 \centering
 	\begin{tabular}{|c|c|c|c|}
 		\hline
-		Number of tasks & 500,000 (Medium) \\
+		Number of tasks & 50,000 \\
 		\hline
 		Task Grain & Medium \\
 		\hline
@@ -181,7 +178,7 @@ The purpose of this experiment is to gauge the absolute performance of our syste
 		\hline
 		Number of CPU cores & 4 \\
 		\hline
-		Number of threads used & 4 \\
+		Number of threads used & \specialcell{1, \\ 2, \\ 3, \\ 4} \\
 		\hline
 		Thread pinning & Uniform \\
 		\hline
@@ -196,6 +193,8 @@ The purpose of this experiment is to gauge the absolute performance of our syste
 
 Note here that the Static schedule and the Dynamic Chunks schedule with a chunk size of 1 represent opposing ends of an overhead spectrum. With a static schedule, we have the least amount of overhead possible, (good for when the task variance is uniform), and with the Dynamic Chunks schedule and a chunk size of 1, we have the most amount of overhead possible, but since we fetch tasks one at a time, we will have the best task complexity balance across our threads (good for skewed/high variance.)
 
+(*** Also shows scalability with core count ***)
+
 
 
 \subsection{Experiment 4 - Schedule Choice Importance}
@@ -203,14 +202,14 @@ Note here that the Static schedule and the Dynamic Chunks schedule with a chunk 
 This experiment is designed to highlight the importance of the choice of schedule.
 
 (*** Should the same be done for thread pinnings? And we have already kind of seen importance of number of threads, but should we have another experiment where num threads > num CPU cores?)
-
+(*** Benefits of plasticity! ***)
 
 
 \begin{table}
 \centering
 	\begin{tabular}{|c|c|}
 		\hline
-		Number of tasks & 500,000 (Medium) \\
+		Number of tasks & 50,000 \\
 		\hline
 		Task Grain & \specialcell{Small, \\ Large} \\
 		\hline
@@ -235,7 +234,7 @@ Expected results
 
 
 
-\subsection{Experiment 4 - }
+\subsection{Experiment 5 - Absolute Multiprogramming Performance}
 
 This experiment
 
@@ -249,7 +248,7 @@ Experiment parameters:
 \centering
 	\begin{tabular}{|c|c|}
 		\hline
-		Number of tasks & 1,000,000 (Large) \\
+		Number of tasks & 50,000 \\
 		\hline
 		Task Grain & Small \\
 		\hline
@@ -257,9 +256,9 @@ Experiment parameters:
 		\hline
 		Number of CPU cores & 4 \\
 		\hline
-		Number of threads used & 4 \\
+		Number of threads used & \specialcell{2, \\ 4, \\ 8} \\
 		\hline
-		Thread pinning & Uniform \\
+		Thread pinning & \specialcell{Uniform, \\ Random} \\
 		\hline
 		Schedule & Static \\
 		\hline

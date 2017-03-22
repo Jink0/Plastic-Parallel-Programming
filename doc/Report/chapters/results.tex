@@ -4,7 +4,6 @@
 In this chapter of the report, we discuss the results of the experiments and their ramifications. The structure of this section mirrors that of the experiments section, so that the first results discussed will be the first experiment detailed in chapter \ref{chapter:experimental_methodology_and_program}.
 
 \section{Results}
-\subsection{Experiment 1}
 
 In this experiment, the total run times of three implementations are measured. One sequential implementation, a standard modern parallel implementation utilizing OMP, and our plastic implementation. Our plastic implementation is running with no plasticity for the moment, and with no messaging functionality at all. This is so it is comparable to a standard parallel implementation.
 
@@ -25,6 +24,162 @@ pthread/openMP w/ 2threads vs us w/ 2 threads then 4 (plasticity!)       - highl
 pthread/openMP w/ fixed schedule vs us switching schedules (plasticity!) - highlights importance of schedule choice
 
  Above with skewed task distribution
+
+\subsection{Experiment 1 - Testing Overhead}
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 1,000,000 (Large) \\
+		\hline
+		Task Grain & Small \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 1 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & Static \\
+		\hline
+	\end{tabular}
+\caption{Experiment 1 Parameters}
+\label{table:ex1_parameters}
+\end{table}
+
+Results: 
+
+Runtime without metrics: 67862.0
+Runtime with metrics:    68047.0
+
+(*** Should I make this a graph? ***)
+
+185ms of delay, 0.003\% of total runtime.
+
+
+
+
+
+
+\subsection{Experiment 2 - Plasticity And Contention Aware Scheduling Framework Overhead}
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 1,000,000 (Large) \\
+		\hline
+		Task Grain & Small \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 1 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & Static \\
+		\hline
+	\end{tabular}
+\caption{Experiment 2 Parameters}
+\label{table:ex2_parameters}
+\end{table}
+
+Results:
+
+Runtime without plasticity etc: 24153.0
+Runtime with plasticity etc:    24684.0
+
+(*** Should I make this a graph? ***)
+
+531ms of delay, 0.02\% of total runtime.
+
+\subsection{Experiment 3 - Absolute Performance}
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|c|c|}
+		\hline
+		Number of tasks & 500,000 (Medium) \\
+		\hline
+		Task Grain & Medium \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 4 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
+		\hline
+	\end{tabular}
+\caption{Experiment 3 Parameters}
+\label{table:ex3_parameters}
+\end{table}
+
+
+
+
+\subsection{Experiment 4 - Schedule Choice Importance}
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 500,000 (Medium) \\
+		\hline
+		Task Grain & \specialcell{Small, \\ Large} \\
+		\hline
+		Task Grain Distribution & \specialcell{Uniform, \\ Biased} \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 4 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
+		\hline
+	\end{tabular}
+\caption{Experiment 4 Parameters}
+\label{table:ex4_parameters}
+\end{table}
+
+
+
+
+\subsection{Experiment 4 - }
+
+\begin{table}
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Number of tasks & 1,000,000 (Large) \\
+		\hline
+		Task Grain & Small \\
+		\hline
+		Task Grain Distribution & Uniform \\
+		\hline
+		Number of CPU cores & 4 \\
+		\hline
+		Number of threads used & 4 \\
+		\hline
+		Thread pinning & Uniform \\
+		\hline
+		Schedule & Static \\
+		\hline
+	\end{tabular}
+\caption{Experiment 5 Parameters}
+\label{table:ex5_parameters}
+\end{table}
+
+
 
 \section{Discussion}
 
