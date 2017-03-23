@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.1.21)  21 MAR 2017 20:36
+This is XeTeX, Version 3.14159265-2.6-0.99996 (MiKTeX 2.9.6210 64-bit) (preloaded format=xelatex 2017.1.21)  23 MAR 2017 02:17
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
 (C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
@@ -579,7 +579,7 @@ File: graphics/placeholder_plastic_contention_aware_scheduling.png Graphic file
 Chapter 4.
 (chapters/implementation.tex [20
 
-]) [21]
+] [21] [22]) [23]
 Chapter 5.
 (chapters/experimental_methodology_and_program.tex
 Overfull \hbox (1.63026pt too wide) in paragraph at lines 3--4
@@ -587,22 +587,22 @@ Overfull \hbox (1.63026pt too wide) in paragraph at lines 3--4
 s? eval-u-a-tion method-
  []
 
-[22
+[24
 
-] [23] [24] [25] [26] [27]) [28]
+] [25] [26] [27] [28] [29]) [30]
 Chapter 6.
 (chapters/results.tex
 File: graphics/runtime_by_number_of_threads.png Graphic file (type QTm)
  <use  "graphics/runtime_by_number_of_threads.png" >
-[29
+[31
 
-] [30] [31] [32] [33] [34]) [35]
+] [32] [33] [34] [35] [36]) [37]
 Chapter 7.
-(chapters/future_work.tex [36
+(chapters/future_work.tex [38
 
-]) [37]
+]) [39]
 Chapter 8.
-(chapters/conclusion.tex) [38
+(chapters/conclusion.tex) [40
 
 ]
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 97.
@@ -620,11 +620,11 @@ Package logreq Info: Writing requests to 'Report.run.xml'.
  ) 
 Here is how much of TeX's memory you used:
  15332 strings out of 428408
- 243033 string characters out of 3160621
- 685681 words of memory out of 3000000
+ 243067 string characters out of 3160621
+ 685743 words of memory out of 3000000
  18613 multiletter control sequences out of 15000+200000
  6898 words of font info for 25 fonts, out of 3000000 for 9000
  1328 hyphenation exceptions out of 8191
  36i,13n,45p,1171b,3426s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on Report.pdf (40 pages).
+Output written on Report.pdf (42 pages).

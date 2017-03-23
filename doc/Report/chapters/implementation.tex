@@ -1,36 +1,68 @@
 %!TEX root = ../Report.tex
-\section{}
 
 In this chapter, we detail specific implementation details of the project, and cover the problems that occurred and how they were solved.
 
-Since the system was developed incrementally, we will cover the implementation in a similar fashion, starting with the implementation of a basic skeleton function, then adding plasticity and contention aware scheduling. Finally, we finish with the programs developed to evaluate the project.
+Since the system was developed incrementally, we will cover the implementation in a similar fashion, starting with the implementation of a basic skeleton function, then adding plasticity, and contention aware scheduling. Finally, we finish with the programs developed to evaluate the project.
 
-
-
-
-
-C++ was used as it is fast, and provides language constructs such as templates and overloading. (Also b/c I wanted to learn something new, is that relevant?)
-
-threads communicate with shared memory, utilizes bag of tasks etc.
-
+C++ was chosen as a basis, since it's fast, and provides language constructs such as templates and overloading. (*** Also because I wanted to learn something new, is that relevant? ***)
 The parallel backend that the system is based upon is Pthreads due to it's wide availability, and the level of fine control allows us to tune all parameters of the program and implement functions which are not possible with other solutions, e.g. detailed metric analysis. 
 
-\subsection{Skeleton Foundation}
+
+
+\section{Skeleton Foundation}
+
+The first skeleton we will implement is the map-array skeleton, with other skeletons left for future work. Map-array is similar to map, as described in section \ref{section:background_skeleton_programming}, only the user function also has access to a user provided array. It is reasonably straight forward to create a sequential skeleton, using c++ templates to create a templated function which takes a function amongst other things as it's arguments. This will be our skeleton. 
+
+Parallelizing this presents two problems, namely:
+
+\begin{itemize}
+	\item How to divide the tasks amongst threads
+	\item How many threads should be used
+\end{itemize}
+ 
+Both of these parameters must be specified beforehand, and both are aspects of the skeleton which we would like to be variable, to provide different implementations for the plasticity portion of this project. To this end, we need to implement multiple different schedules, and the ability to use a variable number of threads, at least at runtime.
+
+To implement multiple schedules, we use a bag of tasks object. Each thread will be given the location of the same bag, and will retrieve a specified number of tasks at a time from the bag. Since each schedule is essentially consists of retrieving a different number tasks, we can use this to implement the basic schedules (Static, Dynamic chunks, Dynamic Individual). More complex schedules can easily be added in the future, as they can reuse the get tasks method, an simply adjust how many tasks each thread retrieves at one time.  
+
+The bag also provides the main source of inter-thread communication using shared memory, and contains various semaphores for controlling the threads. This single point of communication makes it simple for our main thread to communicate with our set of worker threads, and will be discussed in the next section, adding plasticity.
+
+Because we use this bag of tasks object, it gives us the basis for further extensions, such as using multiple bags, adding task stealing, or adding tasks to the bag during computation.
+
+Providing a variable amount of threads is simple now that we have the bag of tasks, all we need to do is to adjust our initial calculations when calculating how many tasks each thread should receive according to the schedule.
 
 
 
-\subsection{Adding Plasticity}
+\section{Adding Plasticity}
+
+We already have a sort of compile time plasticity in our system, in that we can choose some parameters of the skeleton before compilation. We can choose the number of threads and the schedule used. The other main aspect we would like to control is what CPU each thread executes on. This is called processor affinity or thread pinning. This was added to the skeleton by adding control variables to the bag of tasks, which control the CPU affinity of each thread. Each thread then simply sets it's affinity to the intended CPU.
+
+To add runtime plasticity, we need to be able to change the implementation of the skeleton on the fly. The most straightforward method of achieving this is to stop all computation, terminate all the threads, update the parameters, and resume computation. An obvious optimization would be to modify the implementation without needing to terminate threads. 
+
+This graceful switching of the implementation is left for future work, as this optimization is very complex, and results in a marginal speedup proportional to the number of times we wish to change the implementation. We don't plan on switching implementations excessively, and any delay added could be overcome in testing by increasing the input size, and this project is only investigating if this approach to parallel programming is promising.
 
 
 
-\subsection{Contention Aware Scheduling}
+\section{Contention Aware Scheduling}
+
+As detailed in section \ref{subsection:design_contention_aware_scheduling} of the design chapter, we will use a separate controller application to co-ordinate and control all programs using our library. This simplifies the implementation significantly, as it gives us a single point of contact, and a single place to calculate an optimal configuration for each program. To achieve this, we need our separate controller application, and two main additions to our system:
+
+\begin{itemize}
+	\item Inter-process communication
+	\item Separate communication/control thread for each program
+\end{itemize}
+
+We use the zeromq library to provide inter-process communication for it's speed, although it could be replaced with another method. It uses tcp sockets, and serves to simplify inter-process communication.(*** I'm convinced I could be using it better, but it ended up being really complicated to figure out, and doesn't affect our results. Is this worth mentioning? ***)
+
+In order to communicate with the controller while a program is using our library, we need a separate communication thread. This thread will also manage the worker threads, switching implementations and cleaning up after we have finished our computation. Since our main thread is idle when we are processing the map-array pattern, we use the main thread as the communication/control thread. In order to listen to messages from the controller and check if we are finished processing, we use non-blocking communication to check for messages. For the initial registration and de-registration, we use blocking communication, as these messages are vital to the system.
 
 
 
-\subsection{Evaluation}
+\section{Evaluation}
 
-map array test application
+To evaluate our library, we need a program to run and test the library under differing conditions, and we need programs to represent competing approaches to parallel programming. 
 
-sequential/parallel implementation
+The main map-array test application is a tool which can read experiment parameters from a configuration file, and then run each experiment in sequence, recording various metrics for later analysis. This provides a convenient framework for carrying out experiments, and easily enables us to queue up a set of experiments. This is important because such experiments can take hours.
 
-metrics output, and graph generation
+The comparison programs consist of a purely sequential implementation, and an OpenMP implementation. These were chosen because the former represents an implementation a traditional sequential programmer would use, and OpenMP because it is a popular method of parallelizing code, with a focus on performance and a simple interface. They are set up such that they can use the same synthetic workload we use for testing our library.
+
+The last program for evaluation is a python program which was used to create graphs from the generated data.
