@@ -21,6 +21,10 @@ Make work interruptable, e.g. if we assign static schedule we should still be ab
 
 more experiments with varying memory access patterns
 
+Vary Type of tasks (CPU Bottleneck/Memory Bottleneck) 
+
+(*** schedule choice importance - Should the same be done for thread pinnings? And we have already kind of seen importance of number of threads, but should we have another experiment where num threads > num CPU cores?)
+
 \section{Designing For Future Applications}
 
 A real-world version of our library would include multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation). It's feasible that the system could assess both the tasks presented and the environment (e.g. the particulars of the machine), and automatically allocate the resources of the machine so we perform in the most efficient manner.

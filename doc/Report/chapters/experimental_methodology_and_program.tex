@@ -1,16 +1,170 @@
 %!TEX root = ../Report.tex
 
-***Discuss the systems used briefly, runtime of experiments? evaluation methodology (done with nothing else running?, Different array access patterns? How did you create a synthetic workload?)***
+\newif\iflabela
+\newif\iflabelb
+\newif\iflabelc
+\newif\iflabeld
+\newif\iflabele
 
-In this chapter, we describe our evaluation methodology, testing program, and the particular experiments we will run. The outcome of each of these experiments will be discussed in the results chapter, in the same order they are presented here.
+% \begin{filecontents}{ex_params/ex1_params.tex}
+% \begin{table}
+% \centering
+% 	\begin{tabular}{|c|c|}
+% 		\hline
+% 		Number of tasks & 50,000 \\
+% 		\hline
+% 		Task Grain & Small \\
+% 		\hline
+% 		Task Grain Distribution & Uniform \\
+% 		\hline
+% 		Number of CPU cores & 4 \\
+% 		\hline
+% 		Number of threads used & 1 \\
+% 		\hline
+% 		Thread pinning & Uniform \\
+% 		\hline
+% 		Schedule & Static \\
+% 		\hline
+% 	\end{tabular}
+% \caption{Experiment 1 Parameters}
+
+% \iflabela
+% \label{table:evaluation_ex1_parameters}
+% \fi
+% \labelatrue
+
+% \end{table}
+% \end{filecontents}
+
+% \begin{filecontents}{ex_params/ex2_params.tex}
+% \begin{table}
+% \centering
+% 	\begin{tabular}{|c|c|c|c|}
+% 		\hline
+% 		Number of tasks & 50,000 \\
+% 		\hline
+% 		Task Grain & Medium \\
+% 		\hline
+% 		Task Grain Distribution & Uniform \\
+% 		\hline
+% 		Number of CPU cores & 4 \\
+% 		\hline
+% 		Number of threads used & \specialcell{1, \\ 2, \\ 3, \\ 4} \\
+% 		\hline
+% 		Thread pinning & Uniform \\
+% 		\hline
+% 		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
+% 		\hline
+% 	\end{tabular}
+% \caption{Experiment 2 Parameters}
+
+% \iflabelb
+% \label{table:evaluation_ex2_parameters}
+% \fi
+% \labelbtrue
+
+% \end{table}
+% \end{filecontents}
+
+% \begin{filecontents}{ex_params/ex3_params.tex}
+% \begin{table}
+% \centering
+% 	\begin{tabular}{|c|c|}
+% 		\hline
+% 		Number of tasks & 50,000 \\
+% 		\hline
+% 		Task Grain & Small \\
+% 		\hline
+% 		Task Grain Distribution & Uniform \\
+% 		\hline
+% 		Number of CPU cores & 4 \\
+% 		\hline
+% 		Number of threads used & 1 \\
+% 		\hline
+% 		Thread pinning & Uniform \\
+% 		\hline
+% 		Schedule & Static \\
+% 		\hline
+% 	\end{tabular}
+% \caption{Experiment 3 Parameters}
+
+% \iflabelc
+% \label{table:evaluation_ex3_parameters}
+% \fi
+% \labelctrue
+
+% \end{table}
+% \end{filecontents}
+
+% \begin{filecontents}{ex_params/ex4_params.tex}
+% \begin{table}
+% \centering
+% 	\begin{tabular}{|c|c|}
+% 		\hline
+% 		Number of tasks & 50,000 \\
+% 		\hline
+% 		Task Grain & \specialcell{Small, \\ Large} \\
+% 		\hline
+% 		Task Grain Distribution & \specialcell{Uniform, \\ Biased} \\
+% 		\hline
+% 		Number of CPU cores & 4 \\
+% 		\hline
+% 		Number of threads used & 4 \\
+% 		\hline
+% 		Thread pinning & Uniform \\
+% 		\hline
+% 		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
+% 		\hline
+% 	\end{tabular}
+% \caption{Experiment 4 Parameters}
+
+% \iflabeld
+% \label{table:evaluation_ex4_parameters}
+% \fi
+% \labeldtrue
+
+% \end{table}
+% \end{filecontents}
+
+% \begin{filecontents}{ex_params/ex5_params.tex}
+% \begin{table}
+% \centering
+% 	\begin{tabular}{|c|c|}
+% 		\hline
+% 		Number of tasks & 50,000 \\
+% 		\hline
+% 		Task Grain & Small \\
+% 		\hline
+% 		Task Grain Distribution & Uniform \\
+% 		\hline
+% 		Number of CPU cores & 4 \\
+% 		\hline
+% 		Number of threads used & \specialcell{2, \\ 4, \\ 8} \\
+% 		\hline
+% 		Thread pinning & \specialcell{Uniform, \\ Random} \\
+% 		\hline
+% 		Schedule & Static \\
+% 		\hline
+% 	\end{tabular}
+% \caption{Experiment 5 Parameters}
+
+% \iflabele
+% \label{table:evaluation_ex5_parameters}
+% \fi
+% \labeletrue
+
+% \end{table}
+% \end{filecontents}
+
+
+
+The primary goal of this project is to investigate if we can achieve better performance using our approach to parallel programming compared to other methods. Accordingly, we will focus our experiments on evaluating the performance of the system. To this end, we have created a carefully designed set of experiments to asses the system under different conditions, conditions which may be found in future applications. We also evaluate other approaches to parallel programming in order to directly compare their performance with ours. In this chapter we describe our evaluation methodology and the particular experiments we will run. The outcome of each experiment will be discussed in the results chapter in the same order they are presented here.
 
 
 
 \section{Evaluation Methodology}
 
-The experiments were run on an Ubuntu virtual machine, with four cores, 4096MB of memory, and the rest of the system at idle.
-
-To evaluate the performance of the system, we need to synthesize a *** CHECK HERE *** real-world workload. One which we can scale, so we can test different sized tasks and varying task distributions. To do this we use the Collatz function to generate a CPU intensive workload. A constant starting number is used, and the sequence is repeated multiple times, to scale the workload.
+All experiments were run on an Ubuntu virtual machine, with four cores at 4GHz, 4096MB of memory, and the rest of the system at idle. All programs were compiled at optimization level 3, and every result averaged over 5 repeats.
 
 Multiple different statistics can be collected for each thread:
 
@@ -22,251 +176,98 @@ Multiple different statistics can be collected for each thread:
 	\item Number of tasks completed
 \end{enumerate}
 
-assortment of programs
-
-test machine
-repeats
-
-future work - array access patterns
+In these experiments however, we will focus on total runtime, as we are mostly concerned with the overall performance. The other statistics were mostly used during development.
 
 
 
-\section{Evaluation Program}
-
-
-
-\section{Experiments}
-
-The primary goal of this project is to investigate if we can achieve better performance using our approach to parallel programming compared to other methods. Accordingly, we will focus our experiments on evaluating the performance of the system. To this end, we have created a carefully designed set of experiments to asses the system under different conditions, conditions which may be found in future applications. We also evaluate other approaches to parallel programming in order to directly compare their performance with ours.
+\section{Programme of Experiments}
 
 In this section, we detail each experiment, with the thought process behind it, how it will be executed, and the expected results if appropriate. The actual results will be presented in chapter \ref{chapter:results}, where we will compare them with our expectations and discuss their implications.
-
-(*** We stated that a direct goal of this project was to see if we can achieve better performance than a co-scheduling system, but we never compare against one (LIRA) ***)
 
 In each experiment we will vary a different set of parameters. These parameters can be partitioned into three separate classes; Input Parameters, Resources Granted, and Skeleton Parameters. More parameters can be added, (e.g. different resources granted,) but this is left for future work, as currently we only want a preliminary investigation into these ideas. The parameters we can change are:
 
 Input Parameters:
 
 \begin{itemize}
-	\item Number of tasks
-	\item Type of tasks (CPU Bottleneck/Memory Bottleneck) (*** Should this be included? It is not changed in any experiments yet***)
-	\item Task grain
-	\item Task grain distribution
+	\item Number of tasks - The number of tasks to be carried out
+	\item Task grain - The complexity of the tasks, possible values are small, medium, and large. (*** Add med takes 10x as much time as small etc ***)
+	\item Task grain distribution - If we have range of task grains, this describes how they distributed throughout the input array. Possible values are uniform (evenly distributed throughout,) and biased (The more complex tasks are gathered together at the start of the array. This is the worst case scenario for the static schedule.)
 \end{itemize}
 
 Resources Granted:
 
 \begin{itemize}
-	\item Number of CPU cores
+	\item Number of CPU cores - The amount of CPU cores provided in the machine.
 \end{itemize}
 
 Skeleton Parameters:
 
 \begin{itemize}
-	\item Number of threads used
-	\item Thread pinning
-	\item Schedule
+	\item Number of threads used - The number of threads our program uses for multi-threading.
+	\item Thread pinning - The configuration of threads pinned to CPU cores. Possible values are (*** INSERT POSSIBLE VALUES HERE ***)
+	\item Schedule - How the tasks are distributed amongst threads. See section \ref{subsection:design_adding_plasticity} for the possible schedules.
 \end{itemize}
 
-*** Add explanation of each parameter, particularly task grain distribution (Uniform/Biased)
+(*** Add in biased = 1st 1/4 large, rest small ***)
 
-Tests:
+Our first experiment will test how much overhead our metrics collection adds. Experiment 2 then establishes the baseline performance of our library, comparing it to see if it is on a par with an OpenMP solution. Next in experiment 3, we investigate the overhead that has been introduced by contention aware scheduling and plasticity. Experiment 4 then shows the importance of choosing the correct schedule, and how our system could deal with a suboptimal schedule using plasticity. This is again compared to an OpenMP solution.
 
-Overhead of our system
-Scalability
-Absolute Performance
-Benefits of Plasticity
-
-Above with a single program and multiple programs
-
-Overhead of metrics
-Large array size small tasks peculiarity?
-
-***
-
-\subsection{Experiment 1 - Testing Overhead}
-
-The aim of our first test is to investigate if our method for collecting metrics about the system adds any significant overhead that we must take into account in further tests. To this end, we compare the runtimes of our system both with and without metrics collection, to see if there is any significant difference. The experiment parameters are designed such that it is a worse case scenario, and as a result would produce the most significant difference in runtimes.
-
-
-Expected results
-
-Since we have many small tasks, and metrics functions are called before and after tasks are completed, this should result in the worst case scenario.
-
-\begin{table}
-\centering
-	\begin{tabular}{|c|c|}
-		\hline
-		Number of tasks & 50,000 \\
-		\hline
-		Task Grain & Small \\
-		\hline
-		Task Grain Distribution & Uniform \\
-		\hline
-		Number of CPU cores & 4 \\
-		\hline
-		Number of threads used & 1 \\
-		\hline
-		Thread pinning & Uniform \\
-		\hline
-		Schedule & Static \\
-		\hline
-	\end{tabular}
-\caption{Experiment 1 Parameters}
-\label{table:ex1_parameters}
-\end{table}
+Thus far, experiments 1-4 have all been conducted with a single application utilizing our library. In experiment 5, we simulate a situation with multiple applications using our library. We investigate the performance of the system with many applications competing for resources, with multiple strategies for how to share them.
 
 
 
+\subsection{Experiment 1 - Metrics Collection Overhead}
+
+The aim of our first experiment is to investigate if our method for collecting metrics about the system adds any significant overhead that we must take into account in further experiments. To this end, we compare the runtimes of our system both with and without metrics collection, to see if there is any significant difference. The system is run with no controller application or runtime plasticity, since we only wish to measure the overhead added by our metrics collection. 
+
+The experiment parameters are designed such that it is a worse case scenario, and as a result would produce the most significant difference in runtimes. This worst case scenario would be many small tasks, with multiple threads, since metrics functions are called before and after tasks are completed, and are managed on a per-thread basis.
+
+Since our metrics collection consists of some function calls and updating tallys, I don't expect the performance impact to be significant. 
+
+\input{ex_params/ex1_params}
 
 
 
-\subsection{Experiment 2 - Plasticity And Contention Aware Scheduling Framework Overhead}
+\subsection{Experiment 2 - Absolute Performance}
 
-This experiment is designed to investigate whether the two main differences of our approach compared to other approaches incur any significant overhead. To do this, we will simulate the overhead of communicating with the controller and switching strategies, without actually changing strategies. Again
-
-
-
-Experiment parameters:
-
-\begin{table}
-\centering
-	\begin{tabular}{|c|c|}
-		\hline
-		Number of tasks & 50,000 \\
-		\hline
-		Task Grain & Small \\
-		\hline
-		Task Grain Distribution & Uniform \\
-		\hline
-		Number of CPU cores & 4 \\
-		\hline
-		Number of threads used & 1 \\
-		\hline
-		Thread pinning & Uniform \\
-		\hline
-		Schedule & Static \\
-		\hline
-	\end{tabular}
-\caption{Experiment 2 Parameters}
-\label{table:ex2_parameters}
-\end{table}
-
-
-
-Whilst I expect that we will incur some overhead, I don't expect it to be significant, and I predict that it will be of constant time and not scale with regards to input size.
-
-
-
-\subsection{Experiment 3 - Absolute Performance}
-
-The purpose of this experiment is to gauge the absolute performance of our system compared to other approaches. This should test if our approach has significantly more overhead than other approaches, and also if the underlying implementation is correct such that performance is on a par with competing approaches. The other two approaches we will test are a purely sequential approach, and another using OpenMP. We will also vary the schedule, again to verify that our implementation is on a par with a current parallel programming method (OpenMP.)
-
-(*** Could also vary plasticity and co-scheduling overhead? ***)
-
-
-
-\begin{table}
-\centering
-	\begin{tabular}{|c|c|c|c|}
-		\hline
-		Number of tasks & 50,000 \\
-		\hline
-		Task Grain & Medium \\
-		\hline
-		Task Grain Distribution & Uniform \\
-		\hline
-		Number of CPU cores & 4 \\
-		\hline
-		Number of threads used & \specialcell{1, \\ 2, \\ 3, \\ 4} \\
-		\hline
-		Thread pinning & Uniform \\
-		\hline
-		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
-		\hline
-	\end{tabular}
-\caption{Experiment 3 Parameters}
-\label{table:ex3_parameters}
-\end{table}
-
-
+The purpose of this experiment is to gauge the absolute performance of our system compared to other approaches. This should test if our approach has significantly more overhead than other approaches, and also if the underlying implementation is correct such that performance is on a par with competing approaches. To provide these points of comparison, we will test a purely sequential approach, and another using OpenMP. We will also vary the schedule, again to verify that our implementation is on a par with a current parallel programming method (OpenMP) with different schedules.
 
 Note here that the Static schedule and the Dynamic Chunks schedule with a chunk size of 1 represent opposing ends of an overhead spectrum. With a static schedule, we have the least amount of overhead possible, (good for when the task variance is uniform), and with the Dynamic Chunks schedule and a chunk size of 1, we have the most amount of overhead possible, but since we fetch tasks one at a time, we will have the best task complexity balance across our threads (good for skewed/high variance.)
 
-(*** Also shows scalability with core count ***)
+As for the expected outcome, I would predict that we would be close to a purely sequential implementation in single threaded circumstances, if we use a static schedule, as the only additional overhead would be in managing the one thread. For other schedules, we may see a significant performance drop, since we would be using a sub-optimal schedule. But, OpenMP would likely see a similar performance drop with a sub-optimal schedule.
+
+The main question we want to answer is how we compare to a current parallel programming approach, OpenMP. Do we scale with thread/CPU core count in a similar fashion? I would expect that we may be behind OpenMP in terms of performance, as OpenMP is huge, well established project, and as such may be much more optimized than our implementation. Whilst the outcome of this experiment will no doubt be useful, we are mostly concerned with if we can improve upon our own performance by adding plasticity and contention aware scheduling, so we need only compare against ourselves in the final experiment.
+
+\input{ex_params/ex2_params}
+
+
+
+\subsection{Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}
+
+This experiment is designed to investigate whether the two main additions to our approach incur any significant overhead. That is, plasticity and contention aware scheduling. To do this, we will simulate the overhead of communicating with the controller (contention aware scheduling) and switching strategies (plasticity), without actually changing any details of the implementation, so that there will be no performance difference. We will also be running the controller application, which will tie up (a small amount of) system resources.
+
+We will then run the same experiment with no controller or plasticity, as in experiment 1. The runtimes of both cases will be compared to see the total amount of delay introduced.
+
+Whilst I expect that we will incur some overhead, I don't expect it to be significant, as it will be of constant time and not scale with regards to input size.
+
+\input{ex_params/ex3_params}
 
 
 
 \subsection{Experiment 4 - Schedule Choice Importance}
 
-This experiment is designed to highlight the importance of the choice of schedule.
+This experiment is designed to highlight the importance of the choice of schedule, and the benefits plasticity can bring even with just a single application. To do this, we compare the runtimes of different schedules with different task grain distributions. With a uniform task distribution, the static schedule should perform best, and the dynamic individual schedule should be the worst. With a biased task distribution, we should see the static schedule perform the worst, and the dynamic individual or dynamic chunks perform the best.
 
-(*** Should the same be done for thread pinnings? And we have already kind of seen importance of number of threads, but should we have another experiment where num threads > num CPU cores?)
-(*** Benefits of plasticity! ***)
+For the plasticity portion of this experiment, we will also add cases where we start with a sub-optimal schedule, and then, after 10 seconds, change to a better schedule. This will be done with a uniform schedule, starting with the dynamic individual schedule, and switching to the static schedule.
 
-
-\begin{table}
-\centering
-	\begin{tabular}{|c|c|}
-		\hline
-		Number of tasks & 50,000 \\
-		\hline
-		Task Grain & \specialcell{Small, \\ Large} \\
-		\hline
-		Task Grain Distribution & \specialcell{Uniform, \\ Biased} \\
-		\hline
-		Number of CPU cores & 4 \\
-		\hline
-		Number of threads used & 4 \\
-		\hline
-		Thread pinning & Uniform \\
-		\hline
-		Schedule & \specialcell{Static, \\ Dynamic Chunks (Chunk Size = 1,000), \\ Dynamic Chunks (Chunk Size = 1)} \\
-		\hline
-	\end{tabular}
-\caption{Experiment 4 Parameters}
-\label{table:ex4_parameters}
-\end{table}
-
-
-
-Expected results
+\input{ex_params/ex4_params}
 
 
 
 \subsection{Experiment 5 - Absolute Multiprogramming Performance}
 
-This experiment
+The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. 
 
+(*** Expand ***)
 
-
-(*** These experiment parameters will be neatened up into a table ***)
-
-Experiment parameters:
-
-\begin{table}
-\centering
-	\begin{tabular}{|c|c|}
-		\hline
-		Number of tasks & 50,000 \\
-		\hline
-		Task Grain & Small \\
-		\hline
-		Task Grain Distribution & Uniform \\
-		\hline
-		Number of CPU cores & 4 \\
-		\hline
-		Number of threads used & \specialcell{2, \\ 4, \\ 8} \\
-		\hline
-		Thread pinning & \specialcell{Uniform, \\ Random} \\
-		\hline
-		Schedule & Static \\
-		\hline
-	\end{tabular}
-\caption{Experiment 5 Parameters}
-\label{table:ex5_parameters}
-\end{table}
-
-
-
-Expected results
+\input{ex_params/ex5_params}

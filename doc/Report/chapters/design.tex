@@ -11,12 +11,26 @@ The ideas described in the background section are combined to produce a skeleton
 
 
 \subsection{Skeleton Foundation}
+\label{section:design_skeleton_foundation}
 
-As discussed in the background section, one of the key ideas behind the project is that of skeleton programming, using predefined patterns to aid the programmer. The first pattern implemented is the map array pattern, with further patterns left for possible future work. Map-array is similar to the map pattern described in section \ref{section:background_skeleton_programming}, in that it applies a given user function to each element in a list, however map-array also allows the function to access a user provided array. This was chosen as the map pattern is likely the most well known pattern and certainly one of the most useful, and map-array provides further functionality on top of this. It also provides a good basis for developing further patterns, and it also allows complex testing, which will be covered in the evaluation section of this report.
+As discussed in the background section, one of the key ideas behind the project is that of skeleton programming, using predefined patterns to aid the programmer. Possibly the most common skeleton is map, which is a skeleton that takes a function, an array of data, and applies the function to each member of the array. The map operation itself is inherently parallelizable, since each `task' (processing one element of the input array) is independent, so we can simply assign different chunks of the input array to different threads. This is called an ``embarrassingly parallel'' problem. 
+
+Other such problems include map-array, reduce, and scan. These are all implemented in SkePU with a corresponding skeleton. In our case, we will focus on the map-array pattern, with further patterns left for possible future work. Map-array is similar to the map pattern in that it applies a given user function to each element in a list, however map-array also allows the function to access a user provided array. A diagram to better explain this is given in figure \ref{fig:skepu_skeletons}.
+
+Map-array was chosen as the map pattern is likely the most well known pattern and certainly one of the most useful, and map-array provides further functionality on top of this. It also provides a good basis for developing further patterns, and allows for complex testing, which will be covered in the evaluation section of this report.
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\textwidth]{graphics/skepu_skeletons.jpg}
+	\caption{Taken from SkePU documentation: Examples of skeletons}
+	\label{fig:skepu_skeletons}
+\end{figure}
 
 
 
 \subsection{Adding Plasticity}
+\label{subsection:design_adding_plasticity}
 
 To implement plasticity, we add the ability to vary three key aspects of the implementation of a single instance of map-array:
 
@@ -41,22 +55,23 @@ A solution to this problem is to provide many different task distributions, and 
 	\item Tapered - Each thread starts by retrieving N tasks at a time, and as the computation continues, it retrieves fewer and fewer
 \end{itemize}
 
-Thread count and schedule were chosen as they seem the most critical to performance, and thread pinnings was added as this is was investigated in the LIRA paper (cite LIRA) as a factor contention aware scheduling could exploit.
+Thread count and schedule were chosen as they seem the most critical to performance, and thread pinnings was added as this is was investigated in the LIRA paper \cite{lira} as a factor contention aware scheduling could exploit.
 
 Once we have added plasticity, we can experiment with the specifics of an implementation, and see how they affect the performance of the system. This would be the use case of utilizing our library with no other program running, (So no contention aware scheduling), and we can explore how we can adapt the program using plasticity at runtime in this case. We may be able to improve performance even under these conditions, depending upon the configuration of the machine (e.g., is there more CPU cores available) and the problem (e.g. do we have many small tasks or few large tasks.) 
 
 
-% Remember - Graph fiddling and explanations
 
 \begin{figure}
+	\centering
 	\includegraphics[width=\textwidth]{graphics/unoptimized_schedule.png}
-	\caption{A worst case scenario of a static schedule assigning each thread an equal number of tasks}
+	\caption{A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times: \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.}
 	\label{fig:unoptimized_schedule}
 \end{figure}
 
 \begin{figure}
+	\centering
 	\includegraphics[width=\textwidth]{graphics/optimized_schedule.png}
-	\caption{An optimized version of figure \ref{fig:unoptimized_schedule}, notice that thread 2 has four tasks, but the total runtime is substantially less}
+	\caption{An optimized version of figure \ref{fig:unoptimized_schedule}. Here we have the same set of tasks, but we have a better distribution of work, so the total execution time is 10 time units.}
 	\label{fig:optimized_schedule}
 \end{figure}
 
@@ -65,27 +80,27 @@ Once we have added plasticity, we can experiment with the specifics of an implem
 \subsection{Contention Aware Scheduling}
 \label{subsection:design_contention_aware_scheduling}
 
-To add contention aware scheduling, we need multiple applications using our library to be able to collaborate, and adapt their behaviour accordingly. To do this, we use a separate controller application, with which all instances of our program can communicate. This provides a single known point of contact, and a designated thread for computing program parameters with respect to all aspects of the system. An example of how our programs and the controller program communicate is shown in figure 
+To add contention aware scheduling, we need multiple applications using our library to be able to collaborate, and adapt their behaviour accordingly. To do this, we use a separate controller application, with which all instances of our program can communicate. This provides a single known point of contact, and a designated thread for computing program parameters with respect to all aspects of the system.
 
 Once our programs can communicate, and we can control each aspect of them, we can implement contention aware scheduling. In this phase of the project, we simply program a set of predefined actions for the controller to take, in order to manually control what each implementation does, as we are only investigating if this approach seems promising. We leave implementing some algorithm for automatic parameter tuning for future work.
 
-As an example of how this would work in practice is in figure \ref{fig:controller_flowchart}.
+As an example of the communication model is given in figure \ref{fig:controller_flowchart}.
 
-Now that we have contention aware scheduling, we can experiment with multiple programs running on a system at once. An example of how plastic programming and contention aware scheduling is given in figure \ref{fig:plastic_contention_aware_scheduling}
+Now that we have contention aware scheduling, we can experiment with multiple programs running on a system at once. An example of how contention aware scheduling can be enhanced with plastic programming is given in figure \ref{fig:plastic_contention_aware_scheduling}.
 
 
-
-% More graph fiddling
 
 \begin{figure}
-	\includegraphics[width=0.8\textwidth]{graphics/controller_flowchart.png}
-	\caption{How applications communicate with the controller ***Not too happy with this diagram, could be clearer. Also, pretty huge.***}
+	\centering
+	\includegraphics[width=\textwidth]{graphics/controller_communication_flowchart.png}
+	\caption{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.}
 	\label{fig:controller_flowchart}
 \end{figure}
 
 \begin{figure}
-	\includegraphics[width=0.8\textwidth]{graphics/placeholder_plastic_contention_aware_scheduling.png}
-	\caption{***Place-holder graph for plastic contention aware scheduling***}
+	\centering
+	\includegraphics[width=\textwidth]{graphics/plastic_contention_aware_scheduling.png}
+	\caption{An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.) \\ \\ Moving further in time, we have another decision point. This one is triggered by some change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues. \\ \\ Program 2 then terminates, triggering another decision point, and the system again updates the configuration.}
 	\label{fig:plastic_contention_aware_scheduling}
 \end{figure}
 
@@ -98,7 +113,3 @@ To properly evaluate the outcome of this project, we need some way of testing th
 We also need points of comparison in terms of performance. So, in addition to our synthetic program, we also implement an equivalent sequential and an OpenMP version, in which we can vary similar parameters and produce comparable statistics. 
 
 The detailed experimental program will be discussed in \ref{chapter:experimental_methodology_and_program}.
-
-(*** If complete, add that they utilize the same testing framework)
-
-(***NOTE - designing for future applications has been moved to the future work chapter***)

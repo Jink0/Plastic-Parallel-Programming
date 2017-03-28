@@ -1,40 +1,40 @@
 \BOOKMARK [0][-]{chapter.1}{Introduction}{}% 1
 \BOOKMARK [0][-]{chapter.2}{Background}{}% 2
-\BOOKMARK [1][-]{section.2.1}{Current\040Solutions}{chapter.2}% 3
-\BOOKMARK [1][-]{section.2.2}{What\040Is\040Contention\040Aware\040Scheduling?}{chapter.2}% 4
-\BOOKMARK [1][-]{section.2.3}{What\040Is\040Plastic\040Programming?}{chapter.2}% 5
-\BOOKMARK [1][-]{section.2.4}{What\040Is\040Skeleton\040Programming?}{chapter.2}% 6
+\BOOKMARK [1][-]{section.2.1}{Current Solutions}{chapter.2}% 3
+\BOOKMARK [1][-]{section.2.2}{What Is Contention Aware Scheduling?}{chapter.2}% 4
+\BOOKMARK [1][-]{section.2.3}{What Is Plastic Programming?}{chapter.2}% 5
+\BOOKMARK [1][-]{section.2.4}{What Is Skeleton Programming?}{chapter.2}% 6
 \BOOKMARK [1][-]{section.2.5}{Summary}{chapter.2}% 7
 \BOOKMARK [0][-]{chapter.3}{Design}{}% 8
-\BOOKMARK [1][-]{section.3.1}{System\040description}{chapter.3}% 9
-\BOOKMARK [2][-]{subsection.3.1.1}{Skeleton\040Foundation}{section.3.1}% 10
-\BOOKMARK [2][-]{subsection.3.1.2}{Adding\040Plasticity}{section.3.1}% 11
-\BOOKMARK [2][-]{subsection.3.1.3}{Contention\040Aware\040Scheduling}{section.3.1}% 12
+\BOOKMARK [1][-]{section.3.1}{System description}{chapter.3}% 9
+\BOOKMARK [2][-]{subsection.3.1.1}{Skeleton Foundation}{section.3.1}% 10
+\BOOKMARK [2][-]{subsection.3.1.2}{Adding Plasticity}{section.3.1}% 11
+\BOOKMARK [2][-]{subsection.3.1.3}{Contention Aware Scheduling}{section.3.1}% 12
 \BOOKMARK [2][-]{subsection.3.1.4}{Evaluation}{section.3.1}% 13
 \BOOKMARK [0][-]{chapter.4}{Implementation}{}% 14
-\BOOKMARK [1][-]{section.4.1}{Skeleton\040Foundation}{chapter.4}% 15
-\BOOKMARK [1][-]{section.4.2}{Adding\040Plasticity}{chapter.4}% 16
-\BOOKMARK [1][-]{section.4.3}{Contention\040Aware\040Scheduling}{chapter.4}% 17
+\BOOKMARK [1][-]{section.4.1}{Skeleton Foundation}{chapter.4}% 15
+\BOOKMARK [1][-]{section.4.2}{Adding Plasticity}{chapter.4}% 16
+\BOOKMARK [1][-]{section.4.3}{Contention Aware Scheduling}{chapter.4}% 17
 \BOOKMARK [1][-]{section.4.4}{Evaluation}{chapter.4}% 18
-\BOOKMARK [0][-]{chapter.5}{Experimental\040Methodology\040And\040Program}{}% 19
-\BOOKMARK [1][-]{section.5.1}{Evaluation\040Methodology}{chapter.5}% 20
-\BOOKMARK [1][-]{section.5.2}{Evaluation\040Program}{chapter.5}% 21
-\BOOKMARK [1][-]{section.5.3}{Experiments}{chapter.5}% 22
-\BOOKMARK [2][-]{subsection.5.3.1}{Experiment\0401\040-\040Testing\040Overhead}{section.5.3}% 23
-\BOOKMARK [2][-]{subsection.5.3.2}{Experiment\0402\040-\040Plasticity\040And\040Contention\040Aware\040Scheduling\040Framework\040Overhead}{section.5.3}% 24
-\BOOKMARK [2][-]{subsection.5.3.3}{Experiment\0403\040-\040Absolute\040Performance}{section.5.3}% 25
-\BOOKMARK [2][-]{subsection.5.3.4}{Experiment\0404\040-\040Schedule\040Choice\040Importance}{section.5.3}% 26
-\BOOKMARK [2][-]{subsection.5.3.5}{Experiment\0405\040-\040Absolute\040Multiprogramming\040Performance}{section.5.3}% 27
-\BOOKMARK [0][-]{chapter.6}{Results}{}% 28
-\BOOKMARK [1][-]{section.6.1}{Results}{chapter.6}% 29
-\BOOKMARK [2][-]{subsection.6.1.1}{Experiment\0401\040-\040Testing\040Overhead}{section.6.1}% 30
-\BOOKMARK [2][-]{subsection.6.1.2}{Experiment\0402\040-\040Plasticity\040And\040Contention\040Aware\040Scheduling\040Framework\040Overhead}{section.6.1}% 31
-\BOOKMARK [2][-]{subsection.6.1.3}{Experiment\0403\040-\040Absolute\040Performance}{section.6.1}% 32
-\BOOKMARK [2][-]{subsection.6.1.4}{Experiment\0404\040-\040Schedule\040Choice\040Importance}{section.6.1}% 33
-\BOOKMARK [2][-]{subsection.6.1.5}{Experiment\0404\040-\040}{section.6.1}% 34
-\BOOKMARK [1][-]{section.6.2}{Discussion}{chapter.6}% 35
-\BOOKMARK [0][-]{chapter.7}{Future\040Work}{}% 36
-\BOOKMARK [1][-]{section.7.1}{}{chapter.7}% 37
-\BOOKMARK [1][-]{section.7.2}{Designing\040For\040Future\040Applications}{chapter.7}% 38
-\BOOKMARK [0][-]{chapter.8}{Conclusion}{}% 39
-\BOOKMARK [1][-]{section.8.1}{}{chapter.8}% 40
+\BOOKMARK [0][-]{chapter.5}{Experimental Methodology And Program}{}% 19
+\BOOKMARK [1][-]{section.5.1}{Evaluation Methodology}{chapter.5}% 20
+\BOOKMARK [1][-]{section.5.2}{Programme of Experiments}{chapter.5}% 21
+\BOOKMARK [2][-]{subsection.5.2.1}{Experiment 1 - Metrics Collection Overhead}{section.5.2}% 22
+\BOOKMARK [2][-]{subsection.5.2.2}{Experiment 2 - Absolute Performance}{section.5.2}% 23
+\BOOKMARK [2][-]{subsection.5.2.3}{Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{section.5.2}% 24
+\BOOKMARK [2][-]{subsection.5.2.4}{Experiment 4 - Schedule Choice Importance}{section.5.2}% 25
+\BOOKMARK [2][-]{subsection.5.2.5}{Experiment 5 - Absolute Multiprogramming Performance}{section.5.2}% 26
+\BOOKMARK [0][-]{chapter.6}{Results}{}% 27
+\BOOKMARK [1][-]{section.6.1}{Experiment Results}{chapter.6}% 28
+\BOOKMARK [2][-]{subsection.6.1.1}{Experiment 1 - Metrics Collection Overhead}{section.6.1}% 29
+\BOOKMARK [2][-]{subsection.6.1.2}{Experiment 2 - Absolute Performance}{section.6.1}% 30
+\BOOKMARK [2][-]{subsection.6.1.3}{Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{section.6.1}% 31
+\BOOKMARK [2][-]{subsection.6.1.4}{Experiment 4 - Schedule Choice Importance}{section.6.1}% 32
+\BOOKMARK [2][-]{subsection.6.1.5}{Experiment 5 - Absolute Multiprogramming Performance}{section.6.1}% 33
+\BOOKMARK [1][-]{section.6.2}{Discussion}{chapter.6}% 34
+\BOOKMARK [0][-]{chapter.7}{Future Work}{}% 35
+\BOOKMARK [1][-]{section.7.1}{}{chapter.7}% 36
+\BOOKMARK [1][-]{section.7.2}{Designing For Future Applications}{chapter.7}% 37
+\BOOKMARK [0][-]{chapter.8}{Conclusion}{}% 38
+\BOOKMARK [1][-]{section.8.1}{}{chapter.8}% 39
+\BOOKMARK [0][-]{chapter.9}{Bibliography}{}% 40
