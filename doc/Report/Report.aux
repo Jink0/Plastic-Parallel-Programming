@@ -31,10 +31,12 @@
 \@writefile{toc}{\contentsline {section}{\numberline {2.1}Current Solutions}{6}{section.2.1}}
 \citation{mpi}
 \citation{lira}
+\citation{lira}
+\citation{lira}
 \@writefile{toc}{\contentsline {section}{\numberline {2.2}What Is Contention Aware Scheduling?}{7}{section.2.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces Taken from the LIRA paper (CITE LIRA): Pair-wise speedup of programs, comparing sharing a socket to using separate sockets. Boxes annotated with a $-$ indicate cases where performance decreased, and $+$ where performance increased.\relax }}{8}{figure.caption.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces Taken from the LIRA paper \cite  {lira}: Pair-wise speedup of programs, comparing sharing a socket to using separate sockets. Boxes annotated with a $-$ indicate cases where performance decreased, and $+$ where performance increased. In LIRA, this information was used to select which programs, from a given workset, should be scheduled concurrently, in order to maximize performance.\relax }}{8}{figure.caption.2}}
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:lira_pairwise_speedup}{{2.1}{8}{Taken from the LIRA paper (CITE LIRA): Pair-wise speedup of programs, comparing sharing a socket to using separate sockets. Boxes annotated with a $-$ indicate cases where performance decreased, and $+$ where performance increased.\relax }{figure.caption.2}{}}
+\newlabel{fig:lira_pairwise_speedup}{{2.1}{8}{Taken from the LIRA paper \cite {lira}: Pair-wise speedup of programs, comparing sharing a socket to using separate sockets. Boxes annotated with a $-$ indicate cases where performance decreased, and $+$ where performance increased. In LIRA, this information was used to select which programs, from a given workset, should be scheduled concurrently, in order to maximize performance.\relax }{figure.caption.2}{}}
 \citation{petabricks}
 \@writefile{toc}{\contentsline {section}{\numberline {2.3}What Is Plastic Programming?}{9}{section.2.3}}
 \@writefile{lof}{\contentsline {figure}{\numberline {2.2}{\ignorespaces A graph showing three algorithms with different runtime curves, which depend upon the array size. Combining these algorithms would provide an improved algorithm, with D1 and D2 showing the optimal decision points where a plastic programming system should switch algorithms\relax }}{10}{figure.caption.3}}
@@ -54,8 +56,8 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.2}Adding Plasticity}{14}{subsection.3.1.2}}
 \newlabel{subsection:design_adding_plasticity}{{3.1.2}{14}{Adding Plasticity}{subsection.3.1.2}{}}
 \citation{lira}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times: \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.\relax }}{16}{figure.caption.5}}
-\newlabel{fig:unoptimized_schedule}{{3.2}{16}{A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times: \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.\relax }{figure.caption.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.2}{\ignorespaces A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times (These would be unknown to the scheduler): \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.\relax }}{16}{figure.caption.5}}
+\newlabel{fig:unoptimized_schedule}{{3.2}{16}{A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times (These would be unknown to the scheduler): \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.\relax }{figure.caption.5}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.3}{\ignorespaces An optimized version of figure \ref  {fig:unoptimized_schedule}. Here we have the same set of tasks, but we have a better distribution of work, so the total execution time is 10 time units.\relax }}{17}{figure.caption.6}}
 \newlabel{fig:optimized_schedule}{{3.3}{17}{An optimized version of figure \ref {fig:unoptimized_schedule}. Here we have the same set of tasks, but we have a better distribution of work, so the total execution time is 10 time units.\relax }{figure.caption.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.3}Contention Aware Scheduling}{18}{subsection.3.1.3}}
@@ -75,13 +77,13 @@
 \newlabel{fig:map_array_interface}{{4.1}{23}{Interface of our map\_array skeleton. The first four variables are the two input arrays, the function to apply, and the output array respectively. The output\_filename variable is the filename to record the metrics output in, and params sets up the initial parameters we will use. These last two are optional.\relax }{figure.caption.9}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces A usage example of map\_array, here we apply our user\_function to each element of input1. The size of our two input arrays need not match, but the size of the input1 and output arrays must.\relax }}{23}{figure.caption.10}}
 \newlabel{fig:map_array_usage_example}{{4.2}{23}{A usage example of map\_array, here we apply our user\_function to each element of input1. The size of our two input arrays need not match, but the size of the input1 and output arrays must.\relax }{figure.caption.10}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}Adding Plasticity}{25}{section.4.2}}
-\newlabel{section:implementation_adding_plasticity}{{4.2}{25}{Adding Plasticity}{section.4.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}Adding Plasticity}{24}{section.4.2}}
+\newlabel{section:implementation_adding_plasticity}{{4.2}{24}{Adding Plasticity}{section.4.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4.3}Contention Aware Scheduling}{25}{section.4.3}}
 \newlabel{section:implementation_contention_aware_scheduling}{{4.3}{25}{Contention Aware Scheduling}{section.4.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Overall communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }}{27}{figure.caption.11}}
 \newlabel{fig:communication_structure}{{4.3}{27}{Overall communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }{figure.caption.11}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.4}Evaluation}{28}{section.4.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}Testing Programs}{28}{section.4.4}}
 \@writefile{toc}{\contentsline {chapter}{\numberline {5}Experimental Methodology And Program}{29}{chapter.5}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}

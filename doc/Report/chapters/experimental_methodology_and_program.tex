@@ -158,7 +158,7 @@
 
 
 
-The primary goal of this project is to investigate if we can achieve better performance using our approach to parallel programming compared to other methods. Accordingly, we will focus our experiments on evaluating the performance of the system. To this end, we have created a carefully designed set of experiments to asses the system under different conditions, conditions which may be found in future applications. We also evaluate other approaches to parallel programming in order to directly compare their performance with ours. In this chapter we describe our evaluation methodology and the particular experiments we will run. The outcome of each experiment will be discussed in the results chapter in the same order they are presented here.
+The primary goal of this project is to investigate if we can achieve better performance using our approach to parallel programming compared to other methods. Accordingly, we will focus our experiments on evaluating the performance of the system. To this end, we have created a carefully designed set of experiments to asses the system under different conditions, conditions which may be found in future applications. In this chapter we describe our evaluation methodology and the particular experiments we will run. The outcome of each experiment will be discussed in the results chapter in the same order they are presented here.
 
 
 
@@ -184,9 +184,9 @@ In these experiments however, we will focus on total runtime, as we are mostly c
 
 In this section, we detail each experiment, with the thought process behind it, how it will be executed, and the expected results if appropriate. The actual results will be presented in chapter \ref{chapter:results}, where we will compare them with our expectations and discuss their implications.
 
-In each experiment we will vary a different set of parameters. These parameters can be partitioned into three separate classes; Input Parameters, Resources Granted, and Skeleton Parameters. More parameters can be added, (e.g. different resources granted,) but this is left for future work, as currently we only want a preliminary investigation into these ideas. The parameters we can change are:
+In each experiment we will vary a different set of parameters. These parameters can be partitioned into three separate classes; Application Input Parameters, Resources Granted, and Skeleton Parameters. More parameters can be added, (e.g. different resources granted,) but this is left for future work, as currently we only want a preliminary investigation into these ideas. The parameters we can change are:
 
-Input Parameters:
+Application Input Parameters:
 
 \begin{itemize}
 	\item Number of tasks - The number of tasks to be carried out
@@ -218,7 +218,7 @@ Thus far, experiments 1-4 have all been conducted with a single application util
 
 \subsection{Experiment 1 - Metrics Collection Overhead}
 
-The aim of our first experiment is to investigate if our method for collecting metrics about the system adds any significant overhead that we must take into account in further experiments. To this end, we compare the runtimes of our system both with and without metrics collection, to see if there is any significant difference. The system is run with no controller application or runtime plasticity, since we only wish to measure the overhead added by our metrics collection. 
+The aim of our first experiment is to investigate if our method for collecting metrics about the system adds any significant overhead that we must take into account in assessing further experiments. To this end, we compare the runtimes of our system both with and without metrics collection, to see if there is any significant difference. The system is run with no controller application or runtime plasticity, since we only wish to measure the overhead added by our metrics collection. 
 
 The experiment parameters are designed such that it is a worse case scenario, and as a result would produce the most significant difference in runtimes. This worst case scenario would be many small tasks, with multiple threads, since metrics functions are called before and after tasks are completed, and are managed on a per-thread basis.
 
@@ -244,7 +244,7 @@ The main question we want to answer is how we compare to a current parallel prog
 
 \subsection{Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}
 
-This experiment is designed to investigate whether the two main additions to our approach incur any significant overhead. That is, plasticity and contention aware scheduling. To do this, we will simulate the overhead of communicating with the controller (contention aware scheduling) and switching strategies (plasticity), without actually changing any details of the implementation, so that there will be no performance difference. We will also be running the controller application, which will tie up (a small amount of) system resources.
+This experiment is designed to investigate whether the two main additions to a simple skeleton incur any significant overhead. That is, plasticity and contention aware scheduling. To do this, we will simulate the overhead of communicating with the controller (contention aware scheduling) and switching strategies (plasticity), without actually changing any details of the implementation, so that any performance difference will be attributable to communication and switching overhead. We switch once each time, after the controller receives a registration message, it replies with a message triggering the switch.
 
 We will then run the same experiment with no controller or plasticity, as in experiment 1. The runtimes of both cases will be compared to see the total amount of delay introduced.
 
@@ -256,7 +256,7 @@ Whilst I expect that we will incur some overhead, I don't expect it to be signif
 
 \subsection{Experiment 4 - Schedule Choice Importance}
 
-This experiment is designed to highlight the importance of the choice of schedule, and the benefits plasticity can bring even with just a single application. To do this, we compare the runtimes of different schedules with different task grain distributions. With a uniform task distribution, the static schedule should perform best, and the dynamic individual schedule should be the worst. With a biased task distribution, we should see the static schedule perform the worst, and the dynamic individual or dynamic chunks perform the best.
+This experiment is designed to highlight the importance of the choice of schedule, and the benefits plasticity can bring even with just a single application. To do this, we compare the runtimes of different schedules with a biased task grain distribution. With a biased task distribution, we should see the static schedule perform the worst, and the dynamic individual or dynamic chunks schedule perform the best.
 
 For the plasticity portion of this experiment, we will also add cases where we start with a sub-optimal schedule, and then, after 10 seconds, change to a better schedule. This will be done with a uniform schedule, starting with the dynamic individual schedule, and switching to the static schedule.
 

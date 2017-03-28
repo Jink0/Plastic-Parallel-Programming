@@ -42,7 +42,7 @@ To implement plasticity, we add the ability to vary three key aspects of the imp
 
 The thread count and pinnings are self explanatory. The schedule however requires some explanation.
 
-The most basic method to divide the tasks is to give an equal amount to each thread. This is fine if the complexity of the tasks is uniform, but if it is skewed, the amount of computation to be done by each thread is imbalanced. This is illustrated in figure \ref{fig:unoptimized_schedule}. This is because we have idle cores during computation, which is a wasted resource in a multi-threaded execution. However, if we allocate the tasks differently, we can obtain better performance, as illustrated in figure \ref{fig:optimized_schedule}.
+The most basic method to divide the tasks is to give an equal amount to each thread. This is fine if the complexity of the tasks is uniform, but if it is skewed, the amount of computation to be done by each thread is imbalanced. This is illustrated in figure \ref{fig:unoptimized_schedule}. This is because we have idle cores during computation, which is a wasted resource in a multi-threaded execution. However, if we allocate the tasks differently, we can obtain better performance, as illustrated in figure \ref{fig:optimized_schedule}, where the improved schedule runs twice as fast as the simple one.
 
 So load balancing a workload is critical to performance in such a multi-threaded application. However, optimizing the task distribution in this manner is non trivial, and it depends upon the computation to be done as well as the number of threads and other resources available at runtime.
 
@@ -64,7 +64,7 @@ Once we have added plasticity, we can experiment with the specifics of an implem
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{graphics/unoptimized_schedule.png}
-	\caption{A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times: \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.}
+	\caption{A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times (These would be unknown to the scheduler): \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.}
 	\label{fig:unoptimized_schedule}
 \end{figure}
 
@@ -108,7 +108,7 @@ Now that we have contention aware scheduling, we can experiment with multiple pr
 
 \subsection{Evaluation}
 
-To properly evaluate the outcome of this project, we need some way of testing the libraries performance. To this end, we implemented a synthetic program which evaluates the library with an artificial workload, collecting and recording metrics detailing the libraries performance with different parameters.  
+To properly evaluate the outcome of this project, we need some way of testing the libraries performance. To this end, we implemented a synthetic program which calls the skeleton with an artificial workload, collecting and recording metrics detailing the libraries performance with different parameters.  
 
 We also need points of comparison in terms of performance. So, in addition to our synthetic program, we also implement an equivalent sequential and an OpenMP version, in which we can vary similar parameters and produce comparable statistics. 
 

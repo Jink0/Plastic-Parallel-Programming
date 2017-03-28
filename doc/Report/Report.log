@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  28 MAR 2017 02:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  28 MAR 2017 21:23
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
 (C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
@@ -344,7 +344,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.18 ...mberline {4.4}Evaluation}{28}{section.4.4}
+l.18 ...ne {4.4}Testing Programs}{28}{section.4.4}
                                                    [1
 
 ] [2])
@@ -376,7 +376,7 @@ Package pdftex.def Info: graphics/lira_pairwise_speedup.png used on input line
 40.
 (pdftex.def)             Requested size: 345.0pt x 351.63336pt.
  [7] [8 <./graphics/lira_pairwise_speedup.png>] <graphics/plastic_graph.png, id
-=277, 1129.21875pt x 752.8125pt>
+=279, 1129.21875pt x 752.8125pt>
 File: graphics/plastic_graph.png Graphic file (type png)
 
 <use graphics/plastic_graph.png>
@@ -391,14 +391,14 @@ Chapter 3.
 (chapters/design.tex [13
 
 ]
-<graphics/skepu_skeletons.jpg, id=304, 626.34pt x 502.12593pt>
+<graphics/skepu_skeletons.jpg, id=306, 626.34pt x 502.12593pt>
 File: graphics/skepu_skeletons.jpg Graphic file (type jpg)
 
 <use graphics/skepu_skeletons.jpg>
 Package pdftex.def Info: graphics/skepu_skeletons.jpg used on input line 25.
 (pdftex.def)             Requested size: 241.49895pt x 193.6064pt.
  [14 <./graphics/skepu_skeletons.jpg>]
-<graphics/unoptimized_schedule.png, id=313, 578.16pt x 397.485pt>
+<graphics/unoptimized_schedule.png, id=315, 578.16pt x 397.485pt>
 File: graphics/unoptimized_schedule.png Graphic file (type png)
 
 <use graphics/unoptimized_schedule.png>
@@ -406,7 +406,7 @@ Package pdftex.def Info: graphics/unoptimized_schedule.png used on input line 6
 6.
 (pdftex.def)             Requested size: 345.0pt x 237.18277pt.
 
-<graphics/optimized_schedule.png, id=314, 578.16pt x 397.485pt>
+<graphics/optimized_schedule.png, id=316, 578.16pt x 397.485pt>
 File: graphics/optimized_schedule.png Graphic file (type png)
 
 <use graphics/optimized_schedule.png>
@@ -415,7 +415,7 @@ Package pdftex.def Info: graphics/optimized_schedule.png used on input line 73.
 (pdftex.def)             Requested size: 345.0pt x 237.18277pt.
  [15] [16 <./graphics/unoptimized_schedule.png>] [17 <./graphics/optimized_sche
 dule.png>]
-<graphics/controller_communication_flowchart.png, id=336, 543.53062pt x 438.136
+<graphics/controller_communication_flowchart.png, id=338, 543.53062pt x 438.136
 87pt>
 File: graphics/controller_communication_flowchart.png Graphic file (type png)
  <use graphics/controller_communication_flowchart.png>
@@ -423,7 +423,7 @@ Package pdftex.def Info: graphics/controller_communication_flowchart.png used o
 n input line 95.
 (pdftex.def)             Requested size: 345.0pt x 278.11353pt.
 
-<graphics/plastic_contention_aware_scheduling.png, id=337, 852.18375pt x 615.04
+<graphics/plastic_contention_aware_scheduling.png, id=339, 852.18375pt x 615.04
 78pt>
 File: graphics/plastic_contention_aware_scheduling.png Graphic file (type png)
  <use graphics/plastic_contention_aware_scheduling.png>
@@ -472,12 +472,12 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
  [22
 
 ] [23] [24]
-[25] <graphics/communication_structure.png, id=426, 458.46281pt x 440.39531pt>
+[25] <graphics/communication_structure.png, id=428, 458.46281pt x 440.39531pt>
 File: graphics/communication_structure.png Graphic file (type png)
 
 <use graphics/communication_structure.png>
 Package pdftex.def Info: graphics/communication_structure.png used on input lin
-e 132.
+e 130.
 (pdftex.def)             Requested size: 276.00105pt x 265.13297pt.
  [26] [27 <./graphics/communication_structure.png>]) [28]
 Chapter 5.
@@ -493,7 +493,7 @@ s are small, medium,
 (ex_params/ex3_params.tex) [33] (ex_params/ex4_params.tex) [34]
 (ex_params/ex5_params.tex)) [35]
 Chapter 6.
-(chapters/results.tex <graphics/experiment1.png, id=484, 578.16pt x 397.485pt>
+(chapters/results.tex <graphics/experiment1.png, id=486, 578.16pt x 397.485pt>
 File: graphics/experiment1.png Graphic file (type png)
 
 <use graphics/experiment1.png>
@@ -502,7 +502,7 @@ Package pdftex.def Info: graphics/experiment1.png used on input line 22.
  (ex_params/ex1_params.tex) [36
 
 ]
-<graphics/experiment2.png, id=491, 795.6927pt x 711.1368pt>
+<graphics/experiment2.png, id=493, 795.6927pt x 711.1368pt>
 File: graphics/experiment2.png Graphic file (type png)
 
 <use graphics/experiment2.png>
@@ -510,14 +510,14 @@ Package pdftex.def Info: graphics/experiment2.png used on input line 41.
 (pdftex.def)             Requested size: 345.0pt x 308.33286pt.
  (ex_params/ex2_params.tex) [37 <./graphics/experiment1.png>] [38 <./graphics/e
 xperiment2.png>]
-<graphics/experiment3.png, id=505, 762.4485pt x 711.8595pt>
+<graphics/experiment3.png, id=507, 762.4485pt x 711.8595pt>
 File: graphics/experiment3.png Graphic file (type png)
 
 <use graphics/experiment3.png>
 Package pdftex.def Info: graphics/experiment3.png used on input line 66.
 (pdftex.def)             Requested size: 345.0pt x 322.10432pt.
  (ex_params/ex3_params.tex) [39] [40 <./graphics/experiment3.png>] <graphics/ex
-periment4.png, id=517, 710.4141pt x 711.1368pt>
+periment4.png, id=519, 710.4141pt x 711.1368pt>
 File: graphics/experiment4.png Graphic file (type png)
 
 <use graphics/experiment4.png>
@@ -544,7 +544,7 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 146.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 146.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 146.
 Package rerunfilecheck Info: File `Report.out' has not changed.
-(rerunfilecheck)             Checksum: 03BD84EEBA94F54F8F81C7FE9E6D405E;2908.
+(rerunfilecheck)             Checksum: 47F9BF485B9A102AF986B4F3F026B0DB;2914.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 146.
  ) 
 Here is how much of TeX's memory you used:
@@ -554,7 +554,7 @@ Here is how much of TeX's memory you used:
  11688 multiletter control sequences out of 15000+200000
  9008 words of font info for 32 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 40i,14n,67p,1416b,1014s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 40i,14n,67p,1182b,1014s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Program Fi
 les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Program Files/MiK
@@ -567,9 +567,9 @@ b><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Program Fil
 es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTe
 X 2.9/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on Report.pdf (50 pages, 782460 bytes).
+Output written on Report.pdf (50 pages, 783268 bytes).
 PDF statistics:
- 636 PDF objects out of 1000 (max. 8388607)
+ 638 PDF objects out of 1000 (max. 8388607)
  157 named destinations out of 1000 (max. 500000)
  386 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -13,9 +13,9 @@
 \contentsline {subsection}{\numberline {3.1.4}Evaluation}{21}{subsection.3.1.4}
 \contentsline {chapter}{\numberline {4}Implementation}{22}{chapter.4}
 \contentsline {section}{\numberline {4.1}Skeleton Foundation}{22}{section.4.1}
-\contentsline {section}{\numberline {4.2}Adding Plasticity}{25}{section.4.2}
+\contentsline {section}{\numberline {4.2}Adding Plasticity}{24}{section.4.2}
 \contentsline {section}{\numberline {4.3}Contention Aware Scheduling}{25}{section.4.3}
-\contentsline {section}{\numberline {4.4}Evaluation}{28}{section.4.4}
+\contentsline {section}{\numberline {4.4}Testing Programs}{28}{section.4.4}
 \contentsline {chapter}{\numberline {5}Experimental Methodology And Program}{29}{chapter.5}
 \contentsline {section}{\numberline {5.1}Evaluation Methodology}{29}{section.5.1}
 \contentsline {section}{\numberline {5.2}Programme of Experiments}{30}{section.5.2}

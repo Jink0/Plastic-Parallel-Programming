@@ -2,7 +2,7 @@
 
 In this chapter, we present specific implementation details of the project, and cover the problems that occurred and how they were solved.
 
-Since the system was developed incrementally, we will cover the implementation in a similar fashion, starting with the implementation of a basic skeleton function, then adding plasticity, and contention aware scheduling. Finally, we finish with the applications developed to evaluate the project.
+We start with the implementation of a basic skeleton, then  we cover adding plasticity, and contention aware scheduling. Finally, we finish by covering the applications developed to evaluate the project.
 
 C++ was chosen as a basis, since it's fast, and provides language constructs such as templates and overloading. Another, personal, reason is that I wished to learn something new, as I had not used C++ before. 
 
@@ -82,19 +82,17 @@ Parallelizing this presents two problems, namely:
 
 \end{minipage}
  
-Currently in our implementation, both of these parameters must be specified beforehand and will not change at runtime. Both are aspects of the skeleton which we would like to be variable, to provide different implementations for the plasticity portion of this project. To this end, we need to implement multiple different schedules, and the ability to use a variable number of worker threads.
+In a basic skeleton, both of these parameters must be specified beforehand and will not change at runtime. The ability to vary them would provide the different implementations necessary for the plasticity portion of this project.
 
 To implement multiple schedules, we use a bag of tasks object. A bag of tasks is a collection of independent, usually similar tasks which are to be executed. It is a model which is usually combined with some form of parallelism.
 
-Each thread will be given the location of the same bag, and will retrieve a specified number of tasks at a time from the bag. Since each schedule is essentially consists of retrieving a different number tasks, we can use this to implement the basic schedules (Static, Dynamic chunks, Dynamic Individual). More complex schedules can easily be added in the future, as they can reuse the get tasks method, an simply adjust how many tasks each thread retrieves at one time.  
+Each thread will be given the location of the same bag, and will retrieve a specified number of tasks at a time from the bag. Since each schedule essentially consists of retrieving a different number tasks, we can use this to implement the basic schedules (Static, Dynamic chunks, Dynamic Individual). More complex schedules can easily be added in the future, as they can reuse the get tasks method, an simply adjust how many tasks each thread retrieves at one time.
 
 The bag also provides the main source of inter-thread communication using shared memory, and contains various semaphores for controlling the threads. This will be expanded upon in sections \ref{section:implementation_adding_plasticity} and \ref{section:implementation_contention_aware_scheduling}.
 
-Because we use this bag of tasks object, it gives us the basis for further extensions, such as using multiple bags, adding task stealing, or adding tasks to the bag during computation.
+This bag of tasks object also gives us the basis for further extensions, such as using multiple bags, adding task stealing, or adding tasks to the bag during computation.
 
-Providing a variable amount of worker threads is simple now that we have the bag of tasks, all we need to do is to adjust our initial calculations when calculating how many tasks each thread should receive according to the schedule. These worker threads will be spawned by the original thread, the ``main'' thread. It will block until all computation is complete, it will then join with each of the worker threads.
-
-(*** I think that the organization of these sections, particularly discussing the bag of tasks, can be organized better ***)
+Providing a variable number of worker threads is simple now that we have the bag of tasks, all we need to do is to adjust our initial calculations when calculating how many tasks each thread should receive according to the schedule. These worker threads will be spawned by the original thread, the ``main'' thread. It will block until all computation is complete, it will then join with each of the worker threads.
 
 
 
@@ -103,13 +101,13 @@ Providing a variable amount of worker threads is simple now that we have the bag
 
 We already have a sort of compile time plasticity in our system, in that we can choose some parameters of the skeleton before compilation. We can choose the number of worker threads and the schedule used. The other main aspect we would like to control is what CPU core each thread executes on. This is called processor affinity or thread pinning. This was added to the skeleton by adding control variables to the bag of tasks, which control the CPU affinity of each thread. Each thread then simply sets it's affinity to the intended CPU.
 
-To add runtime plasticity, we need to be able to change the implementation of the skeleton on the fly. The most straightforward method of achieving this is to stop all computation, terminate worker threads, update the parameters, and resume computation. Previously, (as described at the end of section \ref{section:implementation_skeleton_foundation},) the main thread would block until the computation is complete, and would then join with each of the worker threads. We now change this so that, instead of blocking, it monitors the computation and can instruct the threads to terminate at any point (using the afore mentioned bag of tasks described in section \ref{section:implementation_skeleton_foundation} for communication). This allows it to prematurely terminate the computation, and then restart it with the new desired parameters. When this is done and what the new parameters should be is another matter. A future system would calculate these things dependent upon the current state of the system, but for our preliminary investigation, we manually produce them in a synthetic environment, and communicate them to the main thread using the controller application, as described in section \ref{section:implementation_contention_aware_scheduling}.
+To add runtime plasticity, we need to be able to change the implementation of the skeleton on the fly. The most straightforward method of achieving this is to stop all computation, terminate worker threads, update the parameters, and resume computation. In a basic skeleton, (as described at the end of section \ref{section:implementation_skeleton_foundation},) the main thread would block until the computation is complete, and then would join with each of the worker threads. We change this so that, instead of blocking, it monitors the computation and can instruct the threads to terminate at any point (using the afore mentioned bag of tasks described in section \ref{section:implementation_skeleton_foundation} for communication). This allows it to prematurely terminate the computation, and then restart it with the new desired parameters. 
 
-(*** Above paragraph may need to be split up, as it's pretty huge as is ***)
-
-
+When this switching is done and what the new parameters should be is another matter. A future system would calculate these things dependent upon the current state of the system, but for our preliminary investigation, we manually produce them in a synthetic environment, and communicate them to the main thread using the controller application, as described in section \ref{section:implementation_contention_aware_scheduling}.
 
 An obvious optimization of this system would be to modify the implementation without the need to terminate threads. This graceful switching of the implementation is left for future work, as this optimization is very complex, and would likely result in a marginal speedup proportional to the number of times we wish to change the implementation. We don't plan on switching implementations excessively, and any delay added could be overcome in testing by increasing the input size, and this project is only investigating if this approach to parallel programming is promising.
+
+Another optimization would involve modifying the static schedule. In our implementation, worker threads only check if they should terminate when they contact the bag for more tasks. Since the static schedule means they only contact the bag at the start of the computation, once they have started, they cannot be interrupted. To optimize this, and make a "plastic" static schedule, we could change the communication method so that worker threads can be interrupted. This hasn't been necessary for our current work, and as such has been left for future work.
 
 
 
@@ -123,7 +121,7 @@ As detailed in section \ref{subsection:design_contention_aware_scheduling} of th
 	\item Separate communication/control thread for each program
 \end{itemize}
 
-We use the zeromq library to provide inter-process communication for it's speed, although it could be replaced with another method. It uses tcp sockets, and serves to simplify inter-process communication. Currently I have made simple use of zeromq for now, and may optimize it in the future.
+We use the zeromq library to provide inter-process communication for it's speed, although it could be replaced with another method. It uses tcp sockets, and serves to simplify inter-process communication. Currently I have made simple use of zeromq for now, and may optimize it in the future. For inter-thread communication (between a main thread and worker threads), we use shared memory, again for speed and simplicity.
 
 In order to communicate with the controller while a program is using our library, we utilize our main thread, which will manage the worker threads, switch implementations when instructed, and will clean up after we have finished our computation. The main thread communicates with the controller, registering with it when we start and de-registering once complete. During computation, it listens to messages from the controller using non-blocking communication. This allows us to also check if we are finished processing. For the initial registration and de-registration, we use blocking communication, as these messages are vital to the system. This system is illustrated in figure \ref{fig:controller_flowchart}, and figure \ref{fig:communication_structure} shows the communication model.
 
@@ -136,7 +134,7 @@ In order to communicate with the controller while a program is using our library
 
 
 
-\section{Evaluation}
+\section{Testing Programs}
 
 To evaluate our library, we need programs to run and test the library under differing conditions, and we need programs to represent competing approaches to parallel programming. 
 
@@ -146,4 +144,4 @@ For meaningful analysis, we need to synthesize a workload. One which we can scal
 
 The comparison programs consist of a purely sequential implementation, and an OpenMP implementation. These were chosen because the former represents an implementation a traditional sequential programmer would use, and OpenMP because it is a popular method of parallelizing code, with a focus on performance and a simple interface. They are set up such that they can use the same synthetic workload we use for testing our library.
 
-The final program used for evaluation is a python program which was used to create graphs from the generated data.
+The final tool we constructed for evaluation is a python program which was used to create graphs from the generated data.
