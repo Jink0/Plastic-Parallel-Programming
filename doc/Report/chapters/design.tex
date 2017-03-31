@@ -84,7 +84,7 @@ To add contention aware scheduling, we need multiple applications using our libr
 
 Once our programs can communicate, and we can control each aspect of them, we can implement contention aware scheduling. In this phase of the project, we simply program a set of predefined actions for the controller to take, in order to manually control what each implementation does, as we are only investigating if this approach seems promising. We leave implementing some algorithm for automatic parameter tuning for future work.
 
-As an example of the communication model is given in figure \ref{fig:controller_flowchart}.
+A diagram showing the high level communication model is given in figure \ref{fig:communication_structure}. This is expanded upon in section \ref{section:implementation_contention_aware_scheduling}, showing specifics about the implementation.
 
 Now that we have contention aware scheduling, we can experiment with multiple programs running on a system at once. An example of how contention aware scheduling can be enhanced with plastic programming is given in figure \ref{fig:plastic_contention_aware_scheduling}.
 
@@ -92,9 +92,9 @@ Now that we have contention aware scheduling, we can experiment with multiple pr
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\textwidth]{graphics/controller_communication_flowchart.png}
-	\caption{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.}
-	\label{fig:controller_flowchart}
+	\includegraphics[width=\textwidth]{graphics/communication_structure.png}
+	\caption{High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.}
+	\label{fig:communication_structure}
 \end{figure}
 
 \begin{figure}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  28 MAR 2017 21:23
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  31 MAR 2017 05:57
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
 (C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
@@ -415,15 +415,15 @@ Package pdftex.def Info: graphics/optimized_schedule.png used on input line 73.
 (pdftex.def)             Requested size: 345.0pt x 237.18277pt.
  [15] [16 <./graphics/unoptimized_schedule.png>] [17 <./graphics/optimized_sche
 dule.png>]
-<graphics/controller_communication_flowchart.png, id=338, 543.53062pt x 438.136
-87pt>
-File: graphics/controller_communication_flowchart.png Graphic file (type png)
- <use graphics/controller_communication_flowchart.png>
-Package pdftex.def Info: graphics/controller_communication_flowchart.png used o
-n input line 95.
-(pdftex.def)             Requested size: 345.0pt x 278.11353pt.
+<graphics/communication_structure.png, id=339, 458.46281pt x 440.39531pt>
+File: graphics/communication_structure.png Graphic file (type png)
 
-<graphics/plastic_contention_aware_scheduling.png, id=339, 852.18375pt x 615.04
+<use graphics/communication_structure.png>
+Package pdftex.def Info: graphics/communication_structure.png used on input lin
+e 95.
+(pdftex.def)             Requested size: 345.0pt x 331.41788pt.
+
+<graphics/plastic_contention_aware_scheduling.png, id=340, 852.18375pt x 615.04
 78pt>
 File: graphics/plastic_contention_aware_scheduling.png Graphic file (type png)
  <use graphics/plastic_contention_aware_scheduling.png>
@@ -452,8 +452,8 @@ Underfull \hbox (badness 1371) in paragraph at lines 103--103
 oint, and the
  []
 
-[18] [19 <./graphics/controller_communication_flowchart.png>] [20 <./graphics/p
-lastic_contention_aware_scheduling.png>]) [21]
+[18] [19 <./graphics/communication_structure.png>] [20 <./graphics/plastic_cont
+ention_aware_scheduling.png>]) [21]
 Chapter 4.
 (chapters/implementation.tex
 LaTeX Font Info:    External font `cmex10' loaded for size
@@ -472,14 +472,15 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
  [22
 
 ] [23] [24]
-[25] <graphics/communication_structure.png, id=428, 458.46281pt x 440.39531pt>
-File: graphics/communication_structure.png Graphic file (type png)
-
-<use graphics/communication_structure.png>
-Package pdftex.def Info: graphics/communication_structure.png used on input lin
-e 130.
-(pdftex.def)             Requested size: 276.00105pt x 265.13297pt.
- [26] [27 <./graphics/communication_structure.png>]) [28]
+[25]
+<graphics/controller_communication_flowchart.png, id=430, 716.6775pt x 503.6315
+6pt>
+File: graphics/controller_communication_flowchart.png Graphic file (type png)
+ <use graphics/controller_communication_flowchart.png>
+Package pdftex.def Info: graphics/controller_communication_flowchart.png used o
+n input line 132.
+(pdftex.def)             Requested size: 345.0pt x 242.4474pt.
+ [26] [27 <./graphics/controller_communication_flowchart.png>]) [28]
 Chapter 5.
 (chapters/experimental_methodology_and_program.tex [29
 
@@ -491,52 +492,110 @@ s are small, medium,
 
 [30] (ex_params/ex1_params.tex) [31] (ex_params/ex2_params.tex) [32]
 (ex_params/ex3_params.tex) [33] (ex_params/ex4_params.tex) [34]
-(ex_params/ex5_params.tex)) [35]
+(ex_params/ex5_params.tex)) [35] [36]
 Chapter 6.
-(chapters/results.tex <graphics/experiment1.png, id=486, 578.16pt x 397.485pt>
+(chapters/results.tex
+
+! LaTeX Error: Unknown float option `H'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.16 \begin{figure}[H]
+                      
+Option `H' ignored and `p' used.
+
+<graphics/experiment1.png, id=491, 702.4644pt x 701.019pt>
 File: graphics/experiment1.png Graphic file (type png)
 
 <use graphics/experiment1.png>
-Package pdftex.def Info: graphics/experiment1.png used on input line 22.
-(pdftex.def)             Requested size: 345.0pt x 237.18277pt.
- (ex_params/ex1_params.tex) [36
+Package pdftex.def Info: graphics/experiment1.png used on input line 18.
+(pdftex.def)             Requested size: 345.0pt x 344.29387pt.
 
-]
-<graphics/experiment2.png, id=493, 795.6927pt x 711.1368pt>
+
+! LaTeX Error: Unknown float option `H'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.23 \begin{table}[H]
+                     
+Option `H' ignored and `p' used.
+
+(ex_params/ex1_params.tex) [37
+
+] [38 <./graphics/experiment1.png>]
+<graphics/experiment2.png, id=505, 807.2559pt x 701.019pt>
 File: graphics/experiment2.png Graphic file (type png)
 
 <use graphics/experiment2.png>
-Package pdftex.def Info: graphics/experiment2.png used on input line 41.
-(pdftex.def)             Requested size: 345.0pt x 308.33286pt.
- (ex_params/ex2_params.tex) [37 <./graphics/experiment1.png>] [38 <./graphics/e
-xperiment2.png>]
-<graphics/experiment3.png, id=507, 762.4485pt x 711.8595pt>
+Package pdftex.def Info: graphics/experiment2.png used on input line 52.
+(pdftex.def)             Requested size: 345.0pt x 299.59247pt.
+ (ex_params/ex2_params.tex) [39] [40 <./graphics/experiment2.png>]
+
+! LaTeX Error: Unknown float option `H'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.75 \begin{figure}[H]
+                      
+Option `H' ignored and `p' used.
+
+<graphics/experiment3.png, id=517, 779.7933pt x 701.019pt>
 File: graphics/experiment3.png Graphic file (type png)
 
 <use graphics/experiment3.png>
-Package pdftex.def Info: graphics/experiment3.png used on input line 66.
-(pdftex.def)             Requested size: 345.0pt x 322.10432pt.
- (ex_params/ex3_params.tex) [39] [40 <./graphics/experiment3.png>] <graphics/ex
-periment4.png, id=519, 710.4141pt x 711.1368pt>
+Package pdftex.def Info: graphics/experiment3.png used on input line 77.
+(pdftex.def)             Requested size: 345.0pt x 310.15009pt.
+
+
+! LaTeX Error: Unknown float option `H'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.82 \begin{table}[H]
+                     
+Option `H' ignored and `p' used.
+
+(ex_params/ex3_params.tex) [41] [42 <./graphics/experiment3.png>]
+<graphics/experiment4.png, id=530, 702.4644pt x 699.5736pt>
 File: graphics/experiment4.png Graphic file (type png)
 
 <use graphics/experiment4.png>
-Package pdftex.def Info: graphics/experiment4.png used on input line 79.
-(pdftex.def)             Requested size: 345.0pt x 345.34583pt.
- (ex_params/ex4_params.tex) [41] [42 <./graphics/experiment4.png>] (ex_params/e
-x5_params.tex) [43]) [44]
+Package pdftex.def Info: graphics/experiment4.png used on input line 119.
+(pdftex.def)             Requested size: 345.0pt x 343.58398pt.
+ (ex_params/ex4_params.tex) [43] [44 <./graphics/experiment4.png>] (ex_params/e
+x5_params.tex) [45]) [46]
 Chapter 7.
-(chapters/future_work.tex [45
+(chapters/future_work.tex [47
 
-]) [46]
+] [48]) [49]
 Chapter 8.
-(chapters/conclusion.tex) [47
+(chapters/conclusion.tex) [50
 
 ] (Report.bbl
 Chapter 9.
+Missing character: There is no Â in font cmcsc10!
+Missing character: There is no ¨ in font cmcsc10!
+! Misplaced alignment tab character &.
+l.21 \newblock Morgan &
+                        Claypool Publishers, 2009.
+I can't figure out why you would want to use a tab mark
+here. If you just want an ampersand, the remedy is
+simple: Just type `I\&' now. But if some right brace
+up above has ended a previous alignment prematurely,
+you're probably due for more error messages, and you
+might try typing `S' now just to see what is salvageable.
+
 )
 Package atveryend Info: Empty hook `BeforeClearDocument' on input line 146.
- [48
+ [51
 
 ]
 Package atveryend Info: Empty hook `AfterLastShipout' on input line 146.
@@ -544,14 +603,14 @@ Package atveryend Info: Empty hook `AfterLastShipout' on input line 146.
 Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 146.
 Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 146.
 Package rerunfilecheck Info: File `Report.out' has not changed.
-(rerunfilecheck)             Checksum: 47F9BF485B9A102AF986B4F3F026B0DB;2914.
+(rerunfilecheck)             Checksum: D08C465DA2B94544ADBEB919C30095B1;2932.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 146.
  ) 
 Here is how much of TeX's memory you used:
- 8456 strings out of 493333
- 128813 string characters out of 3139197
+ 8465 strings out of 493333
+ 128985 string characters out of 3139197
  304391 words of memory out of 3000000
- 11688 multiletter control sequences out of 15000+200000
+ 11691 multiletter control sequences out of 15000+200000
  9008 words of font info for 32 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
  40i,14n,67p,1182b,1014s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -567,9 +626,9 @@ b><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Program Fil
 es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTe
 X 2.9/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on Report.pdf (50 pages, 783268 bytes).
+Output written on Report.pdf (53 pages, 821342 bytes).
 PDF statistics:
- 638 PDF objects out of 1000 (max. 8388607)
- 157 named destinations out of 1000 (max. 500000)
+ 656 PDF objects out of 1000 (max. 8388607)
+ 163 named destinations out of 1000 (max. 500000)
  386 words of extra memory for PDF output out of 10000 (max. 10000000)
 

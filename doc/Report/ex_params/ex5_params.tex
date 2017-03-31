@@ -6,19 +6,41 @@
 \centering
  \begin{tabular}{|c|c|}
   \hline
-  Number of tasks & 50,000 \\
+  Program 1 & \\
   \hline
-  Task Grain & Small \\
+  Number of tasks & 100,000 \\
+  \hline
+  Task Grain & Large \\
   \hline
   Task Grain Distribution & Uniform \\
   \hline
   Number of CPU cores & 4 \\
   \hline
-  Number of threads used & \specialcell{2, \\ 4, \\ 8} \\
+  Number of threads used & \specialcell{4 (*** 8? ***)\\ 2} \\
   \hline
-  Thread pinning & \specialcell{Uniform, \\ Random} \\
+  Thread pinning & \specialcell{Loose, \\ Uniform} \\
   \hline
-  Schedule & Static \\
+  Schedule & Dynamic\_individual \\
+  \hline
+ \end{tabular}
+
+ \begin{tabular}{|c|c|}
+  \hline
+  Program 2 & \\
+  \hline
+  Number of tasks & 10,000 \\
+  \hline
+  Task Grain & Large \\
+  \hline
+  Task Grain Distribution & Uniform \\
+  \hline
+  Number of CPU cores & 4 \\
+  \hline
+  Number of threads used & \specialcell{4 (*** 8? ***)\\ 2} \\
+  \hline
+  Thread pinning & \specialcell{Loose, \\ Uniform} \\
+  \hline
+  Schedule & Dynamic\_individual \\
   \hline
  \end{tabular}
 \caption{Experiment 5 Parameters}

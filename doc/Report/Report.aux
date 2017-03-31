@@ -62,8 +62,8 @@
 \newlabel{fig:optimized_schedule}{{3.3}{17}{An optimized version of figure \ref {fig:unoptimized_schedule}. Here we have the same set of tasks, but we have a better distribution of work, so the total execution time is 10 time units.\relax }{figure.caption.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.3}Contention Aware Scheduling}{18}{subsection.3.1.3}}
 \newlabel{subsection:design_contention_aware_scheduling}{{3.1.3}{18}{Contention Aware Scheduling}{subsection.3.1.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.\relax }}{19}{figure.caption.7}}
-\newlabel{fig:controller_flowchart}{{3.4}{19}{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.\relax }{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }}{19}{figure.caption.7}}
+\newlabel{fig:communication_structure}{{3.4}{19}{High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }{figure.caption.7}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.)     Moving further in time, we have another decision point. This one is triggered by some change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues.     Program 2 then terminates, triggering another decision point, and the system again updates the configuration.\relax }}{20}{figure.caption.8}}
 \newlabel{fig:plastic_contention_aware_scheduling}{{3.5}{20}{An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.) \\ \\ Moving further in time, we have another decision point. This one is triggered by some change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues. \\ \\ Program 2 then terminates, triggering another decision point, and the system again updates the configuration.\relax }{figure.caption.8}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.4}Evaluation}{21}{subsection.3.1.4}}
@@ -81,8 +81,8 @@
 \newlabel{section:implementation_adding_plasticity}{{4.2}{24}{Adding Plasticity}{section.4.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4.3}Contention Aware Scheduling}{25}{section.4.3}}
 \newlabel{section:implementation_contention_aware_scheduling}{{4.3}{25}{Contention Aware Scheduling}{section.4.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Overall communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }}{27}{figure.caption.11}}
-\newlabel{fig:communication_structure}{{4.3}{27}{Overall communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.\relax }}{27}{figure.caption.11}}
+\newlabel{fig:controller_flowchart}{{4.3}{27}{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.\relax }{figure.caption.11}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4.4}Testing Programs}{28}{section.4.4}}
 \@writefile{toc}{\contentsline {chapter}{\numberline {5}Experimental Methodology And Program}{29}{chapter.5}}
 \@writefile{lof}{\addvspace {10\p@ }}
@@ -99,48 +99,54 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2.4}Experiment 4 - Schedule Choice Importance}{34}{subsection.5.2.4}}
 \@writefile{lot}{\contentsline {table}{\numberline {5.4}{\ignorespaces Experiment 4 Parameters\relax }}{34}{table.caption.15}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2.5}Experiment 5 - Absolute Multiprogramming Performance}{35}{subsection.5.2.5}}
-\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Experiment 5 Parameters\relax }}{35}{table.caption.16}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Results}{36}{chapter.6}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Experiment 5 Parameters\relax }}{36}{table.caption.16}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Results}{37}{chapter.6}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chapter:results}{{6}{36}{Results}{chapter.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Experiment Results}{36}{section.6.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.1}Experiment 1 - Metrics Collection Overhead}{36}{subsection.6.1.1}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Experiment 1 Parameters\relax }}{36}{table.caption.18}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces Experiment 1 results\relax }}{37}{figure.caption.17}}
-\newlabel{fig:results_ex1}{{6.1}{37}{Experiment 1 results\relax }{figure.caption.17}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.2}Experiment 2 - Absolute Performance}{37}{subsection.6.1.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces Experiment 2 results\relax }}{38}{figure.caption.19}}
-\newlabel{fig:results_ex2}{{6.2}{38}{Experiment 2 results\relax }{figure.caption.19}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Experiment 2 Parameters\relax }}{38}{table.caption.20}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{39}{subsection.6.1.3}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Experiment 3 Parameters\relax }}{39}{table.caption.22}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.3}{\ignorespaces Experiment 3 results\relax }}{40}{figure.caption.21}}
-\newlabel{fig:results_ex3}{{6.3}{40}{Experiment 3 results\relax }{figure.caption.21}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.4}Experiment 4 - Schedule Choice Importance}{41}{subsection.6.1.4}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Experiment 4 Parameters\relax }}{41}{table.caption.24}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.4}{\ignorespaces Experiment 4 results\relax }}{42}{figure.caption.23}}
-\newlabel{fig:results_ex4}{{6.4}{42}{Experiment 4 results\relax }{figure.caption.23}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.5}Experiment 5 - Absolute Multiprogramming Performance}{43}{subsection.6.1.5}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.5}{\ignorespaces Experiment 5 Parameters\relax }}{43}{table.caption.25}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Discussion}{44}{section.6.2}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {7}Future Work}{45}{chapter.7}}
+\newlabel{chapter:results}{{6}{37}{Results}{chapter.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Experiment Results}{37}{section.6.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.1}Experiment 1 - Metrics Collection Overhead}{37}{subsection.6.1.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces Experiment 1 results\relax }}{38}{figure.caption.17}}
+\newlabel{fig:results_ex1}{{6.1}{38}{Experiment 1 results\relax }{figure.caption.17}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Experiment 1 Results Analysis\relax }}{38}{table.caption.18}}
+\newlabel{table:results_experiment_1_results_analysis}{{6.1}{38}{Experiment 1 Results Analysis\relax }{table.caption.18}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Experiment 1 Parameters\relax }}{38}{table.caption.19}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.2}Experiment 2 - Absolute Performance}{39}{subsection.6.1.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces Experiment 2 results\relax }}{40}{figure.caption.20}}
+\newlabel{fig:results_ex2}{{6.2}{40}{Experiment 2 results\relax }{figure.caption.20}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Experiment 2 Parameters\relax }}{40}{table.caption.21}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{41}{subsection.6.1.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.3}{\ignorespaces Experiment 3 results\relax }}{42}{figure.caption.22}}
+\newlabel{fig:results_ex3}{{6.3}{42}{Experiment 3 results\relax }{figure.caption.22}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Experiment 3 Results Analysis\relax }}{42}{table.caption.23}}
+\newlabel{table:results_experiment_3_results_analysis}{{6.4}{42}{Experiment 3 Results Analysis\relax }{table.caption.23}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.5}{\ignorespaces Experiment 3 Parameters\relax }}{43}{table.caption.24}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.4}Experiment 4 - Schedule Choice Importance}{43}{subsection.6.1.4}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.6}{\ignorespaces Experiment 4 Parameters\relax }}{43}{table.caption.26}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.4}{\ignorespaces Experiment 4 results\relax }}{44}{figure.caption.25}}
+\newlabel{fig:results_ex4}{{6.4}{44}{Experiment 4 results\relax }{figure.caption.25}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.5}Experiment 5 - Absolute Multiprogramming Performance}{45}{subsection.6.1.5}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.7}{\ignorespaces Experiment 5 Parameters\relax }}{46}{table.caption.27}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Discussion}{46}{section.6.2}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7}Future Work}{47}{chapter.7}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chapter:future_work}{{7}{45}{Future Work}{chapter.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7.1}}{45}{section.7.1}}
-\@writefile{toc}{\contentsline {section}{\numberline {7.2}Designing For Future Applications}{46}{section.7.2}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {8}Conclusion}{47}{chapter.8}}
+\newlabel{chapter:future_work}{{7}{47}{Future Work}{chapter.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7.1}Future Development}{47}{section.7.1}}
+\citation{datacenters}
+\@writefile{toc}{\contentsline {section}{\numberline {7.2}Designing For Future Applications}{48}{section.7.2}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {8}Conclusion}{50}{chapter.8}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chapter:conclusion}{{8}{47}{Conclusion}{chapter.8}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8.1}}{47}{section.8.1}}
+\newlabel{chapter:conclusion}{{8}{50}{Conclusion}{chapter.8}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8.1}}{50}{section.8.1}}
 \bibstyle{acm}
 \bibdata{references}
 \bibcite{petabricks}{1}
 \bibcite{lira}{2}
-\bibcite{parallel_challenges}{3}
-\bibcite{mpi}{4}
-\@writefile{toc}{\contentsline {chapter}{\numberline {9}Bibliography}{48}{chapter.9}}
+\bibcite{datacenters}{3}
+\bibcite{parallel_challenges}{4}
+\bibcite{mpi}{5}
+\@writefile{toc}{\contentsline {chapter}{\numberline {9}Bibliography}{51}{chapter.9}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}

@@ -190,7 +190,7 @@ Application Input Parameters:
 
 \begin{itemize}
 	\item Number of tasks - The number of tasks to be carried out
-	\item Task grain - The complexity of the tasks, possible values are small, medium, and large. (*** Add med takes 10x as much time as small etc ***)
+	\item Task grain - The complexity of the tasks, possible values are small, medium, and large. Large is 10x the complexity of medium, and medium 10x the complexity of small.
 	\item Task grain distribution - If we have range of task grains, this describes how they distributed throughout the input array. Possible values are uniform (evenly distributed throughout,) and biased (The more complex tasks are gathered together at the start of the array. This is the worst case scenario for the static schedule.)
 \end{itemize}
 
@@ -204,11 +204,9 @@ Skeleton Parameters:
 
 \begin{itemize}
 	\item Number of threads used - The number of threads our program uses for multi-threading.
-	\item Thread pinning - The configuration of threads pinned to CPU cores. Possible values are (*** INSERT POSSIBLE VALUES HERE ***)
+	\item Thread pinning - The configuration of threads pinned to CPU cores.
 	\item Schedule - How the tasks are distributed amongst threads. See section \ref{subsection:design_adding_plasticity} for the possible schedules.
 \end{itemize}
-
-(*** Add in biased = 1st 1/4 large, rest small ***)
 
 Our first experiment will test how much overhead our metrics collection adds. Experiment 2 then establishes the baseline performance of our library, comparing it to see if it is on a par with an OpenMP solution. Next in experiment 3, we investigate the overhead that has been introduced by contention aware scheduling and plasticity. Experiment 4 then shows the importance of choosing the correct schedule, and how our system could deal with a suboptimal schedule using plasticity. This is again compared to an OpenMP solution.
 
@@ -260,14 +258,18 @@ This experiment is designed to highlight the importance of the choice of schedul
 
 For the plasticity portion of this experiment, we will also add cases where we start with a sub-optimal schedule, and then, after 10 seconds, change to a better schedule. This will be done with a uniform schedule, starting with the dynamic individual schedule, and switching to the static schedule.
 
+(*** Add how we hacked together changing from a static schedule ***)
+
 \input{ex_params/ex4_params}
 
 
 
 \subsection{Experiment 5 - Absolute Multiprogramming Performance}
 
-The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. 
+The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We will start with the controller and one application running, we then introduce a second application, causing the first to modify it's parameters. The second application will then complete it's computation, again causing the first to modify it's parameters. Finally, the first application will finish, completing the experiment. 
 
-(*** Expand ***)
+We compare two situations, one simulating a typical multiprogramming system, where we run the programs as they would be without any plasticity or contention aware scheduling. The other situation will be including plasticity and contention aware scheduling.
+
+To get an idea of the performance, we will compare the runtimes of the two programs, with the runtime of the first application representing the total runtime of the entire experiment. (*** Possibly expand on this ***)
 
 \input{ex_params/ex5_params}

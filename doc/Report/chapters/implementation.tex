@@ -123,13 +123,15 @@ As detailed in section \ref{subsection:design_contention_aware_scheduling} of th
 
 We use the zeromq library to provide inter-process communication for it's speed, although it could be replaced with another method. It uses tcp sockets, and serves to simplify inter-process communication. Currently I have made simple use of zeromq for now, and may optimize it in the future. For inter-thread communication (between a main thread and worker threads), we use shared memory, again for speed and simplicity.
 
-In order to communicate with the controller while a program is using our library, we utilize our main thread, which will manage the worker threads, switch implementations when instructed, and will clean up after we have finished our computation. The main thread communicates with the controller, registering with it when we start and de-registering once complete. During computation, it listens to messages from the controller using non-blocking communication. This allows us to also check if we are finished processing. For the initial registration and de-registration, we use blocking communication, as these messages are vital to the system. This system is illustrated in figure \ref{fig:controller_flowchart}, and figure \ref{fig:communication_structure} shows the communication model.
+In order to communicate with the controller while a program is using our library, we utilize our main thread, which will manage the worker threads, switch implementations when instructed, and will clean up after we have finished our computation. The main thread communicates with the controller, registering with it when we start and de-registering once complete. During computation, it listens to messages from the controller using non-blocking communication. This allows us to also check if we are finished processing. For the initial registration and de-registration, we use blocking communication, as these messages are vital to the system. This system is illustrated in figure \ref{fig:controller_flowchart}, which expands upon figure \ref{fig:communication_structure}, showing implementation details.
+
+
 
 \begin{figure}
 	\centering
-	\includegraphics[width=0.8\textwidth]{graphics/communication_structure.png}
-	\caption{Overall communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.}
-	\label{fig:communication_structure}
+	\includegraphics[width=\textwidth]{graphics/controller_communication_flowchart.png}
+	\caption{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.}
+	\label{fig:controller_flowchart}
 \end{figure}
 
 

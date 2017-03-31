@@ -10,19 +10,28 @@ In this chapter of the report, we discuss the results of the experiments and the
 
 \subsection{Experiment 1 - Metrics Collection Overhead}
 
-Runtime without metrics: 67862.0
-Runtime with metrics:    68047.0
+In experiment 1, we investigated our method for collecting metrics about the system adds any significant overhead that we must take into account in assessing further experiments. Looking at the following results, particularly the percentage of total runtime, it seems that we can assume the performance difference is negligible. (*** Is 3.5\% still negligible? I could reduce it with a little work***)
 
-(*** Should I make this a graph? ***)
 
-185ms of delay, 0.003\% of total runtime.
-
-\begin{figure}
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=\textwidth]{graphics/experiment1.png}
 	\caption{Experiment 1 results}
 	\label{fig:results_ex1}
 \end{figure}
+
+\begin{table}[H]
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Average delay added & 877ms \\
+		\hline
+		Percentage of total runtime & 3.5\% \\
+		\hline
+	\end{tabular}
+	\caption{Experiment 1 Results Analysis}
+	\label{table:results_experiment_1_results_analysis}
+\end{table}
 
 \input{ex_params/ex1_params}
 
@@ -30,11 +39,13 @@ Runtime with metrics:    68047.0
 
 \subsection{Experiment 2 - Absolute Performance}
 
-In this experiment, the total run times of three implementations are measured. One sequential implementation, a standard modern parallel implementation utilizing OMP, and our plastic implementation. Our plastic implementation is running with no plasticity for the moment, and with no messaging functionality at all. This is so it is comparable to a standard parallel implementation.
+In this experiment, the total run times of three implementations are measured. One sequential implementation, a standard modern parallel implementation utilizing OpenMP, and our plastic implementation of map\_array. Our plastic implementation is running with no plasticity for the moment, and with no messaging functionality at all. This is so it is comparable to a standard parallel implementation, since the purpose of this experiment is to test our baseline performance.
 
-The OMP and our implementation are using a dynamic chunks schedule, with a chunk size of 500. All programs were compiled at optimization level 3.
+Both OpenMP and our implementation are using a dynamic chunks schedule, with a chunk size of 1000.
 
-Fig. \ref{fig:results_ex2} shows us that with a single thread, our performance is similar to a sequential implementation, and as we increase the thread count, our performance scales accordingly. Overall, this shows that our baseline implementation performs on a par with current parallel implementations, providing a good baseline performance. 
+Figure \ref{fig:results_ex2} shows us that with a single thread, our performance is similar to a sequential implementation, and as we increase the thread count, our performance scales accordingly. Overall, this shows that our implementation performs on a par with current parallel implementations, providing a good baseline performance. 
+
+
 
 \begin{figure}
 	\centering
@@ -49,30 +60,59 @@ Fig. \ref{fig:results_ex2} shows us that with a single thread, our performance i
 
 \subsection{Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}
 
+This experiment was designed to assess the amount of overhead added by plasticity and the contention aware scheduling framework. The results are strange, because we would expect the runtime to only increase with the added overhead, but we have two cases where the runtime decreases. 
 
-Results:
+With our smallest array size of 1000, we see an increase of 2ms, which is 2.7\% of the total runtime. These results are very close, and within the margin of error. 
 
-Runtime without plasticity etc: 24153.0
-Runtime with plasticity etc:    24684.0
+Our other results both show a decrease in runtime, again both within the margin of error. Possible reasons:
 
-Standard deviation!
+(*** I suspect this weirdness may be down to different circumstances when the experiments were run. Especially since the difference is most pronounced with the largest array size, since it has the largest time for things to change. Also, using a virtual machine can't help. I'll see if I can run them on another machine. ***)
 
-(*** Should I make this a graph? Yes - different input sizes***)
+The overall takeaway from this experiment, is that the added overhead is negligible when measuring the total runtime, with a wide selection of array sizes.
 
-531ms of delay, 0.02\% of total runtime.
 
-\begin{figure}
+
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=\textwidth]{graphics/experiment3.png}
 	\caption{Experiment 3 results}
 	\label{fig:results_ex3}
 \end{figure}
 
+\begin{table}[H]
+\centering
+	\begin{tabular}{|c|c|}
+		\hline
+		Average delay added (Few tasks) & 2ms \\
+		\hline
+		Percentage of total runtime (Few tasks) & 2.7\% \\
+		\hline
+		\hline
+		Average delay added (Med. tasks) & -2ms \\
+		\hline
+		Percentage of total runtime (Med tasks) & N/A \\
+		\hline
+		\hline
+		Average delay added (Many tasks) & -127ms \\
+		\hline
+		Percentage of total runtime (Many tasks) & N/A \\
+		\hline
+	\end{tabular}
+	\caption{Experiment 3 Results Analysis}
+	\label{table:results_experiment_3_results_analysis}
+\end{table}
+
 \input{ex_params/ex3_params}
 
 
 
 \subsection{Experiment 4 - Schedule Choice Importance}
+
+This experiment was designed to highlight the importance of choosing the correct schedule, and how we can benefit from runtime plasticity. We have a biased set of tasks, (first quarter of which are large tasks, the rest small,) meaning the static schedule will perform poorly, and the dynamic schedules will fare well.
+
+This is reflected in the results, where we see the dynamic schedules perform almost three times as well as the static schedule. Also included is a case where we start with the static schedule, and then switch to dynamic chunks after five seconds. We see it perform on a par with our dynamic schedules, again greatly improving upon the static schedule.
+
+
 
 \begin{figure}
 	\centering

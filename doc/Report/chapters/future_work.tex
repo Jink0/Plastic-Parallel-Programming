@@ -1,36 +1,50 @@
 %!TEX root = ../Report.tex
-\section{}
 
-***Overview of possible future work here, including work for next year and after that***
+This chapter discusses further work that could be done to advance this project. This project has a large scope for development, and as such, we will select a subset of tasks to focus on in the second year. We also discuss possibilities for future applications, and the library's
+ utility beyond simply investigating the nature of the problem.
 
-Currently optimizing for performance, can  optimize for other things e.g. energy efficiency for mobile applications etc.
 
-Utilize GPUs, more exotic hardware.
 
-Test on XXXII and other hardware.
+\section{Future Development}
 
-further patterns left for possible future work. Producer consumer?
+Here we provide an overview for possible work to be done in the future. We can categorize tasks into improvements to the current system and feature set, adding additional features, and more extensive, deeper testing:
 
-task stealing?
+Improvements to current feature set:
 
-distributed system?
+\begin{itemize}
+	\item Implementing some algorithm for automatic parameter tuning
+	\item Make work interruptable, currently, once we have assigned tasks, a worker thread cannot be interrupted. This means that the static schedule, which assigns all tasks at once, cannot be interrupted/switched
+	\item Improved experiment framework, with support for experiments involving multiple programs
+\end{itemize}
 
-implementing some algorithm for automatic parameter tuning for future work.
+Additional features:
 
-Make work interruptable, e.g. if we assign static schedule we should still be able to change to other schedules
+\begin{itemize}
+	\item Currently, we only have the map array pattern. More patterns could be implemented
+	\item Different methods of task distribution could be investigated, such as a distributed bag of tasks or adding task stealing
+	\item Support for different parallel programming backends, possibly utilizing more exotic hardware such as GPUs 
+	\item Project could be adapted for use in a distributed system, where we also must consider what machine to run applications on
+	\item We currently optimize our library for performance, we could investigate if we could optimize for other things, such as energy efficiency for mobile applications
+\end{itemize}
 
-more experiments with varying memory access patterns
+More extensive testing:
 
-Vary Type of tasks (CPU Bottleneck/Memory Bottleneck) 
+\begin{itemize}
+	\item Test the library on a variety of hardware and systems
+	\item Experiment with different array access patterns, and investigate how they affect performance
+	\item Experiment with different types of task, such as different bottlenecks (CPU bottleneck/Memory bottleneck) 
+\end{itemize}
 
-(*** schedule choice importance - Should the same be done for thread pinnings? And we have already kind of seen importance of number of threads, but should we have another experiment where num threads > num CPU cores?)
+(*** Where to focus next year? I'd like to do more patterns/backends (particularly for GPUs), and all the testing points would be good. ***)
+
+
 
 \section{Designing For Future Applications}
 
-A real-world version of our library would include multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation). It's feasible that the system could assess both the tasks presented and the environment (e.g. the particulars of the machine), and automatically allocate the resources of the machine so we perform in the most efficient manner.
+A real-world version of our library would include multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation). It's feasible that the system could assess both the tasks presented and the environment (e.g. the particulars of the machine, currently running applications), and automatically allocate the resources of the machine so we perform in the most efficient manner.
 
 This system would be useful in any performance orientated application, even when the machine will only be running a single instance, as we can still optimize the implementation to the environment on that machine. It would, however, come into it's own when we have multiple instances running simultaneously on a machine, a common situation with modern multiprogramming machines.
 
-Could be used on multiple nodes in a distributed system
+The system may also be useful in non-performance orientated applications, for example, we may want to optimize energy usage in mobile applications. We could also optimize for a mix of performance and energy, which, with studies reporting that \textit{the total cost of a server will be primarily a function of the power it consumes} \cite{datacenters}, would be useful in server farms or datacenters.
 
-Another optimization would involve modifying the static schedule
+Another future adaptation for our library would be one designed for a distributed system, where we may have a variety of hardware, machines, and tasks to contend with. In this scenario, we would have a huge amount of input parameters to our scheduler, resulting in a complex problem. We may have programs spread across multiple machines, we need to consider what machine is best to run a particular program on, and what other programs are running on that machine. The system could feasibly be controlled by a single controller application, serving requests from each machine, or it could be distributed across the machines, or we may use a hierarchy, with a controller per machine and a master controller. 
