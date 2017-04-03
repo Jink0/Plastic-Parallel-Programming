@@ -1,6 +1,6 @@
 %!TEX root = ../Report.tex
 
-In this chapter of the report, we discuss the results of the experiments and their ramifications. The structure of this section mirrors that of the experiments section, so that the first results discussed will be the first experiment detailed in chapter \ref{chapter:experimental_methodology_and_program}.
+In this chapter of the report, we discuss the results of the experiments and their ramifications. The structure of this section mirrors that of the experiments section, so that the first results discussed will be the first experiment detailed in chapter \ref{chapter:experimental_methodology_and_program}. The error bars on the graphs show the standard deviation, and all time measurements are in milliseconds.
 
 
 
@@ -10,7 +10,9 @@ In this chapter of the report, we discuss the results of the experiments and the
 
 \subsection{Experiment 1 - Metrics Collection Overhead}
 
-In experiment 1, we investigated our method for collecting metrics about the system adds any significant overhead that we must take into account in assessing further experiments. Looking at the following results, particularly the percentage of total runtime, it seems that we can assume the performance difference is negligible. (*** Is 3.5\% still negligible? I could reduce it with a little work***)
+In experiment 1, we investigated our method for collecting metrics about the system adds any significant overhead that we must take into account in assessing further experiments. Looking at the following results, particularly the percentage of total runtime, the performance impact of metrics collection isn't too severe. Still, detailed metrics were disabled for future experiments.
+
+Of course, in a production system, we wouldn't need any metrics collection.
 
 
 \begin{figure}[H]
@@ -64,9 +66,7 @@ This experiment was designed to assess the amount of overhead added by plasticit
 
 With our smallest array size of 1000, we see an increase of 2ms, which is 2.7\% of the total runtime. These results are very close, and within the margin of error. 
 
-Our other results both show a decrease in runtime, again both within the margin of error. Possible reasons:
-
-(*** I suspect this weirdness may be down to different circumstances when the experiments were run. Especially since the difference is most pronounced with the largest array size, since it has the largest time for things to change. Also, using a virtual machine can't help. I'll see if I can run them on another machine. ***)
+Our other results both show a decrease in runtime, again both within the margin of error. Repeat experiments to reduce the variance would help, and running them on a VM may introduce more variance than in a (*** What is it called when you just have an OS with full access to the hardware? Somewhere between a VM and bare metal ***)
 
 The overall takeaway from this experiment, is that the added overhead is negligible when measuring the total runtime, with a wide selection of array sizes.
 
@@ -112,6 +112,10 @@ This experiment was designed to highlight the importance of choosing the correct
 
 This is reflected in the results, where we see the dynamic schedules perform almost three times as well as the static schedule. Also included is a case where we start with the static schedule, and then switch to dynamic chunks after five seconds. We see it perform on a par with our dynamic schedules, again greatly improving upon the static schedule.
 
+There is a small difference between our dynamic chunks and dynamic individual schedules. With a chunk size of 1,000, our dynamic individual schedule accesses the bag of tasks 1,000 times as often. Considering that it is implemented in shared memory, it makes sense that this penalty isn't large. If retrieving tasks was more costly, it would affect the dynamic individual schedule proportionately more than the dynamic chunks schedule. We also have a variety of task sizes, meaning the time between bag accesses varies. In turn, this means threads are less likely to contend with each other when attempting to obtain the mutex to access the bag.
+
+In our plastic schedule, we change from static to dynamic\_chunks after 5 seconds. In these first 5 seconds, all threads will still have tasks to process, meaning we still have the maximum throughput. Since we change to a dynamic schedule before we have any down time, we match the performance of a constant dynamic schedule.
+
 
 
 \begin{figure}
@@ -127,10 +131,41 @@ This is reflected in the results, where we see the dynamic schedules perform alm
 
 \subsection{Experiment 5 - Absolute Multiprogramming Performance}
 
+The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We compare two situations, the first, named anarchy, is where both programs are run with four threads with no plasticity or contention aware scheduling. This is a typical situation for a multiprogramming system. The second situation, is using plasticity and contention aware scheduling, where we start with four threads in program 1, once program 2 starts we reduce this to two, and assign two threads to program 2. Once program 2 is finished, we switch back to using four threads in program 1.
+
+For a further investigation into the performance of our library, on a hunch, we also ran the experiment with different message checking intervals. This means that each program's main thread sleeps for Nms in between checks for whether the computation is complete or if it has any messages.
+
+Looking at the results, our library is consistently faster than anarchy, which is a promising sign. We also significantly reduce the variance using our library, possibly due to the reduced thread switching. Comparing the different sleep times, we see that significant improvements can be made, if we tune this variable correctly. Since we are reducing some overhead by making this interval longer, (with the compromise of a slower reaction speed to messages), we could reason that if the library was more sophisticated, and if we thoroughly optimized our code, we may see substantial performance gains.
+
+(** I'm a bit suspicious of the big performance difference between 20ms and 100ms, but I can't think of what caused it ***)
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{graphics/experiment5.png}
+	\caption{Experiment 5 results}
+	\label{fig:results_ex5}
+\end{figure}
+
 \input{ex_params/ex5_params}
 
 
 
 \section{Discussion}
 
- ***Discuss the findings of the results, (Mention weird runtimes with many small tasks!)***
+consider the results of each experiment and what they tell you for the future of the project (eg great result, more work needed here etc), which can then feed in to the future work plan.
+
+In this section of the report, we discuss the implications of each experiment, and what they mean for the future of the project. Experiment 1 investigates the overhead added by detailed metrics collection. These metrics were mostly used during development, and as such were disabled for future experiments to minimize their performance impact. 
+
+Experiment 2 establishes a baseline of performance, confirming that we are on a par with current parallel programming approaches. This is a good result, and confirms that our approach does not concede significant overhead. 
+
+Experiment 3 investigates the overhead involved in contention aware scheduling and plasticity. It solidifies the conclusion of experiment 2, in that we do not add any significant overhead.
+
+(** Experiment 3 and 5 seem to contradict one another? ***)
+
+Experiment 4 is a demonstration of the value of choosing the correct schedule, and shows the benefits of plasticity. 
+
+With experiment 5, we show that we can improve upon our standard implementation with plasticity and contention aware scheduling. We also provide reduced variability, both of which are promising results for the early stages of this project. It provides a solid foundation for the next phase of this project in the following year. We also show that we can improve our performance further by optimizing and tuning the code, again providing promising work for the future.
+
+Overall, the first year of this project provides a solid foundation for the work to be done next year, and future work for others following the completion of the project.

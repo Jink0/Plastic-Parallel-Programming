@@ -7,35 +7,30 @@ This chapter discusses further work that could be done to advance this project. 
 
 \section{Future Development}
 
-Here we provide an overview for possible work to be done in the future. We can categorize tasks into improvements to the current system and feature set, adding additional features, and more extensive, deeper testing:
+Here we provide an overview for possible work to be done in the future. We split the tasks into work for the seconds phase of this Minf project, and interesting work for successors:
 
-Improvements to current feature set:
+Next year:
 
 \begin{itemize}
-	\item Implementing some algorithm for automatic parameter tuning
-	\item Make work interruptable, currently, once we have assigned tasks, a worker thread cannot be interrupted. This means that the static schedule, which assigns all tasks at once, cannot be interrupted/switched
 	\item Improved experiment framework, with support for experiments involving multiple programs
+	\item Experiment with different array access patterns, and investigate how they affect performance
+	\item Experiment with different types of task, such as different bottlenecks (CPU bottleneck/Memory bottleneck) 
+	\item Test the library on a variety of hardware and systems
+	\item Make work interruptable, currently, once we have assigned tasks, a worker thread cannot be interrupted. This means that the static schedule, which assigns all tasks at once, cannot be interrupted/switched without manually forcing it to do so
+	\item Currently, we only have the map array pattern. More patterns could be implemented
+	\item Support for different parallel programming backends, possibly utilizing more exotic hardware such as GPUs 
+	\item Implementing some algorithm for automatic parameter tuning
 \end{itemize}
 
-Additional features:
+Follow on work:
 
 \begin{itemize}
-	\item Currently, we only have the map array pattern. More patterns could be implemented
 	\item Different methods of task distribution could be investigated, such as a distributed bag of tasks or adding task stealing
-	\item Support for different parallel programming backends, possibly utilizing more exotic hardware such as GPUs 
 	\item Project could be adapted for use in a distributed system, where we also must consider what machine to run applications on
 	\item We currently optimize our library for performance, we could investigate if we could optimize for other things, such as energy efficiency for mobile applications
 \end{itemize}
 
-More extensive testing:
-
-\begin{itemize}
-	\item Test the library on a variety of hardware and systems
-	\item Experiment with different array access patterns, and investigate how they affect performance
-	\item Experiment with different types of task, such as different bottlenecks (CPU bottleneck/Memory bottleneck) 
-\end{itemize}
-
-(*** Where to focus next year? I'd like to do more patterns/backends (particularly for GPUs), and all the testing points would be good. ***)
+(*** Could provide priority for certain applications, e.g. split threads 1/3 instead of 2/2 ***)
 
 
 

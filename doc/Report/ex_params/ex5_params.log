@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  31 MAR 2017 05:57
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  3 APR 2017 04:40
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/ex_params/ex5_p
 arams.tex
@@ -57,8 +57,7 @@ Missing character: There is no a in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no k in font nullfont!
 Missing character: There is no s in font nullfont!
-Missing character: There is no 1 in font nullfont!
-Missing character: There is no 0 in font nullfont!
+Missing character: There is no 3 in font nullfont!
 Missing character: There is no 0 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no 0 in font nullfont!
@@ -73,11 +72,23 @@ Missing character: There is no r in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no n in font nullfont!
-Missing character: There is no L in font nullfont!
-Missing character: There is no a in font nullfont!
-Missing character: There is no r in font nullfont!
-Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no R in font nullfont!
 Missing character: There is no e in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no a in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no s in font nullfont!
 Missing character: There is no T in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no s in font nullfont!
@@ -144,7 +155,7 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no d in font nullfont!
 ! Undefined control sequence.
 l.19   Number of threads used & \specialcell
-                                            {4 (*** 8? ***)\\ 2} \\
+                                            {4 \\ 4, then 2, then 4} \\
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -152,26 +163,28 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 Missing character: There is no 4 in font nullfont!
-Missing character: There is no ( in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no ? in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no ) in font nullfont!
 ! Missing } inserted.
 <inserted text> 
                 }
-l.19 ...ads used & \specialcell{4 (*** 8? ***)\\ 2
-                                                  } \\
+l.19 ...mber of threads used & \specialcell{4 \\ 4
+                                                  , then 2, then 4} \\
 I've put in what seems to be necessary to fix
 the current column of the current alignment.
 Try to go on, since this might almost work.
 
+Missing character: There is no 4 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no h in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no n in font nullfont!
 Missing character: There is no 2 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no h in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no n in font nullfont!
+Missing character: There is no 4 in font nullfont!
 ! Missing { inserted.
 <inserted text> 
                 {
@@ -293,7 +306,7 @@ Missing character: There is no s in font nullfont!
 Missing character: There is no k in font nullfont!
 Missing character: There is no s in font nullfont!
 Missing character: There is no 1 in font nullfont!
-Missing character: There is no 0 in font nullfont!
+Missing character: There is no 5 in font nullfont!
 Missing character: There is no , in font nullfont!
 Missing character: There is no 0 in font nullfont!
 Missing character: There is no 0 in font nullfont!
@@ -307,11 +320,23 @@ Missing character: There is no r in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no i in font nullfont!
 Missing character: There is no n in font nullfont!
-Missing character: There is no L in font nullfont!
-Missing character: There is no a in font nullfont!
-Missing character: There is no r in font nullfont!
-Missing character: There is no g in font nullfont!
+Missing character: There is no 1 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no , in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no 0 in font nullfont!
+Missing character: There is no R in font nullfont!
 Missing character: There is no e in font nullfont!
+Missing character: There is no p in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no a in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no s in font nullfont!
 Missing character: There is no T in font nullfont!
 Missing character: There is no a in font nullfont!
 Missing character: There is no s in font nullfont!
@@ -378,7 +403,7 @@ Missing character: There is no e in font nullfont!
 Missing character: There is no d in font nullfont!
 ! Undefined control sequence.
 l.39   Number of threads used & \specialcell
-                                            {4 (*** 8? ***)\\ 2} \\
+                                            {4 \\ 2} \\
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -386,20 +411,10 @@ spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
 Missing character: There is no 4 in font nullfont!
-Missing character: There is no ( in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no 8 in font nullfont!
-Missing character: There is no ? in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no * in font nullfont!
-Missing character: There is no ) in font nullfont!
 ! Missing } inserted.
 <inserted text> 
                 }
-l.39 ...ads used & \specialcell{4 (*** 8? ***)\\ 2
+l.39 ...mber of threads used & \specialcell{4 \\ 2
                                                   } \\
 I've put in what seems to be necessary to fix
 the current column of the current alignment.
@@ -577,5 +592,5 @@ Here is how much of TeX's memory you used:
  3642 multiletter control sequences out of 15000+200000
  3640 words of font info for 14 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 19i,7n,12p,152b,106s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 19i,7n,12p,156b,106s stack positions out of 5000i,500n,10000p,200000b,50000s
 !  ==> Fatal error occurred, no output PDF file produced!

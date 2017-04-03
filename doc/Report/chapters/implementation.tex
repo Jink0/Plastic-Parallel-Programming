@@ -38,7 +38,6 @@ The first skeleton we will implement is the map-array skeleton, as described in 
 
 \begin{figure}
 	\begin{lstlisting}
-
 	int user_function(int in1, deque<int> in2) {
 		return in1 + in2[in1];
 	}
@@ -62,7 +61,6 @@ The first skeleton we will implement is the map-array skeleton, as described in 
 		 * Record output.
 		 */
 	}
-
 	\end{lstlisting}
 
 	\caption{A usage example of map\_array, here we apply our user\_function to each element of input1. The size of our two input arrays need not match, but the size of the input1 and output arrays must.}
@@ -133,6 +131,118 @@ In order to communicate with the controller while a program is using our library
 	\caption{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.}
 	\label{fig:controller_flowchart}
 \end{figure}
+
+
+
+\section{Code Complexity}
+
+This project required complex code to achieve it's goals. In this section, we present some extracts of the code to demonstrate it's complexity (modified slightly for presentation purposes,) in figures \ref{fig:implementation_thread_safe_print} and \ref{fig:implementation_execute_external_program}.
+
+(*** A third example could be the makefile? ***)
+
+\begin{figure}
+	\begin{lstlisting}
+	// .hpp file:
+
+	// Print function entry point. Defaults to the cout output stream.
+	template <class ...Args>
+	std::ostream& print(const Args& ...args) {
+	    std::lock_guard<std::mutex> _(get_cout_mutex());
+	    return print(std::cout, args...);
+	}
+
+	// Retrieve mutex. This must be done using this non-templated function, so that we have one mutex instance across all instantiations of the templated functions.
+	std::mutex& get_cout_mutex();
+
+	// Case when given an output stream.
+	template <class ...Args>
+	std::ostream& print(std::ostream& outS, const Args& ...args) {
+	    return print_rec(outS, args...);
+	}
+
+	// Recursively prints arguments.
+	template <class A0, class ...Args>
+	std::ostream& print_rec(std::ostream& outS, const A0& a0, const Args& ...args) {
+	    outS << a0;
+	    return print_rec(outS, args...);
+	}
+
+	// With nothing to add, just return the stream. 
+	std::ostream& print_rec(std::ostream& outS);
+
+
+
+	// .cpp file:
+
+	// With nothing to add to the output stream, just return the stream.
+	std::ostream& print_rec(std::ostream& outS) {
+	    return outS;
+	}
+
+	// Retrieve mutex.
+	std::mutex& get_cout_mutex() {
+		// Static, so that we have one mutex instance across all instantiations of the templated functions.
+	    static std::mutex m;
+	    return m;
+	}
+	\end{lstlisting}
+
+	\caption{A thread safe print function. Prints a variable number of and a variable type of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.}
+	\label{fig:implementation_thread_safe_print}
+\end{figure}
+
+
+
+\begin{figure}
+	\begin{lstlisting}
+	// Example usage: 
+
+	const char *args[64] = {"../bin/program_2_map_array_test" , "../build/configs/config7.ini" , NULL};
+    int out = exec_prog(args);
+
+
+
+	static int exec_prog(const char **args) {
+	    pid_t pid;
+	    int   status, timeout;
+
+	    if ((pid = fork()) == 0) {
+	        if (execve(args[0], (char **)args , NULL) == -1) {
+	            perror("fork() failed [%m]");
+
+	            return -1;
+	        }
+	    }
+
+
+	    timeout = 1000;
+
+	    while (waitpid(pid , &status , WNOHANG) == 0) {
+	            if (--timeout < 0) {
+	                    perror("timeout");
+
+	                    return -1;
+	            }
+
+	            sleep(1);
+	    }
+
+	    printf("%s WEXITSTATUS %d WIFEXITED %d [status %d]\n\n", args[0], WEXITSTATUS(status), WIFEXITED(status), status);
+
+	    if (WIFEXITED(status) != 1 || WEXITSTATUS(status) != 0) {
+	            perror("%s failed, halt system");
+
+	            return -1;
+	    }
+
+	    return 0;
+	}
+	\end{lstlisting}
+
+	\caption{A function for executing an external program, used in the controller application in the setup for experiment 5.}
+	\label{fig:implementation_execute_external_program}
+\end{figure}
+
 
 
 
