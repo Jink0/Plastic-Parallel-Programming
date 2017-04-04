@@ -32,7 +32,7 @@ In these experiments however, we will focus on total runtime, as we are mostly c
 
 \section{Programme of Experiments}
 
-In this section, we detail each experiment, with the thought process behind it, how it will be executed, and the expected results if appropriate. The actual results will be presented in chapter \ref{chapter:results}, where we will compare them with our expectations and discuss their implications.
+In this section, we detail each experiment, with the thought process behind it, how it will be executed, and the expected results if appropriate. The actual results will be presented in chapter \ref{chapter:results_and_conclusion}, where we will compare them with our expectations and discuss their implications.
 
 In each experiment we will vary a different set of parameters. These parameters can be partitioned into three separate classes; Application Input Parameters, Resources Granted, and Skeleton Parameters. More parameters can be added, (e.g. different resources granted,) but this is left for future work, as currently we only want a preliminary investigation into these ideas. The parameters we can change are:
 
@@ -107,8 +107,6 @@ Whilst we expect that we will incur some overhead, we don't expect it to be sign
 This experiment is designed to highlight the importance of the choice of schedule, and the benefits plasticity can bring even with just a single application. To do this, we compare the runtimes of different schedules with a biased task grain distribution. With a biased task distribution, we should see the static schedule perform the worst, and the dynamic individual or dynamic chunks schedule perform the best.
 
 For the plasticity portion of this experiment, we will also add cases where we start with a sub-optimal schedule, and then, after 5 seconds, change to a better schedule. This will be done with a uniform schedule, starting with the dynamic individual schedule, and switching to the static schedule.
-
-(*** Add how we hacked together changing from a static schedule ***)
 
 \input{ex_params/ex4_params}
 

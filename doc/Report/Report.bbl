@@ -14,12 +14,6 @@ Muesli: Multiple utility, evaluation and scripting language interface, 2017.
 \newblock {\em Proceedings of the 2009 ACM SIGPLAN conference on Programming
   language design and implementation - PLDI '09\/} (2009).
 
-\bibitem{parallel_landscape}
-{\sc Asanovic, K., Wawrzynek, J., Wessel, D., Yelick, K., Bodik, R., Demmel,
-  J., Keaveny, T., Keutzer, K., Kubiatowicz, J., and Morgan, N. e.~a.}
-\newblock A view of the parallel computing landscape.
-\newblock {\em Communications of the ACM 52}, 10 (2009), 56.
-
 \bibitem{posix_threads}
 {\sc Butenhof, D.~R.}
 \newblock {\em Programming with POSIX threads}.
@@ -35,11 +29,6 @@ Muesli: Multiple utility, evaluation and scripting language interface, 2017.
 {\sc Chandra, R.}
 \newblock {\em Parallel programming in openMP}.
 \newblock Morgan Kaufmann, 2009.
-
-\bibitem{using_openmp}
-{\sc Chapman, B., Jost, G., and Pas, R. v.~d.}
-\newblock {\em Using OpenMP}.
-\newblock MIT Press, 2008.
 
 \bibitem{lira}
 {\sc Collins, A., Harris, T., Cole, M., and Fensch, C.}
@@ -57,7 +46,7 @@ Muesli: Multiple utility, evaluation and scripting language interface, 2017.
 {\sc Friedman, R.}
 \newblock Home - openmp, 2017.
 
-\bibitem{datacenters}
+\bibitem{datacentres}
 {\sc Ho¨lzle, U., and Barroso, L.~A.}
 \newblock {\em The Datacenter As a Computer: An Introduction to the Design of
   Warehouse-scale Machines (Synthesis Lectures on Computer Architecture)},
@@ -77,11 +66,6 @@ Muesli: Multiple utility, evaluation and scripting language interface, 2017.
 \newblock {\em Proceedings of the 12th international workshop and the 7th
   annual ERCIM workshop on Principles on software evolution and software
   evolution - IWPSE-EVOL '11\/} (2011).
-
-\bibitem{parallel_with_mpi_openmp}
-{\sc Quinn, M.~J.}
-\newblock {\em Parallel programming in C with MPI and openMP}.
-\newblock McGraw-Hill Education.
 
 \bibitem{mpi}
 {\sc Sur, S., Koop, M.~J., and Panda, D.~K.}
