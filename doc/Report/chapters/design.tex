@@ -61,18 +61,13 @@ Once we have added plasticity, we can experiment with the specifics of an implem
 
 
 
-\begin{figure}
+\begin{figure}[!]
 	\centering
-	\includegraphics[width=\textwidth]{graphics/unoptimized_schedule.png}
+	\includegraphics[width=0.9\textwidth]{graphics/unoptimized_schedule.png}
 	\caption{A worst case scenario of a static schedule assigning each thread an equal number of tasks. Suppose we have a set of twelve independent tasks with the following set of execution times (These would be unknown to the scheduler): \{10, 6, 4, 4, 2, 2, 2, 2, 1, 1, 1, 1\}. With four threads, a simple division of tasks would be three tasks each distributed in order. This figure illustrates this distribution of work. Note that the total execution time is 20 time units.}
-	\label{fig:unoptimized_schedule}
-\end{figure}
-
-\begin{figure}
-	\centering
-	\includegraphics[width=\textwidth]{graphics/optimized_schedule.png}
-	\caption{An optimized version of figure \ref{fig:unoptimized_schedule}. Here we have the same set of tasks, but we have a better distribution of work, so the total execution time is 10 time units.}
-	\label{fig:optimized_schedule}
+	\includegraphics[width=0.9\textwidth]{graphics/optimized_schedule.png}
+	\caption{An optimized version of the previous schedule. Here we have the same set of tasks, but we have a better distribution of work, so the total execution time is 10 time units.}
+	\label{fig:schedule_optimization}
 \end{figure}
 
 

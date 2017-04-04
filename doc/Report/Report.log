@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  4 APR 2017 08:51
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (MiKTeX 2.9.6210 64-bit) (preloaded format=pdflatex 2017.1.20)  4 APR 2017 09:23
 entering extended mode
 **C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
 (C:/Users/Mark/Desktop/Plastic-Parallel-Programming/doc/Report/Report.tex
@@ -252,23 +252,26 @@ File: lstmisc.sty 2015/06/04 1.6 (Carsten Heinz)
 Package: filecontents 2011/10/08 v1.3 Create an external file from within a LaT
 eX document
 )
+(C:\Users\Mark\AppData\Roaming\MiKTeX\2.9\tex\latex\setspace\setspace.sty
+Package: setspace 2011/12/19 v6.7a set line spacing
+)
 (Report.aux)
 \openout1 = `Report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 73.
-LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 75.
+LaTeX Font Info:    ... okay on input line 75.
 
 (C:\Users\Mark\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -301,7 +304,7 @@ Package caption Info: hyperref package is loaded.
 Package caption Info: listings package is loaded.
 Package caption Info: End \AtBeginDocument code.
 \AtBeginShipoutBox=\box29
-Package hyperref Info: Link coloring OFF on input line 73.
+Package hyperref Info: Link coloring OFF on input line 75.
 
 ("C:\Program Files\MiKTeX 2.9\tex\latex\hyperref\nameref.sty"
 Package: nameref 2016/05/21 v2.44 Cross-referencing by name of section
@@ -311,9 +314,9 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 )
 \c@section@level=\count114
 )
-LaTeX Info: Redefining \ref on input line 73.
-LaTeX Info: Redefining \pageref on input line 73.
-LaTeX Info: Redefining \nameref on input line 73.
+LaTeX Info: Redefining \ref on input line 75.
+LaTeX Info: Redefining \pageref on input line 75.
+LaTeX Info: Redefining \nameref on input line 75.
 
 (Report.out) (Report.out)
 \@outlinefile=\write3
@@ -325,7 +328,7 @@ LaTeX Info: Redefining \nameref on input line 73.
 File: graphics/university.png Graphic file (type png)
 
 <use graphics/university.png>
-Package pdftex.def Info: graphics/university.png used on input line 89.
+Package pdftex.def Info: graphics/university.png used on input line 91.
 (pdftex.def)             Requested size: 103.50105pt x 103.22397pt.
  [1
 
@@ -335,27 +338,29 @@ dentifier (name{page.1}) has been already used, duplicate ignored
 <to be read again> 
                    \relax 
 l.8 \end{abstract}
-                   [1]) (Report.toc
+                   [1]) [2
+
+] (Report.toc
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <7> on input line 3.
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 3.
-pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has 
-been already used, duplicate ignored
-<to be read again> 
-                   \relax 
-l.18 ...ne {4.4}Testing Programs}{34}{section.4.4}
-                                                   [1
 
-] [2])
+Underfull \vbox (badness 2221) has occurred while \output is active []
+
+ [3]
+[4])
 \tf@toc=\write4
 \openout4 = `Report.toc'.
 
- [3]
-Chapter 1.
-(chapters/introduction.tex [4
+ [5] [6
 
 ]
+Chapter 1.
+(chapters/introduction.tex
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [7]
 LaTeX Font Info:    Try loading font information for OMS+cmr on input line 16.
 
 ("C:\Program Files\MiKTeX 2.9\tex\latex\base\omscmr.fd"
@@ -363,94 +368,110 @@ File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 16.
-) [5]
+) [8]
 Chapter 2.
-(chapters/background.tex [6
+(chapters/background.tex [9
 
 ]
-<graphics/lira_pairwise_speedup.png, id=277, 978.65625pt x 997.47656pt>
+<graphics/lira_pairwise_speedup.png, id=286, 978.65625pt x 997.47656pt>
 File: graphics/lira_pairwise_speedup.png Graphic file (type png)
 
 <use graphics/lira_pairwise_speedup.png>
 Package pdftex.def Info: graphics/lira_pairwise_speedup.png used on input line 
 40.
 (pdftex.def)             Requested size: 345.0pt x 351.63336pt.
- [7] [8 <./graphics/lira_pairwise_speedup.png>] <graphics/plastic_graph.png, id
-=291, 1129.21875pt x 752.8125pt>
+ [10] [11 <./graphics/lira_pairwise_speedup.png>] <graphics/plastic_graph.png, 
+id=300, 1129.21875pt x 752.8125pt>
 File: graphics/plastic_graph.png Graphic file (type png)
 
 <use graphics/plastic_graph.png>
 Package pdftex.def Info: graphics/plastic_graph.png used on input line 59.
 (pdftex.def)             Requested size: 345.0pt x 230.00377pt.
- [9] [10 <./graphics/plastic_graph.png>]
-[11]) [12]
-Chapter 3.
-(chapters/design.tex [13
+ [12] [13 <./graphics/plastic_graph.png>]
+[14]) [15] [16
 
 ]
-<graphics/skepu_skeletons.jpg, id=326, 626.34pt x 502.12593pt>
+Chapter 3.
+(chapters/design.tex [17]
+<graphics/skepu_skeletons.jpg, id=339, 626.34pt x 502.12593pt>
 File: graphics/skepu_skeletons.jpg Graphic file (type jpg)
 
 <use graphics/skepu_skeletons.jpg>
 Package pdftex.def Info: graphics/skepu_skeletons.jpg used on input line 25.
 (pdftex.def)             Requested size: 241.49895pt x 193.6064pt.
- [14 <./graphics/skepu_skeletons.jpg>]
-<graphics/unoptimized_schedule.png, id=335, 578.16pt x 397.485pt>
+
+
+LaTeX Warning: Reference `fig:unoptimized_schedule' on page 18 undefined on inp
+ut line 45.
+
+
+LaTeX Warning: Reference `fig:optimized_schedule' on page 18 undefined on input
+ line 45.
+
+[18 <./graphics/skepu_skeletons.jpg>]
+
+LaTeX Warning: No positions in optional float specifier.
+               Default added (so using `!tbp') on input line 64.
+
+<graphics/unoptimized_schedule.png, id=347, 578.16pt x 397.485pt>
 File: graphics/unoptimized_schedule.png Graphic file (type png)
 
 <use graphics/unoptimized_schedule.png>
 Package pdftex.def Info: graphics/unoptimized_schedule.png used on input line 6
 6.
-(pdftex.def)             Requested size: 345.0pt x 237.18277pt.
+(pdftex.def)             Requested size: 310.4979pt x 213.46812pt.
 
-<graphics/optimized_schedule.png, id=336, 578.16pt x 397.485pt>
+<graphics/optimized_schedule.png, id=348, 578.16pt x 397.485pt>
 File: graphics/optimized_schedule.png Graphic file (type png)
 
 <use graphics/optimized_schedule.png>
-Package pdftex.def Info: graphics/optimized_schedule.png used on input line 73.
+Package pdftex.def Info: graphics/optimized_schedule.png used on input line 68.
 
-(pdftex.def)             Requested size: 345.0pt x 237.18277pt.
- [15] [16 <./graphics/unoptimized_schedule.png>] [17 <./graphics/optimized_sche
-dule.png>]
-<graphics/communication_structure.png, id=359, 458.46281pt x 440.39531pt>
+(pdftex.def)             Requested size: 310.4979pt x 213.46812pt.
+
+
+LaTeX Warning: Float too large for page by 5.93625pt on input line 71.
+
+[19] [20 <./graphics/unoptimized_schedule.png> <./graphics/optimized_schedule.p
+ng>] <graphics/communication_structure.png, id=363, 458.46281pt x 440.39531pt>
 File: graphics/communication_structure.png Graphic file (type png)
 
 <use graphics/communication_structure.png>
 Package pdftex.def Info: graphics/communication_structure.png used on input lin
-e 95.
+e 90.
 (pdftex.def)             Requested size: 345.0pt x 331.41788pt.
 
-<graphics/plastic_contention_aware_scheduling.png, id=360, 852.18375pt x 615.04
+<graphics/plastic_contention_aware_scheduling.png, id=364, 852.18375pt x 615.04
 78pt>
 File: graphics/plastic_contention_aware_scheduling.png Graphic file (type png)
  <use graphics/plastic_contention_aware_scheduling.png>
 Package pdftex.def Info: graphics/plastic_contention_aware_scheduling.png used 
-on input line 102.
+on input line 97.
 (pdftex.def)             Requested size: 345.0pt x 248.99915pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 103--103
+Underfull \hbox (badness 10000) in paragraph at lines 98--98
 
  []
 
 
-Underfull \hbox (badness 1028) in paragraph at lines 103--103
+Underfull \hbox (badness 1028) in paragraph at lines 98--98
 \OT1/cmr/m/n/10 Moving fur-ther in time, we have an-other de-ci-sion point. Thi
 s one is
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 103--103
+Underfull \hbox (badness 10000) in paragraph at lines 98--98
 
  []
 
 
-Underfull \hbox (badness 1371) in paragraph at lines 103--103
+Underfull \hbox (badness 1371) in paragraph at lines 98--98
 \OT1/cmr/m/n/10 Program 2 then ter-mi-nates, trig-ger-ing an-other de-ci-sion p
 oint, and the
  []
 
-[18] [19 <./graphics/communication_structure.png>] [20 <./graphics/plastic_cont
-ention_aware_scheduling.png>]) [21]
+[21] [22 <./graphics/communication_structure.png>] [23 <./graphics/plastic_cont
+ention_aware_scheduling.png>]) [24]
 Chapter 4.
 (chapters/implementation.tex
 LaTeX Font Info:    External font `cmex10' loaded for size
@@ -466,9 +487,13 @@ LaTeX Font Info:    Font shape `OML/cmr/m/n' in size <8> not available
 (Font)              Font shape `OML/cmm/m/it' tried instead on input line 23.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 26.
- [22
 
-] [23]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [25
+
+]
+[26]
 ! Undefined control sequence.
 \lst@um'@ ->\lst@ifupquote \textquotesingle 
                                             \else \char 39\relax \fi 
@@ -491,30 +516,30 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-[24] [25] [26] [27] [28] [29] [30]
-<graphics/controller_communication_flowchart.png, id=593, 716.6775pt x 503.6315
+[27] [28] [29] [30] [31] [32] [33]
+<graphics/controller_communication_flowchart.png, id=597, 716.6775pt x 503.6315
 6pt>
 File: graphics/controller_communication_flowchart.png Graphic file (type png)
  <use graphics/controller_communication_flowchart.png>
 Package pdftex.def Info: graphics/controller_communication_flowchart.png used o
 n input line 289.
 (pdftex.def)             Requested size: 345.0pt x 242.4474pt.
- [31
+ [34
 
-] [32 <./graphics/controller_communication_flowchart.png>] [33]) [34] [35] [36]
-
-Chapter 5.
-(chapters/experimental_methodology_and_program.tex [37
+] [35 <./graphics/controller_communication_flowchart.png>] [36]) [37] [38] [39]
+ [40
 
 ]
+Chapter 5.
+(chapters/experimental_methodology_and_program.tex [41]
 Overfull \hbox (2.27838pt too wide) in paragraph at lines 43--44
 []\OT1/cmr/m/n/10 Task grain - The com-plex-ity of the tasks, pos-si-ble val-ue
 s are small, medium,
  []
 
-[38] (ex_params/ex1_params.tex) [39] (ex_params/ex2_params.tex) [40]
-(ex_params/ex3_params.tex) [41] (ex_params/ex4_params.tex) [42]
-(ex_params/ex5_params.tex)) [43] [44]
+[42] (ex_params/ex1_params.tex) [43] (ex_params/ex2_params.tex) [44]
+(ex_params/ex3_params.tex) [45] (ex_params/ex4_params.tex) [46]
+(ex_params/ex5_params.tex)) [47] [48]
 Chapter 6.
 (chapters/results_and_conclusion.tex
 
@@ -528,7 +553,7 @@ l.18 \begin{figure}[H]
                       
 Option `H' ignored and `p' used.
 
-<graphics/experiment1.png, id=802, 693.0693pt x 690.9012pt>
+<graphics/experiment1.png, id=811, 693.0693pt x 690.9012pt>
 File: graphics/experiment1.png Graphic file (type png)
 
 <use graphics/experiment1.png>
@@ -546,16 +571,16 @@ l.25 \begin{table}[H]
                      
 Option `H' ignored and `p' used.
 
-(ex_params/ex1_params.tex) [45
+(ex_params/ex1_params.tex) [49
 
-] [46 <./graphics/experiment1.png>]
-<graphics/experiment2.png, id=816, 835.4412pt x 690.9012pt>
+] [50 <./graphics/experiment1.png>]
+<graphics/experiment2.png, id=825, 835.4412pt x 690.9012pt>
 File: graphics/experiment2.png Graphic file (type png)
 
 <use graphics/experiment2.png>
 Package pdftex.def Info: graphics/experiment2.png used on input line 54.
 (pdftex.def)             Requested size: 345.0pt x 285.30598pt.
- (ex_params/ex2_params.tex) [47] [48 <./graphics/experiment2.png>]
+ (ex_params/ex2_params.tex) [51] [52 <./graphics/experiment2.png>]
 
 ! LaTeX Error: Unknown float option `H'.
 
@@ -567,7 +592,7 @@ l.75 \begin{figure}[H]
                       
 Option `H' ignored and `p' used.
 
-<graphics/experiment3.png, id=829, 797.8608pt x 691.6239pt>
+<graphics/experiment3.png, id=837, 797.8608pt x 691.6239pt>
 File: graphics/experiment3.png Graphic file (type png)
 
 <use graphics/experiment3.png>
@@ -585,25 +610,27 @@ l.82 \begin{table}[H]
                      
 Option `H' ignored and `p' used.
 
-(ex_params/ex3_params.tex) [49] [50 <./graphics/experiment3.png>]
-<graphics/experiment4.png, id=842, 693.0693pt x 690.1785pt>
+(ex_params/ex3_params.tex) [53] [54 <./graphics/experiment3.png>]
+<graphics/experiment4.png, id=851, 693.0693pt x 690.1785pt>
 File: graphics/experiment4.png Graphic file (type png)
 
 <use graphics/experiment4.png>
 Package pdftex.def Info: graphics/experiment4.png used on input line 123.
 (pdftex.def)             Requested size: 345.0pt x 343.56137pt.
- (ex_params/ex4_params.tex) [51] [52 <./graphics/experiment4.png>] <graphics/ex
-periment5.png, id=854, 901.9296pt x 690.9012pt>
+ (ex_params/ex4_params.tex) [55] [56 <./graphics/experiment4.png>] <graphics/ex
+periment5.png, id=863, 901.9296pt x 690.9012pt>
 File: graphics/experiment5.png Graphic file (type png)
 
 <use graphics/experiment5.png>
 Package pdftex.def Info: graphics/experiment5.png used on input line 146.
 (pdftex.def)             Requested size: 345.0pt x 264.28467pt.
- (ex_params/ex5_params.tex) [53] [54 <./graphics/experiment5.png>] [55]) [56]
+ (ex_params/ex5_params.tex) [57] [58 <./graphics/experiment5.png>] [59]) [60]
 Chapter 7.
-(chapters/future_work.tex [57
+(chapters/future_work.tex [61
 
-] [58]) [59] (Report.bbl
+] [62]) [63] (Report.bbl [64
+
+]
 Chapter 8.
 Missing character: There is no Â in font cmcsc10!
 Missing character: There is no ¨ in font cmcsc10!
@@ -617,27 +644,29 @@ up above has ended a previous alignment prematurely,
 you're probably due for more error messages, and you
 might try typing `S' now just to see what is salvageable.
 
-[60
-
-])
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 142.
- [61]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 142.
+[65])
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 151.
+ [66]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 151.
  (Report.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 142.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 142.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 151.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 151.
 Package rerunfilecheck Info: File `Report.out' has not changed.
 (rerunfilecheck)             Checksum: 4A4D80881E20BE3604A8E3395DFF85B5;2981.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 142.
+
+
+LaTeX Warning: There were undefined references.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 151.
  ) 
 Here is how much of TeX's memory you used:
- 8983 strings out of 493333
- 136581 string characters out of 3139197
- 471391 words of memory out of 3000000
- 11941 multiletter control sequences out of 15000+200000
+ 9021 strings out of 493333
+ 137279 string characters out of 3139197
+ 471451 words of memory out of 3000000
+ 11971 multiletter control sequences out of 15000+200000
  9008 words of font info for 32 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 40i,14n,67p,1179b,1014s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 40i,14n,67p,1179b,1100s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Program Fi
 les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><C:/Program Files/MiK
@@ -650,9 +679,9 @@ b><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Program Fil
 es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files/MiKTe
 X 2.9/fonts/type1/public/amsfonts/cm/cmtt8.pfb>
-Output written on Report.pdf (63 pages, 994113 bytes).
+Output written on Report.pdf (67 pages, 996398 bytes).
 PDF statistics:
- 1035 PDF objects out of 1200 (max. 8388607)
- 433 named destinations out of 1000 (max. 500000)
+ 1048 PDF objects out of 1200 (max. 8388607)
+ 437 named destinations out of 1000 (max. 500000)
  391 words of extra memory for PDF output out of 10000 (max. 10000000)
 

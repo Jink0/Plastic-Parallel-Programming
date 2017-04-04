@@ -1,4 +1,4 @@
-\documentclass{report}
+\documentclass[twoside,openright]{report}
 
 \usepackage{graphicx}
 \graphicspath{{graphics/}}
@@ -65,6 +65,8 @@ backgroundcolor=\color{lbcolor},
 
 \usepackage{filecontents}
 
+\usepackage{setspace} 
+
 \newcommand{\specialcell}[2][c]{%
   \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
 
@@ -74,7 +76,7 @@ backgroundcolor=\color{lbcolor},
 
 \begin{titlepage}
     \begin{center}
-        \vspace*{1cm}
+        \vspace*{3cm}
         
         \Huge
         Design And Analysis Of A Plastic Parallel Programming System
@@ -84,21 +86,26 @@ backgroundcolor=\color{lbcolor},
         \large
         \textbf{Mark Jenkins}
         
-        \vspace{3.5cm}
+        \vspace{2.5cm}
 
         \includegraphics[width=0.3\textwidth]{university}
 
-        \vspace{3.5cm}
+        \vspace{2.5cm}
         
-        School Of Informatics\\
-        University Of Edinburgh\\
+        \textbf{MInf Project (Part 1) Report}\\
+        Master of Informatics\\
+        School of Informatics\\
+        University of Edinburgh\\
         2017
-        
     \end{center}
 \end{titlepage}
 
 \setlength\parskip{1em}
 \setlength\parindent{0pt}
+
+
+
+\begin{singlespacing}
 
 \input{abstract}
 
@@ -138,5 +145,7 @@ backgroundcolor=\color{lbcolor},
 
 \bibliographystyle{acm}
 \bibliography{references} 
+
+\end{singlespacing}
 
 \end{document}
