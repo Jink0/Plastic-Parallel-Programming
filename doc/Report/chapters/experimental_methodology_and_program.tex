@@ -70,7 +70,7 @@ The aim of our first experiment is to investigate if our method for collecting m
 
 The experiment parameters are designed such that it is a worse case scenario, and as a result would produce the most significant difference in runtimes. This worst case scenario would be many small tasks, with multiple threads, since metrics functions are called before and after tasks are completed, and are managed on a per-thread basis.
 
-Since our metrics collection consists of some function calls and updating tallys, we don't expect the performance impact to be significant. 
+Since our metrics collection consists of some function calls and updating tallys, we do not expect the performance impact to be significant. 
 
 \input{ex_params/ex1_params}
 
@@ -84,7 +84,7 @@ Note here that the Static schedule and the Dynamic Chunks schedule with a chunk 
 
 As for the expected outcome, we would predict that we would be close to a purely sequential implementation in single threaded circumstances, if we use a static schedule, as the only additional overhead would come from managing the one thread. For other schedules, we may see a performance drop, since we would be using a sub-optimal schedule. But, OpenMP would likely see a similar performance drop with a sub-optimal schedule.
 
-The main question we want to answer is how we compare to a current parallel programming approach, OpenMP. Do we scale with thread/CPU core count in a similar fashion? We expect that we may be behind OpenMP in terms of performance, as OpenMP is a huge, well established project, and as such may be much more optimized than our implementation. Whilst the outcome of this experiment will no doubt be useful, we are mainly concerned with whether we can improve upon our own performance by adding plasticity and contention aware scheduling, so we need only compare against ourselves in experiment 5.
+The main question we want to answer is how we compare to a current parallel programming approach, OpenMP. Do we scale with thread/CPU core count in a similar fashion? We expect that we may be behind OpenMP in terms of performance, as OpenMP is a large, well established project, and as such may be much more optimized than our implementation. Whilst the outcome of this experiment will no doubt be useful, we are mainly concerned with whether we can improve upon our own performance by adding plasticity and contention aware scheduling, so we need only compare against ourselves in experiment 5.
 
 \input{ex_params/ex2_params}
 
@@ -96,7 +96,7 @@ This experiment is designed to investigate whether the two main additions to a s
 
 We will then run the same experiment with no controller or plasticity, as in experiment 1. The runtimes of both cases will be compared to see the total amount of delay introduced.
 
-Whilst we expect that we will incur some overhead, we don't expect it to be significant, as it will be of constant time and not scale with regards to input size.
+Whilst we expect that we will incur some overhead, we do not expect it to be significant, as it will be of constant time and not scale with regards to input size.
 
 \input{ex_params/ex3_params}
 
@@ -114,10 +114,10 @@ For the plasticity portion of this experiment, we will also add cases where we s
 
 \subsection{Experiment 5 - Absolute Multiprogramming Performance}
 
-The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We start with the controller and one application running, and then introduce a second application, causing the first to modify it's parameters. The second application will then complete it's computation, again causing the first to modify it's parameters. Finally, the first application will finish, completing the experiment. 
+The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We start with the controller and one application running, and then introduce a second application, causing the first to modify its parameters. The second application will then complete its computation, again causing the first to modify its parameters. Finally, the first application will finish, completing the experiment. 
 
 We compare two situations, one simulating a typical multiprogramming system, where we run the programs as they would be without any plasticity or contention aware scheduling. The other situation will be including plasticity and contention aware scheduling.
 
-To get an idea of the performance, we will compare the runtimes of the two programs, with the runtime of the first application representing the total runtime of the entire experiment. We would expect the case with plasticity and contention aware scheduling to fare better, since the overhead isn't too large, and we would enforce that the total number of threads is equal to the number of CPU cores. This means that there is less unnecessary thread switching, as the OS switches between all threads.
+To get an idea of the performance, we will compare the runtimes of the two programs, with the runtime of the first application representing the total runtime of the entire experiment. We would expect the case with plasticity and contention aware scheduling to fare better, since the overhead is not too large, and we would enforce that the total number of threads is equal to the number of CPU cores. This means that there is less unnecessary thread switching, as the OS switches between all threads.
 
 \input{ex_params/ex5_params}

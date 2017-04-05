@@ -1,6 +1,6 @@
 %!TEX root = ../Report.tex
 
-In this chapter, we will discuss the design of the system created to investigate this problem, and detail how such a system could be extended for the future.
+In this chapter, we will discuss the design of the system created to investigate the problem in hand, and detail how such a system could be extended for the future.
 
 
 
@@ -45,7 +45,7 @@ The thread count and pinnings are self explanatory. The schedule however require
 
 The most basic method to divide the tasks is to give an equal amount to each thread. This is fine if the complexity of the tasks is uniform, but if it is biased (e.g. tasks in the first portion of the array are more complex than the rest), the amount of computation to be done by each thread is imbalanced. This is because we have idle cores during computation, since the threads with more work will still be computing once the others have finished. This downtime is a wasted resource in a multi-threaded execution. However, if we allocate the tasks differently, we can obtain better performance, as illustrated in figure \ref{fig:schedule_optimization}, where the improved schedule runs twice as fast as the simple one.
 
-So load balancing a workload is critical to performance in such a multi-threaded application. However, optimizing the task distribution in this manner is a non trivial problem, and it depends upon the computation to be done as well as the number of threads and other resources available at runtime.
+So load balancing a workload is critical to performance in such a multi-threaded application. However, optimizing the task distribution in this manner is a non-trivial problem, and it depends upon the computation to be done as well as the number of threads and other resources available at runtime.
 
 A solution to this problem is to provide many different task distributions, and let the user pick or the machine select which distribution to use. OpenMP documentation calls these schedules, and some examples of these are:
 
@@ -58,7 +58,7 @@ A solution to this problem is to provide many different task distributions, and 
 
 Thread count and schedule were chosen as they seem the most critical to performance, and thread pinnings was added as this is was investigated in the LIRA paper \cite{lira} as a factor contention aware scheduling could exploit.
 
-Once we have added plasticity, we can experiment with the specifics of an implementation, and see how they affect the performance of the system. This would be the use case of utilizing our library with no other program running, (So no contention aware scheduling), and we can explore how we can adapt the program using plasticity at runtime in this case. We may be able to improve performance even under these conditions, depending upon the configuration of the machine (e.g., are there more CPU cores available) and the problem (e.g. do we have many small tasks or few large tasks.) 
+Once we have added plasticity, we can experiment with the specifics of an implementation, and see how they affect the performance of the system. This would be the use case of utilizing our library with no other program running, (i.e. no contention aware scheduling), and we can explore how we can adapt the program using plasticity at runtime in this case. We may be able to improve performance even under these conditions, depending upon the configuration of the machine (e.g., are there more CPU cores available) and the problem (e.g. do we have many small tasks or few large tasks.) 
 
 
 
@@ -89,14 +89,14 @@ With contention aware scheduling, we can experiment with multiple programs runni
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{graphics/communication_structure.png}
-	\caption{High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.}
+	\caption{High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and its worker threads.}
 	\label{fig:communication_structure}
 \end{figure}
 
 \begin{figure}
 	\centering
 	\includegraphics[width=\textwidth]{graphics/plastic_contention_aware_scheduling.png}
-	\caption{An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.) \\ \\ Moving further in time, we have another decision point. This one is triggered by some other change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues. \\ \\ Program 2 then terminates, triggering another decision point, and the system again updates the configuration.}
+	\caption{An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (in this project, we do this manually.) \\ \\ Moving further in time, we have another decision point. This one is triggered by some other change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues. \\ \\ Program 2 then terminates, triggering another decision point, and the system again updates the configuration.}
 	\label{fig:plastic_contention_aware_scheduling}
 \end{figure}
 
