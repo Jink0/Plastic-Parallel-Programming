@@ -2,7 +2,7 @@
 
 In this chapter, we present specific implementation details of the project, providing relevant code highlights,and cover the problems that occurred and how they were solved.
 
-We start with the implementation of a basic skeleton, then  we cover adding plasticity, and contention aware scheduling. Finally, we finish by covering the applications developed to evaluate the project.
+We start with the implementation of a basic skeleton, then we cover adding plasticity, and contention aware scheduling. We finish by covering the applications developed to evaluate the project.
 
 C++ was chosen as a basis, since it's fast, and provides language constructs such as templates and overloading. Another, personal, reason is that I wished to learn something new, as I had not used C++ before. 
 
@@ -13,7 +13,7 @@ The parallel backend that the system is based upon is Pthreads due to its wide a
 \section{Skeleton Foundation}
 \label{section:implementation_skeleton_foundation}
 
-The first skeleton we will implement is the map-array skeleton, as described in section \ref{section:design_skeleton_foundation}. It is reasonably straight forward to create a sequential skeleton, using c++ templates to create a templated function which takes a function amongst other things as it's arguments. This will be our skeleton. The interface of our skeleton is given in figure \ref{fig:implementation_map_array_interface}, and a usage example in figure \ref{fig:implementation_map_array_usage_example}.
+The first skeleton we will implement is the map-array skeleton, as described in section \ref{section:design_skeleton_foundation}. It is reasonably straight forward to create a sequential skeleton, using C++ templates to create a templated function which takes another function amongst other things as it's arguments. This will be our skeleton. The interface of our skeleton is given in figure \ref{fig:implementation_map_array_interface}, and a usage example in figure \ref{fig:implementation_map_array_usage_example}.
 
 
 
@@ -70,7 +70,7 @@ The first skeleton we will implement is the map-array skeleton, as described in 
 Parallelizing this presents two problems, namely:
 
 \begin{itemize}
-	\item How to divide tasks amongst threads (In map array, one task is one application of the user function to an element of the input array)
+	\item How to divide tasks amongst threads (In map array, a task is one application of the user function to an element of the input array)
 	\item How many threads should be used
 \end{itemize}
 
@@ -80,15 +80,15 @@ In a basic skeleton, both of these parameters must be specified beforehand and w
 
 To implement multiple schedules, we use a bag of tasks object. A bag of tasks is a collection of independent, usually similar tasks which are to be executed. It is a model which is usually combined with some form of parallelism.
 
-Each thread will be given the location of the same bag, and will retrieve a specified number of tasks at a time from the bag. Since each schedule essentially consists of retrieving a different number tasks, we can use this to implement the basic schedules (Static, Dynamic chunks, Dynamic Individual). More complex schedules can easily be added in the future, as they can reuse the get tasks method, an simply adjust how many tasks each thread retrieves at one time.
+Each thread will be given the location of the same bag, and will retrieve a specified number of tasks at a time from the bag. Since each schedule essentially consists of retrieving a different number tasks at a time, we can use this to implement the basic schedules (Static, Dynamic chunks, Dynamic Individual). More complex schedules can easily be added in the future, as they can reuse the same framework, and simply adjust how many tasks each thread retrieves at one time.
 
 The bag also provides the main source of inter-thread communication using shared memory, and contains various semaphores for controlling the threads. This will be expanded upon in sections \ref{section:implementation_adding_plasticity} and \ref{section:implementation_contention_aware_scheduling}.
 
 This bag of tasks object also gives us the basis for further extensions, such as using multiple bags, adding task stealing, or adding tasks to the bag during computation.
 
-Providing a variable number of worker threads is simple now that we have the bag of tasks, all we need to do is to adjust our initial calculations when calculating how many tasks each thread should receive according to the schedule. These worker threads will be spawned by the original thread, the ``main'' thread. It will block until all computation is complete, it will then join with each of the worker threads.
+Providing a variable number of worker threads is simple now that we have the bag of tasks, all we need to do is to adjust our initial calculations when calculating how many tasks each thread should receive according to the schedule. These worker threads will be spawned by the original thread, the ``main'' thread. It blocks until the computation is complete, it will then join with each of the worker threads.
 
-Figure \ref{fig:implementation_create_threads} shows how we create our worker thread using Pthreads, and figure \ref{fig:implementation_join_threads} hows how we can later join with them.
+Figure \ref{fig:implementation_create_threads} shows how we create our worker thread using Pthreads, and figure \ref{fig:implementation_join_threads} hows how we later join with them.
 
 
 
@@ -124,7 +124,7 @@ Figure \ref{fig:implementation_create_threads} shows how we create our worker th
 	}
 	\end{lstlisting}
 
-	\caption{Parallel portion of our map\_array skeleton. This figure shows how we use Pthreads to create our worker threads, providing each with access to it's own thread data object.}
+	\caption{The parallel portion of our map\_array skeleton. This figure shows how we use Pthreads to create our worker threads, providing each with access to it's own thread data object.}
 	\label{fig:implementation_create_threads}
 \end{figure}
 
@@ -152,7 +152,7 @@ Figure \ref{fig:implementation_create_threads} shows how we create our worker th
 	}
 	\end{lstlisting}
 
-	\caption{Function which joins with the specified number of threads. Starts with the last thread to be created, so that if we wish to terminate threads, the threads which stay executing preserve their logical ordering.}
+	\caption{Function which joins with the specified number of threads. Starts with the last thread to be created, so that if we wish to terminate threads, the threads which remain executing preserve their logical ordering.}
 	\label{fig:implementation_join_threads}
 \end{figure}
 
@@ -161,15 +161,15 @@ Figure \ref{fig:implementation_create_threads} shows how we create our worker th
 \section{Adding Plasticity}
 \label{section:implementation_adding_plasticity}
 
-We already have a sort of compile time plasticity in our system, in that we can choose some parameters of the skeleton before compilation. We can choose the number of worker threads and the schedule used. The other main aspect we would like to control is what CPU core each thread executes on. This is called processor affinity or thread pinning. This was added to the skeleton by adding control variables to the bag of tasks, which control the CPU affinity of each thread. Each thread then simply sets it's affinity to the intended CPU, using the function in figure \ref{fig:implementation_thread_pinning}.
+We already have a sort of compile time plasticity in our system, in that we can choose some parameters of the skeleton before compilation. We can choose the number of worker threads and the schedule used. The other main aspect we would like to control is what CPU core each thread executes on. This is called processor affinity or thread pinning. This was added to the skeleton by adding control variables to the bag of tasks, which control the CPU affinity of each thread. Each thread then simply sets it's affinity to the intended CPU, using the function given in figure \ref{fig:implementation_thread_pinning}.
 
 To add runtime plasticity, we need to be able to change the implementation of the skeleton on the fly. The most straightforward method of achieving this is to stop all computation, terminate worker threads, update the parameters, and resume computation. In a basic skeleton, (as described at the end of section \ref{section:implementation_skeleton_foundation},) the main thread would block until the computation is complete, and then would join with each of the worker threads. We change this so that, instead of blocking, it monitors the computation and can instruct the threads to terminate at any point (using the afore mentioned bag of tasks described in section \ref{section:implementation_skeleton_foundation} for communication. This functionality is shown in figure \ref{fig:implementation_bot_comms}). An overview of the code used to implement the process can be seen in figure \ref{fig:implementation_main_thread_bot_comms}.
 
-When this switching is done and what the new parameters should be is another matter. A future system would calculate these things dependent upon the current state of the system, but for our preliminary investigation, we manually produce them in a synthetic environment, and communicate them to the main thread using the controller application, as described in section \ref{section:implementation_contention_aware_scheduling}.
+When this switching is done and what the new parameters should be is another matter. A future system would calculate these things taking into account the current state of the system, but for our preliminary investigation, we manually produce them in a synthetic environment, and communicate them to the main thread using the controller application, as described in section \ref{section:implementation_contention_aware_scheduling}.
 
 An obvious optimization of this system would be to modify the implementation without the need to terminate threads. This graceful switching of the implementation is left for future work, as this optimization is very complex, and would likely result in a marginal speedup proportional to the number of times we wish to change the implementation. We don't plan on switching implementations excessively, and any delay added could be overcome in testing by increasing the input size, and this project is only investigating if this approach to parallel programming is promising.
 
-Another optimization would involve modifying the static schedule. In our implementation, worker threads only check if they should terminate when they contact the bag for more tasks. Since the static schedule means they only contact the bag at the start of the computation, once they have started, they cannot be interrupted. To optimize this, and make a "plastic" static schedule, we could change the communication method so that worker threads can be interrupted. This hasn't been necessary for our current work, and as such has been left for future work.
+Another optimization would involve modifying the static schedule. In our implementation, worker threads only check if they should terminate when they contact the bag for more tasks. Since the static schedule means they only contact the bag at the start of the computation, once they have started, they cannot be interrupted. To optimize this, and make a "plastic" static schedule, we could change the communication method so that worker threads can be interrupted. For our later experiments, we hard-coded the switch, and the creation of a truly plastic static schedule has been left for future work.
 
 
 
@@ -235,7 +235,7 @@ Another optimization would involve modifying the static schedule. In our impleme
 	};
 	\end{lstlisting}
 
-	\caption{The inter-thread communication sections of the bag of tasks object. thread\_control provides a control variable for each thread, which it reads and reacts to. empty boolean is updated when the getTasks method is run, and is read periodically by the main thread to check if we have completed the computation.}
+	\caption{The inter-thread communication sections of the bag of tasks object. ``thread\_control'' provides a control variable for each thread, which the thread reads and reacts to. The ``empty'' boolean is updated when the getTasks method is run, and is read periodically by the main thread to check if we have completed the computation.}
 	\label{fig:implementation_bot_comms}
 \end{figure}
 
@@ -262,7 +262,7 @@ Another optimization would involve modifying the static schedule. In our impleme
 	}
 	\end{lstlisting}
 
-	\caption{Function for sticking a thread to a particular CPU core. Enables thread pinning plasticity for each thread.}
+	\caption{Function for sticking the current thread to a particular CPU core. Enables thread pinning plasticity.}
 	\label{fig:implementation_thread_pinning}
 \end{figure}
 
@@ -274,19 +274,19 @@ Another optimization would involve modifying the static schedule. In our impleme
 As detailed in section \ref{subsection:design_contention_aware_scheduling} of the design chapter, we will use a separate controller application to co-ordinate and control all programs using our library. This simplifies the implementation significantly, as it gives us a single point of contact, and a single place to calculate an optimal configuration for each program. To achieve this, we need our separate controller application, and two main additions to our system:
 
 \begin{itemize}
-	\item Inter-process communication
+	\item Inter-process communication (between the controller and each program)
 	\item Separate communication/control thread for each program
 \end{itemize}
 
-We use the ZeroMQ library to provide inter-process communication for it's speed, although it could be replaced with another method. It uses tcp sockets, and serves to simplify inter-process communication. Currently I have made simple use of ZeroMQ for now, and may optimize it in the future. For inter-thread communication (between a main thread and worker threads), we use shared memory, again for speed and simplicity.
+We use the ZeroMQ library to provide inter-process communication due to it's speed, although it could be replaced with another method. It uses tcp sockets, and serves to simplify inter-process communication. Currently I have made simple use of ZeroMQ for now, and may optimize it in the future. For inter-thread communication (between a main thread and worker threads), we use shared memory, again for speed.
 
-In order to communicate with the controller while a program is using our library, we utilize our main thread, which will manage the worker threads, switch implementations when instructed, and will clean up after we have finished our computation. The main thread communicates with the controller, registering with it when we start and de-registering once complete. During computation, it listens to messages from the controller using non-blocking communication. This allows us to also check if we are finished processing. For the initial registration and de-registration, we use blocking communication, as these messages are vital to the system. This system is illustrated at a high level in figure \ref{fig:controller_flowchart}, which expands upon figure \ref{fig:communication_structure}, showing implementation details. Figure \ref{fig:implementation_controller_comms} provides an example of the code used to perform this, and shows the use of the ZeroMQ library.
+In order to communicate with the controller while a program is using our library, we utilize the main thread, which will manage the worker threads, switch implementations when instructed, and will clean up after we have finished our computation. The main thread communicates with the controller, registering with it when we start and de-registering once complete. During computation, it listens to messages from the controller using non-blocking communication. This allows us to also check if we are finished processing the computation. For the initial registration and de-registration, we use blocking communication, as these messages are vital to the system. This system is illustrated at a high level in figure \ref{fig:controller_flowchart}, which expands upon figure \ref{fig:communication_structure}, showing implementation details. Figure \ref{fig:implementation_controller_comms} provides an example of the code used to perform this, and shows the use of the ZeroMQ library.
 
 
 
 \begin{figure}
 	\centering
-	\includegraphics[width=\textwidth]{graphics/controller_communication_flowchart.png}
+	\includegraphics[width=1.1\textwidth]{graphics/controller_communication_flowchart.png}
 	\caption{Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.}
 	\label{fig:controller_flowchart}
 \end{figure}
@@ -352,19 +352,19 @@ In order to communicate with the controller while a program is using our library
 
 \section{Testing Programs}
 
-To evaluate our library, we need programs to run and test the library under differing conditions, and we need programs to represent competing approaches to parallel programming. 
+To evaluate our library, we need programs to run and test the library under differing conditions, and we need programs to represent the competing approaches to parallel programming. 
 
 The main map-array test application is a tool which can read experiment parameters from a configuration file, and then run each experiment in sequence, recording various metrics for later analysis. This provides a convenient framework for carrying out experiments, and easily enables us to queue up a set of experiments. This is important because such experiments can take hours.
 
-For meaningful analysis, we need to synthesize a workload. One which we can scale, so we can test different sized tasks and varying task distributions. To do this we use the Collatz function to generate a CPU intensive workload. A constant starting number is used, and the sequence is repeated multiple times, to scale the workload.
+For meaningful analysis, we need to synthesize a workload. One which we can scale, so we can test different sized tasks and varying task distributions. To do this we use the Collatz function to generate a CPU intensive workload. A constant starting number is used, and the sequence is repeated multiple times, to scale accordingly.
 
 The comparison programs consist of a purely sequential implementation, and an OpenMP implementation. These were chosen because the former represents an implementation a traditional sequential programmer would use, and OpenMP because it is a popular method of parallelizing code, with a focus on performance and a simple interface. They are set up such that they can use the same synthetic workload we use for testing our library.
 
-The final tool we constructed for evaluation is a python program which was used to create graphs from the generated data.
+The final tool we constructed for evaluation is a set of python programs which create graphs from the generated data.
 
 
 
-\section{Supporting Code}
+\section{Utility Code}
 
 This project required complex code to achieve it's goals. In this section, we present other extracts of code, demonstrating it's complexity. 
 
@@ -417,7 +417,7 @@ Figure \ref{fig:implementation_execute_external_program} shows how multiple prog
 	}
 	\end{lstlisting}
 
-	\caption{A thread safe print function. Prints a variable number of and a variable type of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.}
+	\caption{A thread safe print function. Prints a variable type of and a variable number of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.}
 	\label{fig:implementation_thread_safe_print}
 \end{figure}
 

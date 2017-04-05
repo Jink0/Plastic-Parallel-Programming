@@ -62,8 +62,8 @@
 \@writefile{toc}{\contentsline {section}{\numberline {3.1}System description}{13}{section.3.1}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.1}Skeleton Foundation}{13}{subsection.3.1.1}}
 \newlabel{section:design_skeleton_foundation}{{3.1.1}{13}{Skeleton Foundation}{subsection.3.1.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces Taken from SkePU documentation: Examples of skeletons\relax }}{14}{figure.caption.4}}
-\newlabel{fig:skepu_skeletons}{{3.1}{14}{Taken from SkePU documentation: Examples of skeletons\relax }{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.1}{\ignorespaces Taken from SkePU documentation: Examples of patterns\relax }}{14}{figure.caption.4}}
+\newlabel{fig:skepu_skeletons}{{3.1}{14}{Taken from SkePU documentation: Examples of patterns\relax }{figure.caption.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.2}Adding Plasticity}{14}{subsection.3.1.2}}
 \newlabel{subsection:design_adding_plasticity}{{3.1.2}{14}{Adding Plasticity}{subsection.3.1.2}{}}
 \citation{lira}
@@ -74,8 +74,8 @@
 \newlabel{subsection:design_contention_aware_scheduling}{{3.1.3}{17}{Contention Aware Scheduling}{subsection.3.1.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3.4}{\ignorespaces High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }}{18}{figure.caption.6}}
 \newlabel{fig:communication_structure}{{3.4}{18}{High level communication model of the system, with an arbitrary number of programs, with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and it's worker threads.\relax }{figure.caption.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.)     Moving further in time, we have another decision point. This one is triggered by some change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues.     Program 2 then terminates, triggering another decision point, and the system again updates the configuration.\relax }}{19}{figure.caption.7}}
-\newlabel{fig:plastic_contention_aware_scheduling}{{3.5}{19}{An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.) \\ \\ Moving further in time, we have another decision point. This one is triggered by some change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues. \\ \\ Program 2 then terminates, triggering another decision point, and the system again updates the configuration.\relax }{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3.5}{\ignorespaces An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.)     Moving further in time, we have another decision point. This one is triggered by some other change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues.     Program 2 then terminates, triggering another decision point, and the system again updates the configuration.\relax }}{19}{figure.caption.7}}
+\newlabel{fig:plastic_contention_aware_scheduling}{{3.5}{19}{An example of how contention aware scheduling can be enhanced with plastic programming. We have two programs, represented by different colours. As time progresses, we see that when program 2 launches, we have a decision point. Here, the system decides how many resources to give each program and what implementation they should use, according to what is optimal (In this project, we do this manually.) \\ \\ Moving further in time, we have another decision point. This one is triggered by some other change in the machine, which means the optimal configuration has changed. So the system updates the configuration of each program, and continues. \\ \\ Program 2 then terminates, triggering another decision point, and the system again updates the configuration.\relax }{figure.caption.7}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1.4}Evaluation}{20}{subsection.3.1.4}}
 \@writefile{toc}{\contentsline {chapter}{\numberline {4}Implementation}{21}{chapter.4}}
 \@writefile{lof}{\addvspace {10\p@ }}
@@ -87,18 +87,18 @@
 \newlabel{fig:implementation_map_array_interface}{{4.1}{22}{Interface of our map\_array skeleton. The first four variables are the two input arrays, the function to apply, and the output array respectively. The output\_filename variable is the filename to record the metrics output in, and params sets up the initial parameters we will use. These last two are optional.\relax }{figure.caption.8}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces A usage example of map\_array, here we apply our user\_function to each element of input1. The size of our two input arrays need not match, but the size of the input1 and output arrays must.\relax }}{22}{figure.caption.9}}
 \newlabel{fig:implementation_map_array_usage_example}{{4.2}{22}{A usage example of map\_array, here we apply our user\_function to each element of input1. The size of our two input arrays need not match, but the size of the input1 and output arrays must.\relax }{figure.caption.9}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces Parallel portion of our map\_array skeleton. This figure shows how we use Pthreads to create our worker threads, providing each with access to it's own thread data object.\relax }}{24}{figure.caption.10}}
-\newlabel{fig:implementation_create_threads}{{4.3}{24}{Parallel portion of our map\_array skeleton. This figure shows how we use Pthreads to create our worker threads, providing each with access to it's own thread data object.\relax }{figure.caption.10}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Function which joins with the specified number of threads. Starts with the last thread to be created, so that if we wish to terminate threads, the threads which stay executing preserve their logical ordering.\relax }}{25}{figure.caption.11}}
-\newlabel{fig:implementation_join_threads}{{4.4}{25}{Function which joins with the specified number of threads. Starts with the last thread to be created, so that if we wish to terminate threads, the threads which stay executing preserve their logical ordering.\relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces The parallel portion of our map\_array skeleton. This figure shows how we use Pthreads to create our worker threads, providing each with access to it's own thread data object.\relax }}{24}{figure.caption.10}}
+\newlabel{fig:implementation_create_threads}{{4.3}{24}{The parallel portion of our map\_array skeleton. This figure shows how we use Pthreads to create our worker threads, providing each with access to it's own thread data object.\relax }{figure.caption.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Function which joins with the specified number of threads. Starts with the last thread to be created, so that if we wish to terminate threads, the threads which remain executing preserve their logical ordering.\relax }}{25}{figure.caption.11}}
+\newlabel{fig:implementation_join_threads}{{4.4}{25}{Function which joins with the specified number of threads. Starts with the last thread to be created, so that if we wish to terminate threads, the threads which remain executing preserve their logical ordering.\relax }{figure.caption.11}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4.2}Adding Plasticity}{25}{section.4.2}}
 \newlabel{section:implementation_adding_plasticity}{{4.2}{25}{Adding Plasticity}{section.4.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces An example of how the main thread handles a switch in the implementation.\relax }}{27}{figure.caption.12}}
 \newlabel{fig:implementation_main_thread_bot_comms}{{4.5}{27}{An example of how the main thread handles a switch in the implementation.\relax }{figure.caption.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces The inter-thread communication sections of the bag of tasks object. thread\_control provides a control variable for each thread, which it reads and reacts to. empty boolean is updated when the getTasks method is run, and is read periodically by the main thread to check if we have completed the computation.\relax }}{28}{figure.caption.13}}
-\newlabel{fig:implementation_bot_comms}{{4.6}{28}{The inter-thread communication sections of the bag of tasks object. thread\_control provides a control variable for each thread, which it reads and reacts to. empty boolean is updated when the getTasks method is run, and is read periodically by the main thread to check if we have completed the computation.\relax }{figure.caption.13}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces Function for sticking a thread to a particular CPU core. Enables thread pinning plasticity for each thread.\relax }}{29}{figure.caption.14}}
-\newlabel{fig:implementation_thread_pinning}{{4.7}{29}{Function for sticking a thread to a particular CPU core. Enables thread pinning plasticity for each thread.\relax }{figure.caption.14}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces The inter-thread communication sections of the bag of tasks object. ``thread\_control'' provides a control variable for each thread, which the thread reads and reacts to. The ``empty'' boolean is updated when the getTasks method is run, and is read periodically by the main thread to check if we have completed the computation.\relax }}{28}{figure.caption.13}}
+\newlabel{fig:implementation_bot_comms}{{4.6}{28}{The inter-thread communication sections of the bag of tasks object. ``thread\_control'' provides a control variable for each thread, which the thread reads and reacts to. The ``empty'' boolean is updated when the getTasks method is run, and is read periodically by the main thread to check if we have completed the computation.\relax }{figure.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces Function for sticking the current thread to a particular CPU core. Enables thread pinning plasticity.\relax }}{29}{figure.caption.14}}
+\newlabel{fig:implementation_thread_pinning}{{4.7}{29}{Function for sticking the current thread to a particular CPU core. Enables thread pinning plasticity.\relax }{figure.caption.14}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4.3}Contention Aware Scheduling}{30}{section.4.3}}
 \newlabel{section:implementation_contention_aware_scheduling}{{4.3}{30}{Contention Aware Scheduling}{section.4.3}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4.8}{\ignorespaces Communication model for communications between applications and the controller. Thin lines represent program flow, thick lines represent inter-process messages.\relax }}{31}{figure.caption.15}}
@@ -106,9 +106,9 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {4.9}{\ignorespaces An example of how the main thread implements a change to the parameters received from the controller. Demonstrates the usage of the ZeroMQ library to provide inter-process communication with the controller.\relax }}{32}{figure.caption.16}}
 \newlabel{fig:implementation_controller_comms}{{4.9}{32}{An example of how the main thread implements a change to the parameters received from the controller. Demonstrates the usage of the ZeroMQ library to provide inter-process communication with the controller.\relax }{figure.caption.16}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {4.4}Testing Programs}{33}{section.4.4}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.5}Supporting Code}{33}{section.4.5}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.10}{\ignorespaces A thread safe print function. Prints a variable number of and a variable type of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.\relax }}{34}{figure.caption.17}}
-\newlabel{fig:implementation_thread_safe_print}{{4.10}{34}{A thread safe print function. Prints a variable number of and a variable type of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.\relax }{figure.caption.17}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.5}Utility Code}{33}{section.4.5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.10}{\ignorespaces A thread safe print function. Prints a variable type of and a variable number of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.\relax }}{34}{figure.caption.17}}
+\newlabel{fig:implementation_thread_safe_print}{{4.10}{34}{A thread safe print function. Prints a variable type of and a variable number of arguments to an output stream. Implementation is split accross .hpp and .cpp files, as the need for templates requires that certain functions must be defined in the header, so the compiler can see them during linking.\relax }{figure.caption.17}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4.11}{\ignorespaces A function for executing an external program, used in the setup for experiment 5.\relax }}{35}{figure.caption.18}}
 \newlabel{fig:implementation_execute_external_program}{{4.11}{35}{A function for executing an external program, used in the setup for experiment 5.\relax }{figure.caption.18}{}}
 \@writefile{toc}{\contentsline {chapter}{\numberline {5}Experimental Methodology And Program}{36}{chapter.5}}
@@ -126,45 +126,44 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2.4}Experiment 4 - Schedule Choice Importance}{41}{subsection.5.2.4}}
 \@writefile{lot}{\contentsline {table}{\numberline {5.4}{\ignorespaces Experiment 4 Parameters\relax }}{41}{table.caption.22}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {5.2.5}Experiment 5 - Absolute Multiprogramming Performance}{42}{subsection.5.2.5}}
-\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Experiment 5 Parameters\relax }}{43}{table.caption.23}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {6}Results And Conclusion}{44}{chapter.6}}
+\@writefile{lot}{\contentsline {table}{\numberline {5.5}{\ignorespaces Experiment 5 Parameters\relax }}{42}{table.caption.23}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {6}Results}{43}{chapter.6}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chapter:results_and_conclusion}{{6}{44}{Results And Conclusion}{chapter.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.1}Experiment Results}{44}{section.6.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.1}Experiment 1 - Metrics Collection Overhead}{44}{subsection.6.1.1}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces Experiment 1 results\relax }}{45}{figure.caption.24}}
-\newlabel{fig:results_ex1}{{6.1}{45}{Experiment 1 results\relax }{figure.caption.24}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Experiment 1 Results Analysis\relax }}{45}{table.caption.25}}
-\newlabel{table:results_experiment_1_results_analysis}{{6.1}{45}{Experiment 1 Results Analysis\relax }{table.caption.25}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Experiment 1 Parameters\relax }}{45}{table.caption.26}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.2}Experiment 2 - Absolute Performance}{46}{subsection.6.1.2}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Experiment 2 Parameters\relax }}{46}{table.caption.28}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces Experiment 2 results\relax }}{47}{figure.caption.27}}
-\newlabel{fig:results_ex2}{{6.2}{47}{Experiment 2 results\relax }{figure.caption.27}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{48}{subsection.6.1.3}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.3}{\ignorespaces Experiment 3 results\relax }}{49}{figure.caption.29}}
-\newlabel{fig:results_ex3}{{6.3}{49}{Experiment 3 results\relax }{figure.caption.29}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Experiment 3 Results Analysis\relax }}{49}{table.caption.30}}
-\newlabel{table:results_experiment_3_results_analysis}{{6.4}{49}{Experiment 3 Results Analysis\relax }{table.caption.30}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.5}{\ignorespaces Experiment 3 Parameters\relax }}{49}{table.caption.31}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.4}Experiment 4 - Schedule Choice Importance}{50}{subsection.6.1.4}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.6}{\ignorespaces Experiment 4 Parameters\relax }}{50}{table.caption.33}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.4}{\ignorespaces Experiment 4 results\relax }}{51}{figure.caption.32}}
-\newlabel{fig:results_ex4}{{6.4}{51}{Experiment 4 results\relax }{figure.caption.32}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.5}Experiment 5 - Absolute Multiprogramming Performance}{52}{subsection.6.1.5}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6.5}{\ignorespaces Experiment 5 results\relax }}{53}{figure.caption.34}}
-\newlabel{fig:results_ex5}{{6.5}{53}{Experiment 5 results\relax }{figure.caption.34}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {6.7}{\ignorespaces Experiment 5 Parameters\relax }}{54}{table.caption.35}}
-\@writefile{toc}{\contentsline {section}{\numberline {6.2}Conclusion}{54}{section.6.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2.1}Personal Reflection}{54}{subsection.6.2.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {6.2.2}Overall Conclusion}{55}{subsection.6.2.2}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {7}Future Work}{56}{chapter.7}}
+\newlabel{chapter:results}{{6}{43}{Results}{chapter.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.1}Experiment Results}{43}{section.6.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.1}Experiment 1 - Metrics Collection Overhead}{43}{subsection.6.1.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.1}{\ignorespaces Experiment 1 results\relax }}{44}{figure.caption.24}}
+\newlabel{fig:results_ex1}{{6.1}{44}{Experiment 1 results\relax }{figure.caption.24}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.1}{\ignorespaces Experiment 1 Results Analysis\relax }}{44}{table.caption.25}}
+\newlabel{table:results_experiment_1_results_analysis}{{6.1}{44}{Experiment 1 Results Analysis\relax }{table.caption.25}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.2}{\ignorespaces Experiment 1 Parameters\relax }}{44}{table.caption.26}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.2}Experiment 2 - Absolute Performance}{45}{subsection.6.1.2}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.3}{\ignorespaces Experiment 2 Parameters\relax }}{45}{table.caption.28}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.2}{\ignorespaces Experiment 2 results\relax }}{46}{figure.caption.27}}
+\newlabel{fig:results_ex2}{{6.2}{46}{Experiment 2 results\relax }{figure.caption.27}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{47}{subsection.6.1.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.3}{\ignorespaces Experiment 3 results\relax }}{48}{figure.caption.29}}
+\newlabel{fig:results_ex3}{{6.3}{48}{Experiment 3 results\relax }{figure.caption.29}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.4}{\ignorespaces Experiment 3 Results Analysis\relax }}{48}{table.caption.30}}
+\newlabel{table:results_experiment_3_results_analysis}{{6.4}{48}{Experiment 3 Results Analysis\relax }{table.caption.30}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.5}{\ignorespaces Experiment 3 Parameters\relax }}{48}{table.caption.31}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.4}Experiment 4 - Schedule Choice Importance}{49}{subsection.6.1.4}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.6}{\ignorespaces Experiment 4 Parameters\relax }}{49}{table.caption.33}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.4}{\ignorespaces Experiment 4 results\relax }}{50}{figure.caption.32}}
+\newlabel{fig:results_ex4}{{6.4}{50}{Experiment 4 results\relax }{figure.caption.32}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1.5}Experiment 5 - Absolute Multiprogramming Performance}{51}{subsection.6.1.5}}
+\@writefile{lot}{\contentsline {table}{\numberline {6.7}{\ignorespaces Experiment 5 Parameters\relax }}{51}{table.caption.35}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6.5}{\ignorespaces Experiment 5 results\relax }}{52}{figure.caption.34}}
+\newlabel{fig:results_ex5}{{6.5}{52}{Experiment 5 results\relax }{figure.caption.34}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6.2}Conclusion}{53}{section.6.2}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {7}Future Work And Conclusions}{54}{chapter.7}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
-\newlabel{chapter:future_work}{{7}{56}{Future Work}{chapter.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7.1}Future Development}{56}{section.7.1}}
+\newlabel{chapter:future_work_and_conclusions}{{7}{54}{Future Work And Conclusions}{chapter.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7.1}Future Development}{54}{section.7.1}}
 \citation{datacentres}
+\@writefile{toc}{\contentsline {subsection}{\numberline {7.1.1}Personal Reflection}{56}{subsection.7.1.1}}
 \bibstyle{acm}
 \bibdata{references}
 \bibcite{free_lunch}{1}
@@ -178,7 +177,7 @@
 \bibcite{openmp_home}{9}
 \bibcite{datacentres}{10}
 \bibcite{parallel_challenges}{11}
-\@writefile{toc}{\contentsline {chapter}{\numberline {8}Bibliography}{59}{chapter.8}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {8}Bibliography}{57}{chapter.8}}
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
 \bibcite{sequential_to_parallel}{12}

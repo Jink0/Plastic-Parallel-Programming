@@ -4,43 +4,23 @@
 %%
 \begin{table}
 \centering
- \begin{tabular}{|c|c|}
+ \begin{tabular}{|c|c|c|}
   \hline
-  Program 1 & \\
+  Program & Program 1 & Program 2 \\
   \hline
-  Number of tasks & 30,000 \\
+  Number of tasks & 30,000 & 15,000 \\
   \hline
-  Task Grain & 10,000,000 Repeats \\
+  Task Grain & 10,000,000 Repeats & 10,000,000 Repeats \\
   \hline
-  Task Grain Distribution & Uniform \\
+  Task Grain Distribution & Uniform & Uniform \\
   \hline
-  Number of CPU cores & 4 \\
+  Number of CPU cores & 4 & 4 \\
   \hline
-  Number of threads used & \specialcell{4 \\ 4, then 2, then 4} \\
+  Number of threads used & \specialcell{4 \\ 4, then 2, then 4} & \specialcell{4 \\ 2} \\
   \hline
-  Thread pinning & \specialcell{Anarchy, \\ Uniform} \\
+  Thread pinning & \specialcell{Anarchy, \\ Uniform} & \specialcell{Anarchy, \\ Uniform} \\
   \hline
-  Schedule & Dynamic Individual \\
-  \hline
- \end{tabular}
-
- \begin{tabular}{|c|c|}
-  \hline
-  Program 2 & \\
-  \hline
-  Number of tasks & 15,000 \\
-  \hline
-  Task Grain & 10,000,000 Repeats \\
-  \hline
-  Task Grain Distribution & Uniform \\
-  \hline
-  Number of CPU cores & 4 \\
-  \hline
-  Number of threads used & \specialcell{4 \\ 2} \\
-  \hline
-  Thread pinning & \specialcell{Anarchy, \\ Uniform} \\
-  \hline
-  Schedule & Dynamic Individual \\
+  Schedule & Dynamic Individual & Dynamic Individual \\
   \hline
  \end{tabular}
 \caption{Experiment 5 Parameters}

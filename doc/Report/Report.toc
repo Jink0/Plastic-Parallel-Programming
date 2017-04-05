@@ -16,7 +16,7 @@
 \contentsline {section}{\numberline {4.2}Adding Plasticity}{25}{section.4.2}
 \contentsline {section}{\numberline {4.3}Contention Aware Scheduling}{30}{section.4.3}
 \contentsline {section}{\numberline {4.4}Testing Programs}{33}{section.4.4}
-\contentsline {section}{\numberline {4.5}Supporting Code}{33}{section.4.5}
+\contentsline {section}{\numberline {4.5}Utility Code}{33}{section.4.5}
 \contentsline {chapter}{\numberline {5}Experimental Methodology And Program}{36}{chapter.5}
 \contentsline {section}{\numberline {5.1}Evaluation Methodology}{36}{section.5.1}
 \contentsline {section}{\numberline {5.2}Programme of Experiments}{37}{section.5.2}
@@ -25,16 +25,15 @@
 \contentsline {subsection}{\numberline {5.2.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{40}{subsection.5.2.3}
 \contentsline {subsection}{\numberline {5.2.4}Experiment 4 - Schedule Choice Importance}{41}{subsection.5.2.4}
 \contentsline {subsection}{\numberline {5.2.5}Experiment 5 - Absolute Multiprogramming Performance}{42}{subsection.5.2.5}
-\contentsline {chapter}{\numberline {6}Results And Conclusion}{44}{chapter.6}
-\contentsline {section}{\numberline {6.1}Experiment Results}{44}{section.6.1}
-\contentsline {subsection}{\numberline {6.1.1}Experiment 1 - Metrics Collection Overhead}{44}{subsection.6.1.1}
-\contentsline {subsection}{\numberline {6.1.2}Experiment 2 - Absolute Performance}{46}{subsection.6.1.2}
-\contentsline {subsection}{\numberline {6.1.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{48}{subsection.6.1.3}
-\contentsline {subsection}{\numberline {6.1.4}Experiment 4 - Schedule Choice Importance}{50}{subsection.6.1.4}
-\contentsline {subsection}{\numberline {6.1.5}Experiment 5 - Absolute Multiprogramming Performance}{52}{subsection.6.1.5}
-\contentsline {section}{\numberline {6.2}Conclusion}{54}{section.6.2}
-\contentsline {subsection}{\numberline {6.2.1}Personal Reflection}{54}{subsection.6.2.1}
-\contentsline {subsection}{\numberline {6.2.2}Overall Conclusion}{55}{subsection.6.2.2}
-\contentsline {chapter}{\numberline {7}Future Work}{56}{chapter.7}
-\contentsline {section}{\numberline {7.1}Future Development}{56}{section.7.1}
-\contentsline {chapter}{\numberline {8}Bibliography}{59}{chapter.8}
+\contentsline {chapter}{\numberline {6}Results}{43}{chapter.6}
+\contentsline {section}{\numberline {6.1}Experiment Results}{43}{section.6.1}
+\contentsline {subsection}{\numberline {6.1.1}Experiment 1 - Metrics Collection Overhead}{43}{subsection.6.1.1}
+\contentsline {subsection}{\numberline {6.1.2}Experiment 2 - Absolute Performance}{45}{subsection.6.1.2}
+\contentsline {subsection}{\numberline {6.1.3}Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}{47}{subsection.6.1.3}
+\contentsline {subsection}{\numberline {6.1.4}Experiment 4 - Schedule Choice Importance}{49}{subsection.6.1.4}
+\contentsline {subsection}{\numberline {6.1.5}Experiment 5 - Absolute Multiprogramming Performance}{51}{subsection.6.1.5}
+\contentsline {section}{\numberline {6.2}Conclusion}{53}{section.6.2}
+\contentsline {chapter}{\numberline {7}Future Work And Conclusions}{54}{chapter.7}
+\contentsline {section}{\numberline {7.1}Future Development}{54}{section.7.1}
+\contentsline {subsection}{\numberline {7.1.1}Personal Reflection}{56}{subsection.7.1.1}
+\contentsline {chapter}{\numberline {8}Bibliography}{57}{chapter.8}

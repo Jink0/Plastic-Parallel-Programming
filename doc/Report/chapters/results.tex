@@ -10,7 +10,7 @@ In this chapter of the report, we discuss the results of the experiments and the
 
 \subsection{Experiment 1 - Metrics Collection Overhead}
 
-In experiment 1, we investigated our method for collecting metrics about the system adds any significant overhead that we must take into account in assessing further experiments. Looking at the following results, particularly the percentage of total runtime, the performance impact of metrics collection isn't too severe. Still, detailed metrics were disabled for future experiments.
+In experiment 1, we investigated our method for collecting metrics, to see if it adds any significant overhead that we must take into account in assessing further experiments. Looking at the following results, particularly the percentage of total runtime, the performance impact of metrics collection isn't too severe. Still, detailed metrics were disabled for future experiments.
 
 Of course, in a production system, we wouldn't need any metrics collection.
 
@@ -41,9 +41,7 @@ Of course, in a production system, we wouldn't need any metrics collection.
 
 \subsection{Experiment 2 - Absolute Performance}
 
-In this experiment, the total run times of three implementations are measured. One sequential implementation, a standard modern parallel implementation utilizing OpenMP, and our plastic implementation of map\_array. Our plastic implementation is running with no plasticity for the moment, and with no messaging functionality at all. This is so it is comparable to a standard parallel implementation, since the purpose of this experiment is to test our baseline performance.
-
-Both OpenMP and our implementation are using a dynamic chunks schedule, with a chunk size of 1000.
+In this experiment, the total run times of three implementations are measured. One sequential implementation, a standard modern parallel implementation utilizing OpenMP, and our implementation of map\_array. Our implementation is running with no plasticity for the moment, and with no messaging functionality at all. This is so it is comparable to a standard parallel implementation, since the purpose of this experiment is to test our baseline performance.
 
 Figure \ref{fig:results_ex2} shows us that with a single thread, our performance is similar to a sequential implementation, and as we increase the thread count, our performance scales accordingly. Overall, this shows that our implementation performs on a par with current parallel implementations, providing a good baseline performance. 
 
@@ -114,7 +112,7 @@ This is reflected in the results, where we see the dynamic schedules perform alm
 
 There is a small difference between our dynamic chunks and dynamic individual schedules. With a chunk size of 1,000, our dynamic individual schedule accesses the bag of tasks 1,000 times as often. Considering that it is implemented in shared memory, it makes sense that this penalty isn't large. If retrieving tasks was more costly, it would affect the dynamic individual schedule proportionately more than the dynamic chunks schedule. We also have a variety of task sizes, meaning the time between bag accesses varies. In turn, this means threads are less likely to contend with each other when attempting to obtain the mutex to access the bag.
 
-In our plastic schedule, we change from static to dynamic\_chunks after 5 seconds. In these first 5 seconds, all threads will still have tasks to process, meaning we still have the maximum throughput. Since we change to a dynamic schedule before we have any down time, we match the performance of a constant dynamic schedule.
+In our plastic schedule, we change from static to dynamic\_chunks after 5 seconds. In these first 5 seconds, all threads will still have tasks to process, meaning we still have maximum throughput. Since we change to a dynamic schedule before we have any down time, we match the performance of a constant dynamic schedule.
 
 
 
@@ -131,11 +129,11 @@ In our plastic schedule, we change from static to dynamic\_chunks after 5 second
 
 \subsection{Experiment 5 - Absolute Multiprogramming Performance}
 
-The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We compare two situations, the first, named anarchy, is where both programs are run with four threads with no plasticity or contention aware scheduling. This is a typical situation for a multiprogramming system. The second situation, is using plasticity and contention aware scheduling, where we start with four threads in program 1, once program 2 starts we reduce this to two, and assign two threads to program 2. Once program 2 is finished, we switch back to using four threads in program 1.
+The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We compare two situations, the first, named anarchy, is where both programs are run with four threads with no plasticity or contention aware scheduling. This is a typical situation for a multiprogramming system. In the second situation, we use plasticity and contention aware scheduling, where we start with four threads in program 1, once program 2 starts we reduce this to two, and assign two threads to program 2. Once program 2 is finished, we switch back to using four threads in program 1.
 
 For a further investigation into the performance of our library, on a hunch, we also ran the experiment with different message checking intervals. This means that each program's main thread sleeps for Nms in between checks for whether the computation is complete or if it has any messages.
 
-Looking at the results, our library is consistently faster than anarchy, which is a promising sign. We also significantly reduce the variance using our library, possibly due to the reduced thread switching. Comparing the different sleep times, we see that significant improvements can be made, if we tune this variable correctly. Since we are reducing some overhead by making this interval longer, (with the compromise of a slower reaction speed to messages), we could reason that if the library was more sophisticated, and if we thoroughly optimized our code, we may see substantial performance gains.
+Looking at the results, our library is consistently faster than anarchy, which is a promising sign. We also significantly reduce the variance using our library, possibly due to the reduced thread switching. Comparing the different sleep times, we see that significant improvements can be made, if we tune this variable correctly. Since we are reducing some overhead by making this interval longer, (with the compromise of a slower reaction speed to messages), we could reason that if the library were more sophisticated, and if we thoroughly optimized our code, we may see substantial performance gains.
 
 There is a strange performance gain going from a 20ms checking interval to a 100ms interval. While unusual, it held for the 50 repeats, so it is not an isolated case. Due to time constraints, this could not be investigated further, but this could be a possibility for the future work in the next year of this MInf project.
 
@@ -153,22 +151,6 @@ There is a strange performance gain going from a 20ms checking interval to a 100
 
 
 \section{Conclusion}
-
-
-
-\subsection{Personal Reflection}
-
-In this section we provide a personal reflection on the first year of this project, and thoughts for the future.
-
-Working on this project, I have learned much about parallel programming, C++ programming, and managing a large software engineering project. I had not done any of these things prior to this project. Overall I'm pleased with how this project turned out. I've completed all the goals I set at the start of the year, and then some.
-
-Looking back, I wish I had developed more of the report alongside the development of the project, and that I had provided more attention to developing more sophisticated testing software. Whilst I was able to adapt the current system to my needs, it could be easier to perform experiments. As such, this is definitely something I will improve in the next year of this MInf project.
-
-The outcome of this report has provided exciting results for next year, and I'm looking forward to implementing new features, and particularly to further experiments investigating the system. I would also like to again learn new things, particularly programming for GPUs, and more advanced inter-process communication. Hopefully I can improve this project further, and leave an easy to extend code base for future students.
-
-
-
-\subsection{Overall Conclusion}
 
 In this section of the report, we discuss the implications of each experiment, and what they mean for the future of the project. 
 

@@ -1,6 +1,6 @@
 %!TEX root = ../Report.tex
 
-This chapter discusses further work that could be done to advance this project. This project has a large scope for development, and as such, we will select a subset of tasks to focus on in the second year. We also discuss possibilities for future applications, and the library's utility beyond simply investigating the nature of the problem.
+This chapter discusses further work that could be done to advance this project, and a personal reflection upon the project as a whole. This project has a large scope for development, and as such, we will select a subset of tasks to focus on in the second year. We also discuss possibilities for future applications, and the library's utility beyond simply investigating the nature of the problem.
 
 
 
@@ -19,6 +19,7 @@ Next year:
 	\item Currently, we only have the map array pattern. More patterns could be implemented, as a real-world version of our library would provide multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation).
 	\item Support for different parallel programming backends, possibly utilizing more exotic hardware such as GPUs 
 	\item Implementing some algorithm for automatic parameter tuning. It's feasible that the system could assess both the tasks presented and the environment (e.g. the particulars of the machine, currently running applications), and automatically allocate the resources of the machine so we perform in the most efficient manner.
+	\item Moving away from the virtual machine for experimentation. The VM may introduce variance into our experiments, an limits us to the experiments we can perform. For example, we saw unusually large runtimes with large input arrays. this is because the array was larger than the memory assigned to the VM, meaning it was not entirely kept within memory.
 \end{itemize}
 
 Follow on work:
@@ -29,3 +30,15 @@ Follow on work:
 	\item We currently optimize our library for performance, however the system may also be useful in non-performance orientated applications, for example, we may want to optimize energy usage for mobile applications. We could also optimize for a mix of performance and energy, which, with studies reporting that \textit{the total cost of a server will be primarily a function of the power it consumes} \cite{datacentres}, would be useful in server farms or data centres.
 	\item In deciding what resources to allocate to which program, we could implement a priority system. Both an internal priority system and a user controlled priority system would be useful. In an internal priority system, we would asses attributes of each program, and possibly assign more resources to one than the other (e.g. if one program scales better than another, we may decide to grant it extra CPU cores until it is complete.) A user controlled priority system would deal with cases where some programs are more or less important compared to other programs to the user. We could allow the user to manually control priorities, or possibly even the distribution of resources. 
 \end{itemize}
+
+
+
+\subsection{Personal Reflection}
+
+In this section we provide a personal reflection on the first year of this project, and thoughts for the future.
+
+Working on this project, I have learned much about parallel programming, C++ programming, and managing a large software engineering project. I had not done any of these things prior to this project. Overall I'm pleased with how this project turned out. I've completed all the goals I set at the start of the year, and then some.
+
+Looking back, I wish I had developed more of the report alongside the development of the project, and that I had provided more attention to developing more sophisticated testing software. Whilst I was able to adapt the current system to my needs, it could be easier to perform experiments. As such, this is definitely something I will improve in the next year of this MInf project.
+
+The outcome of this report has provided exciting results for next year, and I'm looking forward to implementing new features, and particularly to further experiments investigating the system. I would also like to again learn new things, particularly programming for GPUs, and more advanced inter-process communication. Hopefully I can improve this project further, and leave an easy to extend code base for future students.
