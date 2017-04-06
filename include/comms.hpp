@@ -7,8 +7,9 @@ using namespace std;
 using namespace zmq;
 
 #define DEFAULT_PORT 5555
-
 #define MAX_NUM_THREADS 128
+
+
 
 // Structures that are used to pass messages between the controller and applications.
 
@@ -36,6 +37,8 @@ struct settings {
     Schedule schedule;
 };
 
+
+
 // Message headers
 #define CON_REP  0
 #define CON_UPDT 1
@@ -51,6 +54,8 @@ struct message {
 	struct settings settings;
 };
 
+
+
 // Receive 0MQ message from socket and convert into a message struct.
 static struct message m_recv(socket_t &socket) {
 
@@ -59,6 +64,8 @@ static struct message m_recv(socket_t &socket) {
 
     return *(static_cast<struct message*>(msg.data()));
 }
+
+
 
 // Receive 0MQ message from socket and convert into a message struct.
 static struct message m_no_block_recv(socket_t &socket) {
@@ -77,6 +84,8 @@ static struct message m_no_block_recv(socket_t &socket) {
 
     return *(static_cast<struct message*>(msg.data()));
 }
+
+
 
 // Send a message struct.
 static bool m_send(socket_t &socket, const struct message &to_send) {

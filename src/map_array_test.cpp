@@ -92,7 +92,7 @@ deque<eParameters> processConfig(char *argv[])
     pt::ptree propTree;
     pt::ini_parser::read_ini(argv[1], propTree);
 
-    // Retreive number of experiments from property tree.
+    // Retrieve number of experiments from property tree.
     uint32_t num_experiments = propTree.get<uint32_t>(pt::ptree::path_type("PARAMS/numExperiments", '/'));
 
     // Get the number of repeats to do.
@@ -292,7 +292,7 @@ int main(int argc, char *argv[])
 {
     if (argc != 2)
     {
-        print("\nInvalid command line arguemnts!\n\n");
+        print("\nInvalid command line arguments!\n\n");
         exit(EXIT_FAILURE);
     }
 
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
     // Record filepath of the config file before we move so we can copy it later.
     path p(current_path() /= argv[1]);
 
-    // Create a folder for this run's output logs, and change the current working directory to it.
+    // Create a folder for this runs output logs, and change the current working directory to it.
     createFolderAndMove();
 
     // Copy our config file so we know what parameters were used.
@@ -323,11 +323,15 @@ int main(int argc, char *argv[])
         // Generate data for vectors.
         for (uint32_t i = 0; i < as; i++) 
         {
-            // input1[i] = (double) 1. / i;
-            // input2[i] = (double) 1. / i;
-            // input1[i] = (int) i + 1;
-            // input2[i] = (int) i + 1;
-            input1[i] = 10000;
+            if (i < (as / 4)) 
+            {
+                input1[i] = 10000000;
+            } 
+            else 
+            {
+                input1[i] = 100000;
+            }
+
             input2[i] = 87736;
         }
 
@@ -337,15 +341,13 @@ int main(int argc, char *argv[])
         // Start mapArray.
         map_array(input1, input2, collatz, output, exParamsVector[i].output_filename, exParamsVector[i].params);
 
-        for (uint32_t i = 0; i < as; i++) 
-        {
-            //print(output[i]);
-        }
+        // for (uint32_t i = 0; i < as; i++) 
+        // {
+            // print(output[i]);
+        // }
 
         print("\n\n");
     }
-
-    //sleep(10);
 
     return 0;
 }

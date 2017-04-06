@@ -75,7 +75,7 @@ double read_sequential(double *arr, int min, int max)
 
 
 /*
- * Sequantially read array, however get random numbers to mimic times for random access.
+ * Sequentially read array, however get random numbers to mimic times for random access.
  */
 
 double read_sequential_adjusted(double *arr, int min, int max)

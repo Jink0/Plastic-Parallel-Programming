@@ -31,12 +31,14 @@ using namespace std;
  * you cannot separate the definition of a template class from its declaration and put it inside a .cpp file.
  */
 
+
+
 // Parameters with default values.
 struct parameters 
 {
     parameters(): task_dist(1), schedule(Tapered) 
     { 
-      // Retreive the number of CPUs using the boost library.
+      // Retrieve the number of CPUs using the boost library.
       uint32_t num_threads = boost::thread::hardware_concurrency();
 
       for (uint32_t i = 0; i < num_threads; i++)
@@ -136,7 +138,7 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
 
 
 
-// Thread control enum. threads either run (execute), change strategies (update), or stop (terminte).
+// Thread control enum. threads either run (execute), change strategies (update), or stop (terminate).
 enum Thread_Control {Execute, Update, Terminate};
 
 
@@ -285,7 +287,7 @@ struct thread_data
   // CPU for thread to run on.
   uint32_t cpu_affinity;
 
-  // Starting chunk size of tasks to retreive.
+  // Starting chunk size of tasks to retrieve.
   uint32_t chunk_size;
 
   // Check for tapered schedule.

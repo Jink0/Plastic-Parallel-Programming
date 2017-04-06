@@ -8,11 +8,15 @@
  * Non-Templated print functions. Cannot be defined in header file like the templated functions.
  */
 
+
+
 // With nothing to add to the output stream, just return the stream.
 std::ostream& print_rec(std::ostream& outS)
 {
     return outS;
 }
+
+
 
 // Retrieve the mutex. Must be done using this non-templated function, so that we have one mutex across all 
 // instantiations of the templated function.

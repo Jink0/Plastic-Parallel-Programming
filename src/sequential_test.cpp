@@ -1,13 +1,11 @@
 #include <sequential_test.hpp>
 
-// Workloads for workload generation
-#include "workloads.hpp"
-
+#include "workloads.hpp" // Workloads for workload generation
 #include "metrics.hpp"
-
 #include "utils.hpp"
-
 #include <stdint.h>
+
+
 
 int main(int argc, char *argv[])
 {
@@ -24,10 +22,6 @@ int main(int argc, char *argv[])
     // Generate data for vectors.
     for (uint32_t i = 0; i < as; i++) 
     {
-        // input1[i] = (double) 1. / i;
-        // input2[i] = (double) 1. / i;
-        // input1[i] = (int) i + 1;
-        // input2[i] = (int) i + 1;
         input1[i] = 10000;
         input2[i] = 87736;
     }
@@ -47,10 +41,10 @@ int main(int argc, char *argv[])
 
     metrics_thread_finished(0);
 
-    for (uint32_t i = 0; i < as; i++) 
-    {
-        //print(output.at(i));
-    }
+    // for (uint32_t i = 0; i < as; i++) 
+    // {
+        // print(output.at(i));
+    // }
 
     metrics_finalise();
 

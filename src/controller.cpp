@@ -10,9 +10,13 @@
 using namespace std;
 using namespace zmq;
 
+
+
 enum Message_type {
     Sending, Receving
 };
+
+
 
 void message_printout(Message_type type, struct message mess) {
     switch (type) {
@@ -41,6 +45,52 @@ void message_printout(Message_type type, struct message mess) {
 
     cout << endl << endl;
 }
+
+
+
+static int exec_prog(const char **args) 
+{
+        pid_t pid;
+        int   status, timeout;
+
+        if ((pid = fork()) == 0) 
+        {
+            if (execve(args[0], (char **)args , NULL) == -1) 
+            {
+                perror("fork() failed [%m]");
+
+                return -1;
+            }
+        }
+
+
+        timeout = 1000;
+
+        while (waitpid(pid , &status , WNOHANG) == 0) 
+        {
+                if (--timeout < 0) 
+                {
+                        perror("timeout");
+
+                        return -1;
+                }
+
+                sleep(1);
+        }
+
+        // printf("%s WEXITSTATUS %d WIFEXITED %d [status %d]\n\n", args[0], WEXITSTATUS(status), WIFEXITED(status), status);
+
+        // if (WIFEXITED(status) != 1 || WEXITSTATUS(status) != 0) 
+        // {
+        //         perror("%s failed, halt system");
+
+        //         return -1;
+        // }
+
+        return 0;
+}
+
+
 
 int main () {
     //  Prepare our context and socket
