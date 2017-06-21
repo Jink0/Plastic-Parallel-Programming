@@ -25,7 +25,7 @@ LIB_FLAGS = -lboost_filesystem -lboost_system -lboost_thread -lzmq
 _CON_OBJ = controller.o 
 CON_OBJ    = $(patsubst %,$(BUILD_DIR)/%,$(_CON_OBJ))
 
-_MAT_OBJ = map_array_test.o utils.o map_array_test_utils.o metrics.o workloads.o
+_MAT_OBJ = map_array_test.o utils.o metrics.o workloads.o
 MAT_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_MAT_OBJ))
 
 _PAR_OBJ = parallel_test.o workloads.o metrics.o utils.o
@@ -37,10 +37,10 @@ SEQ_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_SEQ_OBJ))
 
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp #$(DEPS)
-	$(GCC) -c -o $@ $< -I$(UTILS_DIR)/include $(CPPFLAGS)
+	$(GCC) -c -o $@ $< -I$(UTILS_DIR)/include -I$(INCLUDE_DIR) $(CPPFLAGS)
 
 $(BUILD_DIR)/%.o: $(MAP_ARRAY_TEST_DIR)/src/%.cpp #$(DEPS)
-	$(GCC) -c -o $@ $< -I$(MAP_ARRAY_TEST_DIR)/include -I$(UTILS_DIR)/include $(CPPFLAGS)
+	$(GCC) -c -o $@ $< -I$(MAP_ARRAY_TEST_DIR)/include -I$(UTILS_DIR)/include -I$(INCLUDE_DIR) $(CPPFLAGS)
 
 $(BUILD_DIR)/%.o: $(PARALLEL_TEST_DIR)/$(SRC_DIR)/%.cpp #$(DEPS)
 	$(GCC) -c -o $@ $< -I$(PARALLEL_TEST_DIR)/include -I$(UTILS_DIR)/include $(CPPFLAGS)
@@ -57,7 +57,7 @@ controller:      $(CON_OBJ)
 	$(GCC) -o $(BIN_DIR)/$@ $^ -I$(UTILS_DIR)/include $(CPPFLAGS) $(LIB_FLAGS)
 
 map_array_test:  $(MAT_OBJ)
-	$(GCC) -o $(BIN_DIR)/$@ $^ $(CPPFLAGS) $(LIB_FLAGS)
+	$(GCC) -o $(BIN_DIR)/$@ $^ -I$(INCLUDE_DIR) $(CPPFLAGS) $(LIB_FLAGS)
 
 parallel_test:   $(PAR_OBJ)
 	$(GCC) -o $(BIN_DIR)/$@ $^ $(CPPFLAGS) $(LIB_FLAGS)
