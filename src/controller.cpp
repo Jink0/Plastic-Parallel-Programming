@@ -5,7 +5,7 @@
 
 #include <boost/thread.hpp> // boost::thread::hardware_concurrency();
 
-#include <comms.hpp>
+#include "comms.hpp"
 
 using namespace std;
 using namespace zmq;

@@ -28,6 +28,8 @@ using namespace std;
   #include <metrics.hpp> // Our metrics library
 #endif
 
+#include <map_array_utils.hpp>
+
 /*
  * This file contains the definition of the map array pattern. Note - all the definitions are in the header file, as 
  * you cannot separate the definition of a template class from its declaration and put it inside a .cpp file.
@@ -48,6 +50,7 @@ template <typename in1, typename in2, typename out>
 void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1, deque<in2>), deque<out>& output, 
                string output_filename = "", parameters params = parameters())
 {
+  test();
   Ms(print("[Main] Metrics on!\n\n"));
 
   // Initialise metrics.

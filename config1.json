@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "number_of_repeats": "5",
+        "defaults": {
+            "number_of_threads": "4",
+            "inital_schedule": "Static",
+            "array_size": "200000",
+            "task_size_distribution": "0x7ffffc0e4100"
+        },
+        "experiment1": {
+            "number_of_threads": "1"
+        },
+        "experiment2": {
+            "default": "true"
+        }
+    }
+}
