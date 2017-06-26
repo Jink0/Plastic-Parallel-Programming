@@ -3,8 +3,8 @@
 	<number_of_repeats>5</number_of_repeats>
 	<defaults>
 		<number_of_threads>4</number_of_threads>
-		<inital_schedule>Static</inital_schedule>
-		<inital_chunk_size>50</inital_chunk_size>
+		<initial_schedule>Dynamic_chunks</initial_schedule>
+		<initial_chunk_size>50</initial_chunk_size>
 		<array_size>200000</array_size>
 		<task_size_distribution type="array">
 			<value>1</value>
