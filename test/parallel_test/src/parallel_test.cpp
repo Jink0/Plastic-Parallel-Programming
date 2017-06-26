@@ -34,13 +34,16 @@ struct experiment_parameters {
 };
 
 struct run_parameters {
-	uint32_t number_of_repeats = 0;
+	uint32_t number_of_repeats     = 0;
 
 	std::deque<experiment_parameters> experiments;
 };
 
 std::ostream& print(std::ostream &o, const run_parameters& params) {
-    o << "Number of repeats: " << params.number_of_repeats << std::endl << std::endl;
+	o << "Number of experiments: " << params.experiments.size() << std::endl <<
+         "Number of repeats: " << params.number_of_repeats << std::endl << std::endl;
+
+    o << "TODO: Complete printout\n\n";
 
     for (uint32_t i = 0; i < params.experiments.size(); i++) {
     	o << "Experiment " << i + 1 << ": " << std::endl;
@@ -83,8 +86,86 @@ boost::property_tree::ptree read_config_file(int argc, char *argv[]) {
     return pt;
 }
 
+#include <boost/algorithm/string/trim.hpp>
+
+void dump(boost::property_tree::ptree const& pt, std::string const& indent = "") {
+    for (auto& node : pt) {
+        std::cout << indent << node.first;
+
+        auto value = boost::trim_copy(node.second.get_value(""));
+
+        if (!value.empty())
+            std::cout << ": '" << value << "'";
+
+        std::cout << "\n";
+
+        dump(node.second, indent + "    ");
+    }
+}
+
+experiment_parameters translate_experiment_parameters(boost::property_tree::ptree pt) {
+	struct experiment_parameters params;
+
+	for (auto& node : pt) {
+        if (node.first.compare("number_of_threads") == 0) {
+        	params.number_of_threads = node.second.get_value<uint32_t>();
+
+        } else if (node.first.compare("inital_schedule") == 0) {
+        	std::string sched = node.second.get_value<string>();
+
+        	if (sched.compare("Static") == 0) {
+        		params.inital_schedule = Static;
+
+        	} else if (sched.compare("Dynamic_chunks") == 0) {
+        		params.inital_schedule = Dynamic_chunks;
+
+        	} else if (sched.compare("Tapered") == 0) {
+        		params.inital_schedule = Tapered;
+
+        	} else if (sched.compare("Auto") == 0) {
+        		params.inital_schedule = Auto;
+        	}
+
+        } else if (node.first.compare("inital_chunk_size") == 0) {
+        	params.inital_chunk_size = node.second.get_value<uint32_t>();
+
+        } else if (node.first.compare("array_size") == 0) {
+        	params.array_size = node.second.get_value<uint32_t>();
+
+        } else if (node.first.compare("task_size_distribution") == 0) {
+
+        } else {
+	        std::cout << "Unrecognised node in config: " << node.first << std::endl << std::endl;
+
+	        // exit(EXIT_FAILURE);
+	    }
+    }
+
+	return params;
+}
+
 run_parameters translate_property_tree(boost::property_tree::ptree pt) {
 	struct run_parameters params;
+	struct experiment_parameters defaults;
+
+    // dump(pt);
+
+    for (auto& node : pt.get_child("parameters")) {
+        if (node.first.compare("number_of_repeats") == 0) {
+        	params.number_of_repeats = node.second.get_value<uint32_t>();
+
+        } else if (node.first.compare("defaults") == 0) {
+       		defaults = translate_experiment_parameters(node.second);
+
+        } else if (node.first.compare("experiments") == 0) {
+        	// params.experiments.push_back(translate_experiment_parameters(node.second));
+
+        } else {
+	        std::cout << "Unrecognised node in config: " << node.first << std::endl << std::endl;
+
+	        exit(EXIT_FAILURE);
+	    }
+    }
 
 	return params;
 }
@@ -98,18 +179,21 @@ int main(int argc, char *argv[])
 	// Create an empty property tree object
     boost::property_tree::ptree pt;
 
+    // populate tree structure pt
 	pt = read_config_file(argc, argv);
 
     // writing the unchanged ptree in file2.xml
     // write_xml("file2.xml", pt, std::locale(), boost::property_tree::xml_writer_make_settings<std::string>('\t', 1));
 
-    write_xml(std::cout, pt, boost::property_tree::xml_writer_make_settings<std::string>('\t', 1));
+    // write_xml(std::cout, pt, boost::property_tree::xml_writer_make_settings<std::string>('\t', 1));
 
     struct run_parameters test;
 
-    std::cout << test;
+    std::cout << test << std::endl;
 
+    struct run_parameters test2 = translate_property_tree(pt);
 
+    std::cout << test2;
 
 	// for (uint32_t r = 0; r < REPEATS; r++) {
 	// 	// Initialise metrics.

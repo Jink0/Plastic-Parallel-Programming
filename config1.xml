@@ -4,6 +4,7 @@
 	<defaults>
 		<number_of_threads>4</number_of_threads>
 		<inital_schedule>Static</inital_schedule>
+		<inital_chunk_size>50</inital_chunk_size>
 		<array_size>200000</array_size>
 		<task_size_distribution type="array">
 			<value>1</value>
@@ -12,9 +13,9 @@
 		</task_size_distribution>
 	</defaults>
 	<experiments>
-		<experiment1/>
-		<experiment2>
+		<experiment/>
+		<experiment>
 			<number_of_threads>1</number_of_threads>
-		</experiment2>
+		</experiment>
 	</experiments>
 </parameters>
