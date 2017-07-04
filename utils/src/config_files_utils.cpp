@@ -44,10 +44,12 @@ std::ostream& dump(std::ostream &o, const run_parameters &params, std::string co
 // Dump experiment parameters to ostream o, indented by given indent.
 std::ostream& dump(std::ostream &o, const experiment_parameters &params, std::string const &indent) {
 	// Print parameters to stream.
-	o << indent << "Number of threads: " << params.number_of_threads << std::endl <<
-	     indent << "Initial schedule: " << params.initial_schedule << std::endl <<
-	     indent << "Initial chunk size: " << params.initial_chunk_size << std::endl <<
-	     indent << "Array size: " << params.array_size << std::endl <<
+	o << indent << "Number of threads:      " << params.number_of_threads << std::endl <<
+         indent << "Threading library:      " << threading_libraries[params.threading_lib] << std::endl <<
+	     indent << "Initial schedule:       " << schedules[params.initial_schedule] << std::endl <<
+	     indent << "Initial chunk size:     " << params.initial_chunk_size << std::endl <<
+         indent << "User function:          " << user_functions[params.user_function] << std::endl <<
+	     indent << "Array size:             " << params.array_size << std::endl <<
 	     indent << "Task size distribution:";
 
 	for (uint32_t i = 0; i < params.task_size_distribution.size(); i++) {
@@ -119,26 +121,27 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
         	// Retrieve value.
         	params.number_of_threads = node.second.get_value<uint32_t>();
 
+        } else if (node.first.compare("threading_library") == 0) { 
+            std::string t_lib = node.second.get_value<std::string>();
+
+            // Translate schedule string to enum and record it.
+            params.threading_lib = (Threading_library) std::distance(threading_libraries, std::find(threading_libraries, threading_libraries + NUM_THREADING_LIBRARIES, t_lib));
+
         } else if (node.first.compare("initial_schedule") == 0) {
         	std::string sched = node.second.get_value<std::string>();
 
-        	// Compare value to record enum.
-        	if (sched.compare("Static") == 0) {
-        		params.initial_schedule = Static;
-
-        	} else if (sched.compare("Dynamic_chunks") == 0) {
-        		params.initial_schedule = Dynamic_chunks;
-
-        	} else if (sched.compare("Tapered") == 0) {
-        		params.initial_schedule = Tapered;
-
-        	} else if (sched.compare("Auto") == 0) {
-        		params.initial_schedule = Auto;
-        	}
+            // Translate schedule string to enum and record it.
+            params.initial_schedule = (Schedule) std::distance(schedules, std::find(schedules, schedules + NUM_SCHEDULES, sched));
 
         } else if (node.first.compare("initial_chunk_size") == 0) {
         	// Retrieve value.
         	params.initial_chunk_size = node.second.get_value<uint32_t>();
+
+        } else if (node.first.compare("user_function") == 0) {  
+            std::string u_func = node.second.get_value<std::string>();
+
+            // Translate schedule string to enum and record it.
+            params.user_function = (User_function) std::distance(user_functions, std::find(user_functions, user_functions + NUM_USER_FUNCTIONS, u_func));  
 
         } else if (node.first.compare("array_size") == 0) {
         	// Retrieve value.

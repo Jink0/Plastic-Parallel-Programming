@@ -25,6 +25,6 @@ int oneTouch(int in1, deque<int> in2);
  * Test user function
  */
 
-int collatz(int weight, deque<int> seeds);
+// int collatz(int weight, deque<int> seeds);
 
 #endif // WORKLOADS_HPP

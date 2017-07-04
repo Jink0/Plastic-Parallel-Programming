@@ -6,10 +6,15 @@
 
 #include <string>
 #include <deque>
+#include <algorithm>
 
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+
+#define NUM_SCHEDULES 4
+#define NUM_USER_FUNCTIONS 1
+#define NUM_THREADING_LIBRARIES 4
 
 
 
@@ -18,7 +23,19 @@
  */
 
 // Possible schedules.
-enum Schedule {Static, Dynamic_chunks, Tapered, Auto};
+enum Schedule {Static = 0, Dynamic_chunks = 1, Tapered = 2, Auto = 3};
+
+const std::string schedules[NUM_SCHEDULES] = {"Static", "Dynamic_chunks", "Tapered", "Auto"};
+
+// User functions.
+enum User_function {Collatz = 0};
+
+const std::string user_functions[NUM_USER_FUNCTIONS] = {"Collatz"};
+
+// Threading libraries
+enum Threading_library {Default = 0, pThreads = 1, TBB = 2, OpenMP = 3};
+
+const std::string threading_libraries[NUM_THREADING_LIBRARIES] = {"Default", "pThreads", "TBB", "OpenMP"};
 
 // Individual experiment parameters.
 struct experiment_parameters {
@@ -31,11 +48,17 @@ struct experiment_parameters {
 	// Chunk size to start with.
 	uint32_t initial_chunk_size;
 
+	// User function to use.
+	User_function user_function;
+
 	// Array size to use.
 	uint32_t array_size;
 
 	// Relative distribution of tasks, e.g. 1 1 1 4 means last 1/4 of the array has tasks 4x as large.
 	std::deque<uint32_t> task_size_distribution;
+
+	// Threading library to use.
+	Threading_library threading_lib;
 };
 
 // Run of experiments parameters.
