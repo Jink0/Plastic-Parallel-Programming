@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
 
 		  	metrics_exit();
 
-			// for (i = 0; i < work.input1.size(); i++) {
+		 // for (i = 0; i < work.input1.size(); i++) {
 		 //        print(output.at(i));
 		 //    }
 
