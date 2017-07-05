@@ -24,28 +24,22 @@
  * Test user function
  */
 
-int collatz(int weight, deque<int> seeds) 
-{
-    for (int i = 0; i < weight; i++)
-    {
+int collatz(int weight, deque<int> seeds) {
+    for (int i = 0; i < weight; i++)     {
         int start = seeds[0];
 
-        if (start < 1) 
-        {
+        if (start < 1) {
             fprintf(stderr,"Error, cannot start collatz with %d\n", start);
-            return -1;
+
+            return 0;
         }
 
         int count = 0;
-        while (start != 1) 
-        {
+        while (start != 1) {
             count++;
-            if (start % 2) 
-            {
+            if (start % 2) {
                 start = 3 * start + 1;
-            } 
-            else 
-            {
+            } else {
                 start = start/2;
             }
         }
@@ -107,51 +101,63 @@ int main(int argc, char *argv[]) {
 
     std::cout << params;
 
-    struct workload<int, int, int> work = generate_workload<int, int, int>(params.experiments.at(0));
+    for (uint32_t i = 0; i < params.experiments.size(); i++) {
+    	for (uint32_t j = 0; j < params.number_of_repeats; j++) {
 
-    deque<int> output(work.input1.size(), 0);
+    		// Create output filename.
+    		std::string output_filename = ("Experiment" + to_string(i + 1) + "_Repeat" + to_string(j));
 
-    uint32_t nthreads, tid, i;
+    		struct workload<int, int, int> work = generate_workload<int, int, int>(params.experiments.at(i));
 
-	omp_set_dynamic(0);     // Explicitly disable dynamic teams
-	omp_set_num_threads(work.params.number_of_threads); // Use 4 threads for all consecutive parallel regions
+		    deque<int> output(work.input1.size(), 0);
 
-	#pragma omp parallel shared(work, output) private(i, tid) 
-	{
-	  	tid = omp_get_thread_num();
+		    metrics_init(work.params.number_of_threads, output_filename);
 
-	  	metrics_thread_start(tid);
+		    uint32_t nthreads, tid, i;
 
-	  	if (tid == 0) {
-	    	nthreads = omp_get_num_threads();
-	    	print("Number of threads = ", nthreads, "\n");
-	  	}
+			omp_set_dynamic(0);     // Explicitly disable dynamic teams
+			omp_set_num_threads(work.params.number_of_threads); // Use 4 threads for all consecutive parallel regions
 
-	  	print("Thread ", tid, " starting...\n");
+			#pragma omp parallel shared(work, output) private(i, tid) 
+			{
+			  	tid = omp_get_thread_num();
 
-	  	#pragma omp for schedule(dynamic, work.params.initial_chunk_size)
-	  	for (i = 0; i < work.input1.size(); i++) {
-	  		metrics_starting_work(tid);
+			  	metrics_thread_start(tid);
 
-	    	output.at(i) = collatz(work.input1.at(i), work.input2);
+			  	if (tid == 0) {
+			    	nthreads = omp_get_num_threads();
+			    	print("Number of threads = ", nthreads, "\n");
+			  	}
 
-	    	metrics_finishing_work(tid);
-	  	}
+			  	print("Thread ", tid, " starting...\n");
 
-	  metrics_thread_finished(tid);
-  	}  /* end of parallel section */
+			  	#pragma omp for schedule(dynamic, work.params.initial_chunk_size)
+			  	for (i = 0; i < work.input1.size(); i++) {
+			  		metrics_starting_work(tid);
 
-	metrics_finalise();
+			    	output.at(i) = collatz(work.input1.at(i), work.input2);
 
-  	metrics_calc();
+			    	metrics_finishing_work(tid);
+			  	}
 
-  	metrics_exit();
+			  metrics_thread_finished(tid);
+		  	}  /* end of parallel section */
 
-	for (i = 0; i < work.input1.size(); i++) {
-        print(output.at(i));
+			metrics_finalise();
+
+		  	metrics_calc();
+
+		  	metrics_exit();
+
+			// for (i = 0; i < work.input1.size(); i++) {
+		 //        print(output.at(i));
+		 //    }
+
+		    if (std::find(output.begin(), output.end(), 0) != output.end()) {
+		    	std::cout << "\n\nWARNING - INCORRECT OUTPUT!!\n\n\n";
+		    }
+    	}
     }
 
-    if (std::find(output.begin(), output.end(), 0) != output.end()) {
-    	std::cout << "\n\nWARNING - INCORRECT OUTPUT!!\n\n\n";
-    }
+    
 }
