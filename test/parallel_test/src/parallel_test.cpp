@@ -1,7 +1,6 @@
 #include <parallel_test.hpp>
 
-// Workloads for workload generation
-#include "workloads.hpp"
+
 
 #include "metrics.hpp"
 #include "utils.hpp"
@@ -20,86 +19,18 @@
 
 #include "config_files_utils.hpp"
 
-/*
- * Test user function
- */
+// Workloads for workload generation
+#include "workloads.hpp"
 
-int collatz(int weight, deque<int> seeds) {
-    for (int i = 0; i < weight; i++)     {
-        int start = seeds[0];
 
-        if (start < 1) {
-            fprintf(stderr,"Error, cannot start collatz with %d\n", start);
-
-            return 0;
-        }
-
-        int count = 0;
-        while (start != 1) {
-            count++;
-            if (start % 2) {
-                start = 3 * start + 1;
-            } else {
-                start = start/2;
-            }
-        }
-    }
-    
-    return 1;
-}
-
-// Structure to contain our workload.
-template <typename in1, typename in2, typename out>
-struct workload {
-	// First input deque.
-	deque<in1> input1;
-
-	// Second input deque.
-	deque<in2> input2;
-
-	// User function pointer.
-	out (*userFunction) (in1, deque<in2>);
-
-	struct experiment_parameters params;
-};
-
-// 
-template <typename in1, typename in2, typename out>
-workload<in1, in2, out> generate_workload(struct experiment_parameters params) {
-	struct workload<in1, in2, out> output;
-
-	output.params = params;
-
-	uint32_t quotient  = params.array_size / params.task_size_distribution.size();
-	uint32_t remainder = params.array_size % params.task_size_distribution.size();
-
-	for (uint32_t i = 0; i < params.task_size_distribution.size(); i++) {
-		for (uint32_t j = 0; j < quotient; j++) {
-			output.input1.push_back(params.task_size_distribution.at(i));
-		}
-	}
-
-	for (uint32_t i = 0; i < remainder; i++) {
-		output.input1.push_back(params.task_size_distribution.back());
-	}
-
-	output.input2.push_back(1);
-
-	switch (params.user_function) {
-		case Collatz:
-			output.userFunction = collatz;
-
-			break;
-	}
-
-	return output;
-}
 
 int main(int argc, char *argv[]) {
 	// Retrieve run parameters from given config file.
     struct run_parameters params = translate_run_parameters(read_config_file(argc, argv));
 
     std::cout << params;
+
+    createFoldersAndMove(argv[1], "parallel_test");
 
     for (uint32_t i = 0; i < params.experiments.size(); i++) {
     	for (uint32_t j = 0; j < params.number_of_repeats; j++) {
@@ -142,10 +73,6 @@ int main(int argc, char *argv[]) {
 
 			  metrics_thread_finished(tid);
 		  	}  /* end of parallel section */
-
-			metrics_finalise();
-
-		  	metrics_calc();
 
 		  	metrics_exit();
 

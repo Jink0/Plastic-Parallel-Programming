@@ -336,6 +336,10 @@ void metrics_calc(void)
 
 void metrics_exit(void)
 {
+    metrics_finalise();
+    
+    metrics_calc();
+
     // Free our malloc'ed memory.
     free(metrics.thread_times);
 }

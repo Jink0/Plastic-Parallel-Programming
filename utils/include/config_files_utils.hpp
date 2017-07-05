@@ -110,6 +110,12 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
 // Translates the parameters of an entire run from a property tree to our run_parameters struct. 
 run_parameters translate_run_parameters(boost::property_tree::ptree pt);
 
+/*
+ * Creates a folder with the next valid name (the next run number), and moves into it.
+ */
+
+void createFoldersAndMove(std::string config_filename, std::string prog_dir_name);
+
 
 
 #endif // CONFIG_FILES_UTILS_HPP

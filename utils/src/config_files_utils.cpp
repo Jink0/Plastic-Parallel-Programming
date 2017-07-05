@@ -211,3 +211,49 @@ run_parameters translate_run_parameters(boost::property_tree::ptree pt) {
 
 	return params;
 }
+
+
+
+/*
+ * Creates a folder with the next valid name (the next run number), and moves into it.
+ */
+
+void createFoldersAndMove(std::string config_filename, std::string prog_dir_name) {
+    // Record filepath of the config file before we move so we can copy it later.
+    boost::filesystem::path c_p(boost::filesystem::current_path() /= config_filename);
+
+    // Create runs directory if it doesn't exist.
+    boost::filesystem::path r_p("runs");
+    create_directory(r_p);
+
+    // Move into the runs directory.
+    boost::filesystem::current_path("runs");
+
+    // Create program directory.
+    boost::filesystem::path p_p(prog_dir_name.c_str());
+    create_directory(p_p);
+
+    // Move into the program directory.
+    boost::filesystem::current_path(prog_dir_name.c_str());
+
+    // Directory name to start at.
+    int i = 1;
+    
+    // Root directory word.
+    std::string root_dir_name = "run";
+
+    // Find what the next run number should be.
+    while (boost::filesystem::is_directory(root_dir_name + std::to_string(i).c_str())) {
+        i++;
+    }
+
+    // Create our run directory.
+    boost::filesystem::path rr_p(root_dir_name + std::to_string(i).c_str());
+    create_directory(rr_p);
+
+    // Move into our run directory.
+    boost::filesystem::current_path(root_dir_name + std::to_string(i).c_str());
+
+    // Copy our config file so we know what parameters were used.
+    copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
+}
