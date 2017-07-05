@@ -1,0 +1,14 @@
+# Compiled Object files
+build/*.o
+
+# Runs
+build/run*
+
+# LaTeX Files
+doc/Report/*.log
+doc/Report/*.aux
+doc/Report/*.bcf
+doc/Report/*.out
+doc/Report/*.xml
+doc/Report/*.synctex.gz
+doc/Report/*.toc
