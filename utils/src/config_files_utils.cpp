@@ -1,5 +1,7 @@
 #include "config_files_utils.hpp"
 
+#include "utils.hpp"
+
 
 
 // Dump property tree to ostream o, indented by given indent.
@@ -82,12 +84,11 @@ std::ostream& operator<< (std::ostream &o, const experiment_parameters &params) 
 
 // Attempts to read the given config file.
 boost::property_tree::ptree read_config_file(int argc, char *argv[]) {
-	std::cout << std::endl;
+	print("\n");
 
 	// Check arguments
 	if (argc != 2) {
-		std::cout << "Incorrect command line arguments!" << std::endl << std::endl
-				  << "usage: parallel_test config_file.xml" << std::endl << std::endl;
+		print("Incorrect command line arguments!\n\nusage: parallel_test config_file.xml\n\n");
 
 		exit(EXIT_FAILURE);
 	}
@@ -97,7 +98,7 @@ boost::property_tree::ptree read_config_file(int argc, char *argv[]) {
 
     // Check that config file exists
     if (!boost::filesystem::exists(argv[1])) {
-  		std::cout << "Cannot find config file: " << argv[1] << std::endl << std::endl;
+  		print("Cannot find config file: ", argv[1], "\n\n");
 
   		exit(EXIT_FAILURE);
 	}
@@ -122,26 +123,44 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
         	params.number_of_threads = node.second.get_value<uint32_t>();
 
         } else if (node.first.compare("threading_library") == 0) { 
-            std::string t_lib = node.second.get_value<std::string>();
+            const std::string *t_lib = std::find(threading_libraries, threading_libraries + NUM_THREADING_LIBRARIES, node.second.get_value<std::string>());
 
-            // Translate schedule string to enum and record it.
-            params.threading_lib = (Threading_library) std::distance(threading_libraries, std::find(threading_libraries, threading_libraries + NUM_THREADING_LIBRARIES, t_lib));
+            if (t_lib != std::end(threading_libraries)) {
+                // Translate threading library string to enum and record it.
+                params.threading_lib = (Threading_library) std::distance(threading_libraries, t_lib);
+
+            } else {
+                print("\nInvalid threading library: ", node.second.get_value<std::string>(), "\n\n");
+                exit(EXIT_FAILURE);
+            }
 
         } else if (node.first.compare("initial_schedule") == 0) {
-        	std::string sched = node.second.get_value<std::string>();
+            const std::string *sched = std::find(schedules, schedules + NUM_SCHEDULES, node.second.get_value<std::string>());
 
-            // Translate schedule string to enum and record it.
-            params.initial_schedule = (Schedule) std::distance(schedules, std::find(schedules, schedules + NUM_SCHEDULES, sched));
+            if (sched != std::end(schedules)) {
+                // Translate schedule string to enum and record it.
+                params.initial_schedule = (Schedule) std::distance(schedules, sched);
+
+            } else {
+                print("\nInvalid schedule: ", node.second.get_value<std::string>(), "\n\n");
+                exit(EXIT_FAILURE);
+            }
 
         } else if (node.first.compare("initial_chunk_size") == 0) {
         	// Retrieve value.
         	params.initial_chunk_size = node.second.get_value<uint32_t>();
 
         } else if (node.first.compare("user_function") == 0) {  
-            std::string u_func = node.second.get_value<std::string>();
+            const std::string *u_func = std::find(user_functions, user_functions + NUM_USER_FUNCTIONS, node.second.get_value<std::string>());
 
-            // Translate schedule string to enum and record it.
-            params.user_function = (User_function) std::distance(user_functions, std::find(user_functions, user_functions + NUM_USER_FUNCTIONS, u_func));  
+            if (u_func != std::end(user_functions)) {
+                // Translate user function string to enum and record it.
+                params.user_function = (User_function) std::distance(user_functions, u_func);
+
+            } else {
+                print("\nInvalid user function: ", node.second.get_value<std::string>(), "\n\n");
+                exit(EXIT_FAILURE);
+            }
 
         } else if (node.first.compare("array_size") == 0) {
         	// Retrieve value.
@@ -157,7 +176,7 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
 
         		// Catch unexpected nodes, ignoring "<xmlattr>".
         		} else if (child.first.compare("<xmlattr>") != 0) {
-	        		std::cout << "Unrecognised node in config: " << child.first << std::endl << std::endl;
+	        		print("Unrecognised node in config: ", child.first, "\n\n");
 
 	        		exit(EXIT_FAILURE);
 	    		}
@@ -165,7 +184,7 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
 
         // Catch unexpected nodes.
         } else {
-	        std::cout << "Unrecognised node in config: " << node.first << std::endl << std::endl;
+	        print("Unrecognised node in config: ", node.first, "\n\n");
 
 	        exit(EXIT_FAILURE);
 	    }
@@ -203,7 +222,7 @@ run_parameters translate_run_parameters(boost::property_tree::ptree pt) {
 
 	    // Catch unexpected nodes.
         } else {
-	        std::cout << "Unrecognised node in config: " << node.first << std::endl << std::endl;
+	        print("Unrecognised node in config: ", node.first, "\n\n");
 
 	        exit(EXIT_FAILURE);
 	    }
@@ -213,12 +232,7 @@ run_parameters translate_run_parameters(boost::property_tree::ptree pt) {
 }
 
 
-
-/*
- * Creates a folder with the next valid name (the next run number), and moves into it.
- */
-
-void createFoldersAndMove(std::string config_filename, std::string prog_dir_name) {
+void moveAndCopy(std::string config_filename, std::string prog_dir_name) {
     // Record filepath of the config file before we move so we can copy it later.
     boost::filesystem::path c_p(boost::filesystem::current_path() /= config_filename);
 

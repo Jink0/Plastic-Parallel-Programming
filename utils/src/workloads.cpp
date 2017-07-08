@@ -1,6 +1,8 @@
+#include <workloads.hpp>
+
 #include <stdio.h>
 
-#include <workloads.hpp>
+
 
 /*
  * Test user function
