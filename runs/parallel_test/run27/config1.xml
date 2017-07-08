@@ -2,7 +2,7 @@
 <parameters>
 	<number_of_repeats>1</number_of_repeats>
 	<defaults>
-		<number_of_threads>4</number_of_threads>
+		<number_of_threads>1</number_of_threads>
 		<initial_schedule>Dynamic_chunks</initial_schedule>
 		<initial_chunk_size>500</initial_chunk_size>
 		<user_function>Collatz</user_function>
