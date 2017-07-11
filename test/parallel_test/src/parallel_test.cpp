@@ -2,7 +2,6 @@
 
 #include <string>
 #include <stdint.h>
-#include <iostream>
 #include <deque>
 
 #include <thread>
@@ -17,11 +16,9 @@
 
 
 
-#define CHUNKSIZE 500
-#define N_THREADS 4
-#define REPEATS   5
-
 #define DETAILED_METRICS
+
+
 
 std::mutex& get_tid_mutex() {
     static std::mutex m;

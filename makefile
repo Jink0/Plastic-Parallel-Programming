@@ -24,10 +24,10 @@ CON_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_CON_OBJ))
 _MAT_OBJ = map_array_test.o map_array_utils.o utils.o metrics.o workloads.o
 MAT_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_MAT_OBJ))
 
-_PAR_OBJ = parallel_test.o config_files_utils.o workloads.o metrics.o utils.o
+_PAR_OBJ = parallel_test.o utils.o config_files_utils.o workloads.o metrics.o
 PAR_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_PAR_OBJ))
 
-_SEQ_OBJ = sequential_test.o workloads.o metrics.o utils.o
+_SEQ_OBJ = sequential_test.o utils.o config_files_utils.o workloads.o metrics.o
 SEQ_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_SEQ_OBJ))
 
 

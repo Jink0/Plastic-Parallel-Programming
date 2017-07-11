@@ -28,32 +28,47 @@
 
 // Structure to contain statistics for a single thread in a single run.
 struct thread_time {
-    struct timeval start_time, finish_time; 
+    struct timespec start_time, finish_time; 
 
-    struct timeval last_start_time;         
-    struct timeval overhead_start_time;
-    struct timeval mutex_blocked_start_time; 
-    struct timeval wait_blocked_start_time; 
+    struct timespec last_start_time;         
+    struct timespec overhead_start_time;
+    struct timespec mutex_blocked_start_time; 
+    struct timespec wait_blocked_start_time; 
 
-    uint32_t cumul_work_millis          = 0;
-    uint32_t cumul_overhead_millis      = 0; 
-    uint32_t cumul_mutex_blocked_millis = 0;
-    uint32_t cumul_wait_blocked_millis  = 0;
+    struct timespec cumul_work_millis;
+    struct timespec cumul_overhead_millis; 
+    struct timespec cumul_mutex_blocked_millis;
+    struct timespec cumul_wait_blocked_millis;
 
-    uint32_t tasks_completed = 0;  
+    long tasks_completed = 0;  
+
+    thread_time() {
+
+        cumul_work_millis.tv_sec           = 0;
+        cumul_work_millis.tv_nsec          = 0;
+
+        cumul_overhead_millis.tv_sec       = 0; 
+        cumul_overhead_millis.tv_nsec      = 0; 
+
+        cumul_mutex_blocked_millis.tv_sec  = 0;
+        cumul_mutex_blocked_millis.tv_nsec = 0;
+
+        cumul_wait_blocked_millis.tv_sec   = 0;
+        cumul_wait_blocked_millis.tv_nsec  = 0;
+    }
 };
 
 // Structure to contain statistics for a set of repeats.
 struct repeat {
-    struct timeval start_time;
-    struct timeval finish_time; 
+    struct timespec start_time;
+    struct timespec finish_time; 
 
     std::deque<thread_time> thread_times;
 
     repeat(uint32_t num_threads) {
 
         // Assign start time and set number of threads.
-        gettimeofday(&start_time, NULL);
+        clock_gettime(CLOCK_MONOTONIC, &start_time);
         thread_times.resize(num_threads);
     }
 };

@@ -1,67 +1,75 @@
 #include <sequential_test.hpp>
 
-// Workloads for workload generation
-#include "workloads.hpp"
-
-#include "metrics.hpp"
+#include <string>
+#include <stdint.h>
+#include <deque>
 
 #include "utils.hpp"
+#include "config_files_utils.hpp"
+#include "workloads.hpp"
+#include "metrics.hpp"
 
-#include <stdint.h>
 
-#include <string>
 
-#define REPEATS 1
+#define DETAILED_METRICS
 
-int main(int argc, char *argv[])
-{
-  for (uint32_t r = 0; r < REPEATS; r++) 
-  {
-	 // Initialise metrics.
-  	metrics_init(1, string(argv[1]) +"_Repeat" + std::to_string(r) + ".csv");
-  	metrics_thread_start(0);
 
-	 uint32_t as = 200000;
 
-	 // Experiment input vectors.
-    deque<int> input1(as);
-    deque<int> input2(as);
+int main(int argc, char *argv[]) {
 
-    // Generate data for vectors.
-    for (uint32_t i = 0; i < as; i++) 
-    {
-        // input1[i] = (double) 1. / i;
-        // input2[i] = (double) 1. / i;
-        // input1[i] = (int) i + 1;
-        // input2[i] = (int) i + 1;
-        input1[i] = 10000;
-        input2[i] = 87736;
+  // Retrieve run parameters from given config file.
+  struct run_parameters params = translate_run_parameters(read_config_file(argc, argv));
+
+  // Print run parameters.
+  print(params);
+
+  // Move to output folder and copy our config to it.
+  moveAndCopy(argv[1], "sequential_test");
+
+  // For each experiment,
+  for (uint32_t i = 0; i < params.experiments.size(); i++) {
+
+    // Create output filename.
+    std::string output_filename = ("Experiment" + to_string(i + 1) + ".csv");
+
+    metrics_start(output_filename);
+
+    // For each repeat,
+    for (uint32_t j = 0; j < params.number_of_repeats; j++) {
+
+      // Generate workload.
+      struct workload<int, int, int> work = generate_workload<int, int, int>(params.experiments.at(i));
+
+      // Create output deque.
+      deque<int> output(work.input1.size(), 0);
+
+      metrics_repeat_start(params.experiments.at(i).number_of_threads);
+      metrics_thread_start(0);
+
+      // Sequential section start
+      for (uint32_t k = 0; k < work.input1.size(); k++) {
+
+        metrics_starting_work(0);
+
+        // Do work.
+        output.at(k) = collatz(work.input1.at(k), work.input2);
+
+        metrics_finishing_work(0);
+      }
+
+      metrics_thread_finished(0);
+      metrics_repeat_finished();
+
+      // for (i = 0; i < work.input1.size(); i++) {
+      //     print(output.at(i));
+      // }
+
+      // Check if output is valid.
+      if (std::find(output.begin(), output.end(), 0) != output.end()) {
+        print("\n\nWARNING - INCORRECT OUTPUT!!\n\n\n");
+      }
     }
 
-    // Output deque.
-    deque<int> output(as);
-
-    for (uint32_t i = 0; i < as; i++)
-    { 
-      metrics_starting_work(0);
-  
-      // Run user function
-      output.at(i) = collatz(input1.at(i), input2);
-
-      metrics_finishing_work(0);
-    }
-
-    metrics_thread_finished(0);
-
-    for (uint32_t i = 0; i < as; i++) 
-    {
-        //print(output.at(i));
-    }
-
-    metrics_finalise();
-
-  	metrics_calc();
-
-  	metrics_exit();
+    metrics_finished();
   }
 }
