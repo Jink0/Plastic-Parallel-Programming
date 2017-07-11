@@ -199,8 +199,8 @@ void metrics_finished(void) {
             thread_numbers                << "\t" << j;
             num_tasks_completed           << "\t" << time.tasks_completed;
 
-            // time_working                  << "\t" << time.cumul_work_millis;
-            // time_in_overhead              << "\t" << time.cumul_overhead_millis;
+            time_working                  << "\t" << (time.cumul_work_millis.tv_sec * 1000) + (time.cumul_work_millis.tv_nsec / 1000000);
+            time_in_overhead              << "\t" << (time.cumul_overhead_millis.tv_sec * 1000) + (time.cumul_overhead_millis.tv_nsec / 1000000);
             // time_mutex_blocked            << "\t" << time.cumul_mutex_blocked_millis;
             // time_blocked_by_master_thread << "\t" << time.cumul_wait_blocked_millis;
         }

@@ -12,7 +12,7 @@ UTILS_DIR           = utils
 # Flags and includes
 
 GCC       = g++
-CXXFLAGS  = -Wall -std=c++11 -pthread -fopenmp -O3 -DMETRICS -DCONTROLLER
+CXXFLAGS  = -Wall -std=c++11 -pthread -fopenmp -O3 -DDETAILED_METRICS -DCONTROLLER
 INCLUDES  = -I$(INCLUDE_DIR) -I$(UTILS_DIR)/include -I$(MAP_ARRAY_TEST_DIR)/include -I$(PARALLEL_TEST_DIR)/include -I$(SEQUENTIAL_TEST_DIR)/include
 LIB_FLAGS = -lboost_system -lboost_filesystem -lboost_thread -lzmq -ltbb
 

@@ -11,7 +11,11 @@
 
 
 
-#define DETAILED_METRICS
+#ifdef DETAILED_METRICS
+  #define DM( x ) x
+#else
+  #define DM( x ) 
+#endif
 
 
 
@@ -49,12 +53,12 @@ int main(int argc, char *argv[]) {
       // Sequential section start
       for (uint32_t k = 0; k < work.input1.size(); k++) {
 
-        metrics_starting_work(0);
+        DM(metrics_starting_work(0));
 
         // Do work.
         output.at(k) = collatz(work.input1.at(k), work.input2);
 
-        metrics_finishing_work(0);
+        DM(metrics_finishing_work(0));
       }
 
       metrics_thread_finished(0);
