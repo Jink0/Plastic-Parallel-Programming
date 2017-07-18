@@ -18,7 +18,7 @@
  * must be able to see the implementation when linking in order to generate code for all specializations
  */
 
-// With nothing to add to the output stream, just return the stream. 
+// With nothing to add to the output stream, just return the stream.
 std::ostream& print_rec(std::ostream& outS);
 
 // Recursively print arguments.
@@ -36,7 +36,7 @@ std::ostream& print(std::ostream& outS, const Args& ...args)
     return print_rec(outS, args...);
 }
 
-// Retrieve the mutex. Must be done using this non-templated function, so that we have one mutex across all 
+// Retrieve the mutex. Must be done using this non-templated function, so that we have one mutex across all
 // instantiations of the templated function.
 std::mutex& get_cout_mutex();
 
@@ -60,18 +60,18 @@ std::string type_name()
     // Mangled name of type T.
     std::string mName = typeid(T).name();
 
-    // Attempt to demangle 
+    // Attempt to demangle
     char *dmName = abi::__cxa_demangle(mName.c_str(), NULL, NULL, &status);
 
     // If successful;
-    if(status == 0) 
+    if (status == 0)
     {
         // Record name.
         mName = dmName;
 
         // Free memory.
         free(dmName);
-    }   
+    }
 
     return mName;
 }

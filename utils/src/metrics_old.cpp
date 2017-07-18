@@ -39,7 +39,7 @@ typedef struct {
 
 
 
-/* 
+/*
  * Struct to store all metrics
  */
 
@@ -129,7 +129,7 @@ void metrics_starting_work(int thread_id)
     gettimeofday(&now, NULL);
 
     // Overhead accrued is the time since we last finished doing work.
-    metrics.thread_times[thread_id].cumul_overhead_millis += 
+    metrics.thread_times[thread_id].cumul_overhead_millis +=
         TIME_DIFF_MICROS(now, metrics.thread_times[thread_id].last_start_time);
 
     // Reset to last work start time.
@@ -174,7 +174,7 @@ void metrics_obtaining_mutex(int thread_id)
 
 
 /*
- * Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been 
+ * Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been
  * blocked.
  */
 
@@ -257,7 +257,7 @@ void metrics_finalise(void)
 
 
 /*
- * Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to 
+ * Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to
  * inconsistent results. So metrics should not be fully trusted until all threads have finished.
  */
 
@@ -292,7 +292,7 @@ void metrics_calc(void)
     time_blocked_by_master_thread << "Time blocked by master thread:";
 
     // Write metrics to output stream for each thread.
-    for (int i = 0; i < metrics.num_threads; i++) 
+    for (int i = 0; i < metrics.num_threads; i++)
     {
         time = metrics.thread_times[i];
 
@@ -337,7 +337,7 @@ void metrics_calc(void)
 void metrics_exit(void)
 {
     metrics_finalise();
-    
+
     metrics_calc();
 
     // Free our malloc'ed memory.

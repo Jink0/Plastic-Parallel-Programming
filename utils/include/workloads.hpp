@@ -44,7 +44,7 @@ int oneTouch(int in1, deque<int> in2);
 
 int collatz(int weight, deque<int> seeds);
 
-// 
+//
 template <typename in1, typename in2, typename out>
 workload<in1, in2, out> generate_workload(struct experiment_parameters params) {
 	struct workload<in1, in2, out> output;
@@ -67,10 +67,10 @@ workload<in1, in2, out> generate_workload(struct experiment_parameters params) {
 	output.input2.push_back(1);
 
 	switch (params.user_function) {
-		case Collatz:
-			output.userFunction = collatz;
+	case Collatz:
+		output.userFunction = collatz;
 
-			break;
+		break;
 	}
 
 	return output;

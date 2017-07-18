@@ -16,16 +16,16 @@ enum Message_type {
 
 void message_printout(Message_type type, struct message mess) {
     switch (type) {
-        case Sending:
-            cout << "Sending ACK to PID:     ";
-            break;
+    case Sending:
+        cout << "Sending ACK to PID:     ";
+        break;
 
-        case Receving:
-            cout << "Received SYN from PID:  ";
-            break;
+    case Receving:
+        cout << "Received SYN from PID:  ";
+        break;
 
-        default:
-            break;
+    default:
+        break;
     }
 
     cout << mess.pid << endl;
@@ -55,45 +55,45 @@ int main () {
         struct message data = m_recv(socket);
 
         switch (data.header) {
-            case APP_REG:
-                {
-                    message_printout(Receving, data);
-                        
-                    struct message rep;
+        case APP_REG:
+        {
+            message_printout(Receving, data);
 
-                    rep.header            = CON_REP;
-                    rep.pid               = data.pid;
-                    rep.settings.schedule = Dynamic_chunks;
+            struct message rep;
 
-                    fill_n(rep.settings.thread_pinnings, MAX_NUM_THREADS, -1);
+            rep.header            = CON_REP;
+            rep.pid               = data.pid;
+            rep.settings.schedule = Dynamic_chunks;
 
-                    for (uint32_t i = 0; i < 4; i++)
-                    {
-                        rep.settings.thread_pinnings[i] = i;
-                    }
+            fill_n(rep.settings.thread_pinnings, MAX_NUM_THREADS, -1);
 
-                    // Send reply to client.
-                    m_send(socket, rep);
+            for (uint32_t i = 0; i < 4; i++)
+            {
+                rep.settings.thread_pinnings[i] = i;
+            }
 
-                    message_printout(Sending, rep);
+            // Send reply to client.
+            m_send(socket, rep);
 
-                    //sleep(30);
+            message_printout(Sending, rep);
 
-                    m_send(socket, rep);
+            //sleep(30);
 
-                    message_printout(Sending, rep);
+            m_send(socket, rep);
 
-                    break;
-                }
+            message_printout(Sending, rep);
 
-            case APP_TERM:
-                {
-                    cout << "PID: " << data.pid << " terminated" << endl << endl;
+            break;
+        }
 
-                    // Remove application from active list.
+        case APP_TERM:
+        {
+            cout << "PID: " << data.pid << " terminated" << endl << endl;
 
-                    break;
-                }
+            // Remove application from active list.
+
+            break;
+        }
         }
     }
     return 0;

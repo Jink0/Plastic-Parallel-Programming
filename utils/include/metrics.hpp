@@ -28,27 +28,27 @@
 
 // Structure to contain statistics for a single thread in a single run.
 struct thread_time {
-    struct timespec start_time, finish_time; 
+    struct timespec start_time, finish_time;
 
-    struct timespec last_start_time;         
+    struct timespec last_start_time;
     struct timespec overhead_start_time;
-    struct timespec mutex_blocked_start_time; 
-    struct timespec wait_blocked_start_time; 
+    struct timespec mutex_blocked_start_time;
+    struct timespec wait_blocked_start_time;
 
     struct timespec cumul_work_millis;
-    struct timespec cumul_overhead_millis; 
+    struct timespec cumul_overhead_millis;
     struct timespec cumul_mutex_blocked_millis;
     struct timespec cumul_wait_blocked_millis;
 
-    long tasks_completed = 0;  
+    long tasks_completed = 0;
 
     thread_time() {
 
         cumul_work_millis.tv_sec           = 0;
         cumul_work_millis.tv_nsec          = 0;
 
-        cumul_overhead_millis.tv_sec       = 0; 
-        cumul_overhead_millis.tv_nsec      = 0; 
+        cumul_overhead_millis.tv_sec       = 0;
+        cumul_overhead_millis.tv_nsec      = 0;
 
         cumul_mutex_blocked_millis.tv_sec  = 0;
         cumul_mutex_blocked_millis.tv_nsec = 0;
@@ -61,7 +61,7 @@ struct thread_time {
 // Structure to contain statistics for a set of repeats.
 struct repeat {
     struct timespec start_time;
-    struct timespec finish_time; 
+    struct timespec finish_time;
 
     std::deque<thread_time> thread_times;
 
@@ -107,7 +107,7 @@ void metrics_thread_finished(uint32_t thread_id);
 // Finalise metrics for a single repeat.
 void metrics_repeat_finished();
 
-// Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to 
+// Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to
 // inconsistent results. So metrics should not be fully trusted until all threads have finished.
 void metrics_finished(void);
 
@@ -116,7 +116,7 @@ void metrics_finished(void);
 // // Call before thread tries to obtain a mutex.
 // void metrics_obtaining_mutex(uint32_t thread_id);
 
-// // Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been 
+// // Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been
 // // blocked.
 // void metrics_obtained_mutex(uint32_t thread_id);
 

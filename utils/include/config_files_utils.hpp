@@ -103,11 +103,11 @@ boost::property_tree::ptree read_config_file(int argc, char *argv[]);
 
 
 
-// Translates the parameters of an individual experiment from a property tree to our experiment_parameters struct. 
+// Translates the parameters of an individual experiment from a property tree to our experiment_parameters struct.
 // Writes the parameters it finds to the given experiment_parameters struct, possibly overwriting existing values.
 void translate_experiment_parameters(boost::property_tree::ptree pt, struct experiment_parameters &params);
 
-// Translates the parameters of an entire run from a property tree to our run_parameters struct. 
+// Translates the parameters of an entire run from a property tree to our run_parameters struct.
 run_parameters translate_run_parameters(boost::property_tree::ptree pt);
 
 

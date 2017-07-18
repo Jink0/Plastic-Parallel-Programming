@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <parameters>
-	<number_of_repeats>1</number_of_repeats>
+	<number_of_repeats>2</number_of_repeats>
 	<defaults>
 		<number_of_threads>4</number_of_threads>
 		<initial_schedule>Dynamic_chunks</initial_schedule>
@@ -16,6 +16,9 @@
 		<threading_library>Default</threading_library>
 	</defaults>
 	<experiments>
+		<experiment>
+			<number_of_threads>8</number_of_threads>
+		</experiment>
 		<experiment/>
 	</experiments>
 </parameters>

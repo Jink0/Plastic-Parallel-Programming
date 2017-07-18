@@ -35,7 +35,7 @@ int collatz(int weight, deque<int> seeds) {
         int start = seeds[0];
 
         if (start < 1) {
-            fprintf(stderr,"Error, cannot start collatz with %d\n", start);
+            fprintf(stderr, "Error, cannot start collatz with %d\n", start);
 
             return 0;
         }
@@ -46,10 +46,10 @@ int collatz(int weight, deque<int> seeds) {
             if (start % 2) {
                 start = 3 * start + 1;
             } else {
-                start = start/2;
+                start = start / 2;
             }
         }
     }
-    
+
     return 1;
 }

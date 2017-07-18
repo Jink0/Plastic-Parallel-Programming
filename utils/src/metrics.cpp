@@ -38,7 +38,7 @@ void timespec_cumul_add(struct timespec *t1, struct timespec *t2) {
 
 // Initialise metrics for a set of repeats.
 void metrics_start(std::string output_filename) {
-   
+
     // Attempt to open/create output file.
     metrics.output_stream = fopen((char*) output_filename.c_str(), "w");
 
@@ -80,7 +80,7 @@ void metrics_starting_work(uint32_t thread_id) {
     clock_gettime(CLOCK_MONOTONIC, &now);
 
     // Overhead accrued is the time since we last finished doing work.
-    // metrics.repeats.back().thread_times.at(thread_id).cumul_overhead_millis += 
+    // metrics.repeats.back().thread_times.at(thread_id).cumul_overhead_millis +=
     //     TIME_DIFF_NANOS(now, metrics.repeats.back().thread_times.at(thread_id).last_start_time);
 
     timespec_diff(&now, &metrics.repeats.back().thread_times.at(thread_id).last_start_time, &diff);
@@ -149,7 +149,7 @@ void metrics_repeat_finished() {
     clock_gettime(CLOCK_MONOTONIC, &metrics.repeats.back().finish_time);
 }
 
-// Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to 
+// Calculate and print/record metrics. If we are still working, metrics can still be updated, which could lead to
 // inconsistent results. So metrics should not be fully trusted until all threads have finished.
 void metrics_finished(void) {
     for (uint32_t i = 0; i < metrics.repeats.size(); i++) {
@@ -238,7 +238,7 @@ void metrics_finished(void) {
 //     clock_gettime(CLOCK_MONOTONIC, &metrics.repeats.back().thread_times.at(thread_id).mutex_blocked_start_time);
 // }
 
-// // Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been 
+// // Call just after thread has obtained mutex. Increments the cumulative blocking time by the time the thread has been
 // // blocked.
 // void metrics_obtained_mutex(uint32_t thread_id) {
 //     struct timespec now;

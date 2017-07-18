@@ -17,17 +17,17 @@
 
 
 #ifdef DETAILED_METRICS
-  #define DM( x ) x
+#define DM( x ) x
 #else
-  #define DM( x ) 
+#define DM( x )
 #endif
 
 
 
 std::mutex& get_tid_mutex() {
-    static std::mutex m;
+	static std::mutex m;
 
-    return m;
+	return m;
 }
 
 uint32_t next_tid = 0;
@@ -54,149 +54,149 @@ ID_Type My_ID(get_tid());
 int main(int argc, char *argv[]) {
 
 	// Retrieve run parameters from given config file.
-    struct run_parameters params = translate_run_parameters(read_config_file(argc, argv));
+	struct run_parameters params = translate_run_parameters(read_config_file(argc, argv));
 
-    // Print run parameters.
-    print(params);
+	// Print run parameters.
+	print(params);
 
-    // Move to output folder and copy our config to it.
-    moveAndCopy(argv[1], "parallel_test");
+	// Move to output folder and copy our config to it.
+	moveAndCopy(argv[1], "parallel_test");
 
-    // For each experiment,
-    for (uint32_t i = 0; i < params.experiments.size(); i++) {
+	// For each experiment,
+	for (uint32_t i = 0; i < params.experiments.size(); i++) {
 
-    	// Create output filename.
-    	std::string output_filename = ("Experiment" + to_string(i + 1) + ".csv");
+		// Create output filename.
+		std::string output_filename = ("Experiment" + to_string(i + 1) + ".csv");
 
-    	metrics_start(output_filename);
+		metrics_start(output_filename);
 
-    	// For each repeat,
-    	for (uint32_t j = 0; j < params.number_of_repeats; j++) {
+		// For each repeat,
+		for (uint32_t j = 0; j < params.number_of_repeats; j++) {
 
-    		// Generate workload.
-    		struct workload<int, int, int> work = generate_workload<int, int, int>(params.experiments.at(i));
+			// Generate workload.
+			struct workload<int, int, int> work = generate_workload<int, int, int>(params.experiments.at(i));
 
-    		// Create output deque.
-		    deque<int> output(work.input1.size(), 0);
+			// Create output deque.
+			deque<int> output(work.input1.size(), 0);
 
-		    metrics_repeat_start(params.experiments.at(i).number_of_threads);
+			metrics_repeat_start(params.experiments.at(i).number_of_threads);
 
-		    // Parallel section start
-		    switch (params.experiments.at(i).threading_lib) {
-		    	case Default:
-		    		{
-		    			goto Def;
-		    		}
+			// Parallel section start
+			switch (params.experiments.at(i).threading_lib) {
+			case Default:
+			{
+				goto Def;
+			}
 
-		    		break;
+			break;
 
-		    	case pThreads:
-		    		{
-		    			print("\npThreads not implemented for parallel_test!\n\n");
+			case pThreads:
+			{
+				print("\npThreads not implemented for parallel_test!\n\n");
 
-		    			exit(EXIT_FAILURE);
-		    		}
+				exit(EXIT_FAILURE);
+			}
 
-		    		break;
+			break;
 
-		    	case TBB:
-		    		{
-		    			tbb::task_scheduler_init init(work.params.number_of_threads);
-		    			
-			    		// std::deque<bool> thread_init(work.params.number_of_threads, true);
+			case TBB:
+			{
+				tbb::task_scheduler_init init(work.params.number_of_threads);
 
-			    		metrics_thread_start(0);
+				// std::deque<bool> thread_init(work.params.number_of_threads, true);
 
-			    		tbb::parallel_for(size_t(0), work.input1.size(), [&](size_t k) {
+				metrics_thread_start(0);
 
-					        // metrics_starting_work(gettid());
-					        DM(metrics_starting_work(0));
+				tbb::parallel_for(size_t(0), work.input1.size(), [&](size_t k) {
 
-					  		// Do work.
-					    	output.at(k) = collatz(work.input1.at(k), work.input2);
+					// metrics_starting_work(gettid());
+					DM(metrics_starting_work(0));
 
-					    	// metrics_finishing_work(gettid());
-					    	DM(metrics_finishing_work(0));
+					// Do work.
+					output.at(k) = collatz(work.input1.at(k), work.input2);
 
-					    	// print(My_ID.local());
+					// metrics_finishing_work(gettid());
+					DM(metrics_finishing_work(0));
 
-					    	// std::this_thread::thread::id get_id()
-					    	// std::thread::id this_id = std::this_thread::get_id();
+					// print(My_ID.local());
 
-					    });
+					// std::this_thread::thread::id get_id()
+					// std::thread::id this_id = std::this_thread::get_id();
 
-					    metrics_thread_finished(0);
-							    
-			    		next_tid = 0;
-		    		}
+				});
 
-		    		break;
+				metrics_thread_finished(0);
 
-		    	case OpenMP:
-		    		{
-			    		Def:
+				next_tid = 0;
+			}
 
-					    uint32_t nthreads, tid, k;
+			break;
 
-					    // Explicitly disable dynamic teams.
-						omp_set_dynamic(0);  
+			case OpenMP:
+			{
+Def:
 
-						// Use set number of threads for all consecutive parallel regions. 
-						omp_set_num_threads(work.params.number_of_threads);
+				uint32_t nthreads, tid, k;
 
-						#pragma omp parallel shared(work, output) private(k, tid) 
-						{
-							// Get tid.
-						  	tid = omp_get_thread_num();
+				// Explicitly disable dynamic teams.
+				omp_set_dynamic(0);
 
-						  	if (tid == 0) {
-						    	nthreads = omp_get_num_threads();
-						    	print("Number of threads = ", nthreads, "\n");
-						  	}
+				// Use set number of threads for all consecutive parallel regions.
+				omp_set_num_threads(work.params.number_of_threads);
 
-						  	print("Thread ", tid, " starting...\n");
+				#pragma omp parallel shared(work, output) private(k, tid)
+				{
+					// Get tid.
+					tid = omp_get_thread_num();
 
-						  	metrics_thread_start(tid);
-
-						  	// Set our schedule.
-						  	switch (params.experiments.at(i).initial_schedule) {
-						  		case Static:
-						  			omp_set_schedule(omp_sched_static, 0);
-
-						  			break;
-
-						  		case Dynamic_chunks:
-						  			omp_set_schedule(omp_sched_dynamic, work.params.initial_chunk_size);
-
-						  			break;
-
-						  		case Tapered:
-						  			omp_set_schedule(omp_sched_guided, work.params.initial_chunk_size);
-
-						  			break;
-
-						  		case Auto:
-						  			omp_set_schedule(omp_sched_auto, work.params.initial_chunk_size);
-
-						  			break;
-						  	}
-
-						  	#pragma omp for schedule(runtime)
-						  	for (k = 0; k < work.input1.size(); k++) {
-						  		DM(metrics_starting_work(tid));
-
-						  		// Do work.
-						    	output.at(k) = collatz(work.input1.at(k), work.input2);
-
-						    	DM(metrics_finishing_work(tid));
-						  	}
-
-						  metrics_thread_finished(tid);
-					  	}
+					if (tid == 0) {
+						nthreads = omp_get_num_threads();
+						print("Number of threads = ", nthreads, "\n");
 					}
 
-		    		break;
-		    }
+					print("Thread ", tid, " starting...\n");
+
+					metrics_thread_start(tid);
+
+					// Set our schedule.
+					switch (params.experiments.at(i).initial_schedule) {
+					case Static:
+						omp_set_schedule(omp_sched_static, 0);
+
+						break;
+
+					case Dynamic_chunks:
+						omp_set_schedule(omp_sched_dynamic, work.params.initial_chunk_size);
+
+						break;
+
+					case Tapered:
+						omp_set_schedule(omp_sched_guided, work.params.initial_chunk_size);
+
+						break;
+
+					case Auto:
+						omp_set_schedule(omp_sched_auto, work.params.initial_chunk_size);
+
+						break;
+					}
+
+					#pragma omp for schedule(runtime)
+					for (k = 0; k < work.input1.size(); k++) {
+						DM(metrics_starting_work(tid));
+
+						// Do work.
+						output.at(k) = collatz(work.input1.at(k), work.input2);
+
+						DM(metrics_finishing_work(tid));
+					}
+
+					metrics_thread_finished(tid);
+				}
+			}
+
+			break;
+			}
 
 			metrics_repeat_finished();
 
@@ -205,11 +205,11 @@ int main(int argc, char *argv[]) {
 			// }
 
 			// Check if output is valid.
-		    if (std::find(output.begin(), output.end(), 0) != output.end()) {
-		    	print("\n\nWARNING - INCORRECT OUTPUT!!\n\n\n");
-		    }
-    	}
+			if (std::find(output.begin(), output.end(), 0) != output.end()) {
+				print("\n\nWARNING - INCORRECT OUTPUT!!\n\n\n");
+			}
+		}
 
-    	metrics_finished();
-    }
+		metrics_finished();
+	}
 }
