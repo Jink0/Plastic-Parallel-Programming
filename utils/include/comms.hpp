@@ -3,6 +3,8 @@
 
 #include <zmq.hpp> // ZMQ communication library.
 
+#include "config_files_utils.hpp"
+
 using namespace std;
 using namespace zmq;
 
@@ -18,7 +20,7 @@ using namespace zmq;
                                 Tapered            - Chunk size starts off large and decreases to better handle load 
                                                      imbalance between iterations.
                                 Auto               - Automatically try to figure out the best schedule. */
-enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
+// enum Schedule {Static, Dynamic_chunks, Dynamic_individual, Tapered, Auto};
 
 string Schedules[5] {
 	"Static",

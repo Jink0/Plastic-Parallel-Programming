@@ -12,23 +12,23 @@
 #include <iostream>
 
 #include <utils.hpp>
-#include <comms.hpp>
+// #include <comms.hpp>
 
 #include <map_array_thread.hpp>
 
+#include <workloads.hpp>
+
 using namespace std;
 
-#ifdef METRICS
-  #define Ms( x ) x
-#else
-  #define Ms( x ) 
-#endif
+// #ifdef METRICS
+  // #define Ms( x ) x
+// #else
+  // #define Ms( x ) 
+// #endif
 
-#ifdef METRICS
-  #include <metrics.hpp> // Our metrics library
-#endif
-
-#include <map_array_utils.hpp>
+// #ifdef METRICS
+//   #include <metrics_old.hpp> // Our metrics library
+// #endif
 
 /*
  * This file contains the definition of the map array pattern. Note - all the definitions are in the header file, as 
@@ -47,31 +47,29 @@ using namespace std;
  */
 
 template <typename in1, typename in2, typename out>
-void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1, deque<in2>), deque<out>& output, 
-               string output_filename = "", parameters params = parameters())
-{
-  test();
-  Ms(print("[Main] Metrics on!\n\n"));
+void map_array(struct workload<int, int, int>& work, deque<out>& output, experiment_parameters params, string output_filename = "") {
+
+  // Ms(print("[Main] Metrics on!\n\n"));
 
   // Initialise metrics.
-  Ms(metrics_init(4, output_filename + ".csv"));
+  // Ms(metrics_init(4, output_filename + ".csv"));
 
   // Print the number of processors we can detect.
-  print("[Main] Found ", params.thread_pinnings.size(), " processors\n");
+  print("[Main] Found ", params.number_of_threads, " processors\n");
 
-  BagOfTasks<in1, in2, out> bot(input1.begin(), input1.end(), &input2, user_function, output.begin());
+  BagOfTasks<in1, in2, out> bot(work.input1.begin(), work.input1.end(), &work.input2, work.userFunction, output.begin());
 
-  bot.thread_control.assign(params.thread_pinnings.size(), Execute);
+  bot.thread_control.assign(params.number_of_threads, Execute);
 
-  // Calculate info for data partitioning.
+  // // Calculate info for data partitioning.
   deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, params);
 
-  // Variables for creating and managing threads.
-  deque<pthread_t> threads(params.thread_pinnings.size());
+  // // Variables for creating and managing threads.
+  deque<pthread_t> threads(params.number_of_threads);
 
   // Create all our needed threads.
-  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
-  {
+  for (uint32_t i = 0; i < params.number_of_threads; i++) {
+
     print("[Main] Creating thread ", i , "\n");
 
     int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
@@ -90,6 +88,19 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
       exit(-1);
     }
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Get our PID to send to the controller.
   /*uint32_t pid = pthread_self();
@@ -218,13 +229,13 @@ void map_array(deque<in1>& input1, deque<in2>& input2, out (*user_function) (in1
 
   socket.close();*/
 
-  join_with_threads(threads, params.thread_pinnings.size());
+  join_with_threads(threads, params.number_of_threads);
 
-  Ms(metrics_finalise());
+  // Ms(metrics_finalise());
 
-  Ms(metrics_calc());
+  // Ms(metrics_calc());
 
-  Ms(metrics_exit());
+  // Ms(metrics_exit());
 
   return;
 }

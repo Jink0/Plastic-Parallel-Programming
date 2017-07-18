@@ -16,15 +16,15 @@
 
 using namespace std;
 
-#ifdef METRICS
-  #define Ms( x ) x
-#else
-  #define Ms( x ) 
-#endif
+// #ifdef METRICS
+//   #define Ms( x ) x
+// #else
+//   #define Ms( x ) 
+// #endif
 
-#ifdef METRICS
-  #include <metrics.hpp> // Our metrics library
-#endif
+// #ifdef METRICS
+//   #include <metrics_old.hpp> // Our metrics library
+// #endif
 
 // #include <map_array_utils.cpp>
 
@@ -40,28 +40,28 @@ using namespace std;
 
 
 // Parameters with default values.
-struct parameters 
-{
-    parameters(): task_dist(1), schedule(Tapered) 
-    { 
-      // Retreive the number of CPUs using the boost library.
-      uint32_t num_threads = boost::thread::hardware_concurrency();
+// struct parameters 
+// {
+//     parameters(): task_dist(1), schedule(Tapered) 
+//     { 
+//       // Retreive the number of CPUs using the boost library.
+//       uint32_t num_threads = boost::thread::hardware_concurrency();
 
-      for (uint32_t i = 0; i < num_threads; i++)
-      {
-        thread_pinnings.push_back(i);
-      }
-    }
+//       for (uint32_t i = 0; i < num_threads; i++)
+//       {
+//         thread_pinnings.push_back(i);
+//       }
+//     }
 
-    // How many threads to pin where.
-    deque<int> thread_pinnings;
+//     // How many threads to pin where.
+//     deque<int> thread_pinnings;
 
-    // Distribution of the tasks.
-    int task_dist;
+//     // Distribution of the tasks.
+//     int task_dist;
 
-    // Schedule to use.
-    Schedule schedule;
-};
+//     // Schedule to use.
+//     Schedule schedule;
+// };
 
 // Thread control enum. threads either run (execute), change strategies (update), or stop (terminte).
 enum Thread_Control {Execute, Update, Terminate};
@@ -285,15 +285,15 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
 
       break;
 
-    case Dynamic_individual:
-      {
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-          output.at(i) = 1;
-        }
-      }
+    // case Dynamic_individual:
+    //   {
+    //     for (uint32_t i = 0; i < num_threads; i++)
+    //     {
+    //       output.at(i) = 1;
+    //     }
+    //   }
 
-      break;
+    //   break;
 
     case Tapered:
       {
@@ -326,25 +326,25 @@ deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedul
 
 
 template <typename in1, typename in2, typename out>
-deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, parameters params) 
+deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, experiment_parameters params) 
 {
   // Calculate info for data partitioning.
-  deque<uint32_t> schedules = calc_schedules(input1_size, params.thread_pinnings.size(), params.schedule, 500);
+  deque<uint32_t> schedules = calc_schedules(input1_size, params.number_of_threads, params.initial_schedule, params.initial_chunk_size);
 
   // Output thread data
   deque<thread_data<in1, in2, out>> output;
 
   // Set thread data values.
-  for (uint32_t i = 0; i < params.thread_pinnings.size(); i++)
+  for (uint32_t i = 0; i < params.number_of_threads; i++)
   {
     struct thread_data<in1, in2, out> iter_data;
 
     iter_data.threadId     = i;
     iter_data.chunk_size   = schedules.at(i);
     iter_data.bot          = &bot;
-    iter_data.cpu_affinity = params.thread_pinnings.at(i);
+    iter_data.cpu_affinity = i;
 
-    if (params.schedule == Tapered)
+    if (params.initial_schedule == Tapered)
     {
       iter_data.tapered_schedule = true;
     }
@@ -366,15 +366,19 @@ void *mapArrayThread(void *threadarg)
   stick_this_thread_to_cpu(my_data->cpu_affinity);
 
   // Initialise metrics
-  Ms(metrics_thread_start(my_data->threadId));
+  // Ms(metrics_thread_start(my_data->threadId));
 
   // Print starting parameters
   print("[Thread ", my_data->threadId, "] Hello! \n");
+
+
 
   // Get tasks
   tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
 
   uint32_t tapered_chunk_size = my_data->chunk_size / 2;
+
+  print("Number of tasks: ", my_tasks.in1End - my_tasks.in1Begin, "\n");
 
   // While we have tasks to do;
   while (my_tasks.in1End - my_tasks.in1Begin > 0 )
@@ -382,12 +386,12 @@ void *mapArrayThread(void *threadarg)
     // Run between iterator ranges, stepping through input1 and output vectors
     for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
     {
-      Ms(metrics_starting_work(my_data->threadId));
+      // Ms(metrics_starting_work(my_data->threadId));
     
       // Run user function
       *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
 
-      Ms(metrics_finishing_work(my_data->threadId));
+      // Ms(metrics_finishing_work(my_data->threadId));
     }
 
     // If we should still be executing, get more tasks!
@@ -414,7 +418,7 @@ void *mapArrayThread(void *threadarg)
 
   }
 
-  Ms(metrics_thread_finished(my_data->threadId));
+  // Ms(metrics_thread_finished(my_data->threadId));
 
   pthread_exit(NULL);
 }

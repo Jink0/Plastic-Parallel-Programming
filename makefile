@@ -21,7 +21,7 @@ LIB_FLAGS = -lboost_system -lboost_filesystem -lboost_thread -lzmq -ltbb
 _CON_OBJ = controller.o
 CON_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_CON_OBJ))
 
-_MAT_OBJ = map_array_test.o map_array_utils.o utils.o metrics.o workloads.o
+_MAT_OBJ = map_array_test.o utils.o config_files_utils.o workloads.o metrics.o
 MAT_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_MAT_OBJ))
 
 _PAR_OBJ = parallel_test.o utils.o config_files_utils.o workloads.o metrics.o
