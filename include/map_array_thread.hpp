@@ -43,8 +43,8 @@ enum Thread_Control {Execute, Update, Terminate};
 
 // Structure to contain a group of tasks.
 template <typename in1, typename in2, typename out>
-struct tasks
-{
+struct tasks {
+
     // Start of input.
     typename std::deque<in1>::iterator in1Begin;
 
@@ -79,7 +79,7 @@ public:
     // Check for if bag is empty.
     bool empty = false;
 
-    // Constructor
+    // Constructor using just a workload and an output deque.
     BagOfTasks(struct workload<in1, in2, out>& work,
                deque<out>& output) :
 
@@ -112,11 +112,10 @@ public:
     // Destructor
     ~BagOfTasks() {};
 
-    // Overloads << operator for easy printing with streams.
-    friend std::ostream& operator<< (std::ostream &outS, BagOfTasks<in1, in2, out> &bot)
-    {
-        // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is
-        // destroyed and the mutex is released.
+    // Overloads << operator for easy printing with streams. Mainly used for development.
+    friend std::ostream& operator<< (std::ostream &outS, BagOfTasks<in1, in2, out> &bot) {
+
+        // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released.
         std::lock_guard<std::mutex> lock(bot.m);
 
         // Print all our important data.
@@ -127,8 +126,8 @@ public:
                << "Number of tasks - " << bot.in1End - bot.in1Begin << std::endl << std::endl;
     };
 
-    uint32_t numTasksRemaining()
-    {
+    uint32_t numTasksRemaining() {
+
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
@@ -136,9 +135,9 @@ public:
         return in1End - in1Begin;
     }
 
-    // Returns tasks of the specified number or less.
-    tasks<in1, in2, out> getTasks(uint32_t num)
-    {
+    // Returns tasks of the specified count or less.
+    tasks<in1, in2, out> getTasks(uint32_t num) {
+
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
@@ -148,17 +147,15 @@ public:
         uint32_t num_tasks;
 
         // Calculate number of tasks to return.
-        if (num < in1End - in1Begin)
-        {
+        if (num < in1End - in1Begin) {
             num_tasks = num;
-        }
-        else
-        {
+
+        } else {
             num_tasks = in1End - in1Begin;
         }
 
-        if (num_tasks == 0)
-        {
+        // Check if the bag is empty.
+        if (num_tasks == 0) {
             empty = true;
         }
 
@@ -200,10 +197,10 @@ enum Status {Alive, Sleeping, Terminated};
 
 // Data struct to pass to each thread.
 template <typename in1, typename in2, typename out>
-struct thread_data
-{
+struct thread_data {
+
     // Id of this thread.
-    int threadId;
+    uint32_t threadId;
 
     // CPU for thread to run on.
     uint32_t cpu_affinity;
@@ -231,68 +228,66 @@ struct thread_data
 
 
 
-std::deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Schedule sched, uint32_t chunk_size = 0)
-{
-    std::deque<uint32_t> output(num_threads);
+std::deque<uint32_t> calc_chunks(experiment_parameters params) {
 
-    switch (sched)
-    {
-    case Static:
-    {
-        // Calculate info for data partitioning.
-        uint32_t quotient  = num_tasks / num_threads;
-        uint32_t remainder = num_tasks % num_threads;
+    // Output deque of chunk sizes, one for each thread.
+    std::deque<uint32_t> output(params.number_of_threads);
 
-        for (uint32_t i = 0; i < num_threads; i++)
+    switch (params.initial_schedule){
+        case Static:
         {
-            // If we still have remainder tasks, add one to this thread.
-            if (i < remainder)
-            {
-                output.at(i) = quotient + 1;
+            // Calculate info for data partitioning.
+            uint32_t quotient  = params.array_size / params.number_of_threads;
+            uint32_t remainder = params.array_size % params.number_of_threads;
+
+            for (uint32_t i = 0; i < params.number_of_threads; i++) {
+
+                // If we still have remainder tasks, add one to this thread.
+                if (i < remainder) {
+                    output.at(i) = quotient + 1;
+
+                } else {
+                    output.at(i) = quotient;
+                }
             }
-            else
-            {
+        }
+
+        break;
+
+        case Dynamic_chunks:
+        {
+            // If the chunk size is set to zero, guess at a reasonable chunk size.
+            if (params.initial_chunk_size == 0) {
+                params.initial_chunk_size = params.array_size / (params.number_of_threads * 10);
+            }
+
+            // Set chunk sizes.
+            for (uint32_t i = 0; i < params.number_of_threads; i++) {
+                output.at(i) = params.initial_chunk_size;
+            }
+        }
+
+        break;
+
+        case Tapered:
+        {
+            // Calculate info for data partitioning.
+            uint32_t quotient  = params.array_size / (params.number_of_threads * 2);
+
+            // Set chunk sizes.
+            for (uint32_t i = 0; i < params.number_of_threads; i++) {
                 output.at(i) = quotient;
             }
         }
-    }
 
-    break;
+        break;
 
-    case Dynamic_chunks:
-    {
-        if (chunk_size == 0)
+        case Auto:
         {
-            chunk_size = num_tasks / (num_threads * 10);
+            print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
         }
 
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-            output.at(i) = chunk_size;
-        }
-    }
-
-    break;
-
-    case Tapered:
-    {
-        // Calculate info for data partitioning.
-        uint32_t quotient  = num_tasks / (num_threads * 2);
-
-        for (uint32_t i = 0; i < num_threads; i++)
-        {
-            output.at(i) = quotient;
-        }
-    }
-
-    break;
-
-    case Auto:
-    {
-        print("\n\n\n*********************\n\nAuto schedule not implemented yet!\n\n*********************\n\n\n\n");
-    }
-
-    break;
+        break;
     }
 
     return output;
@@ -300,31 +295,26 @@ std::deque<uint32_t> calc_schedules(uint32_t num_tasks, uint32_t num_threads, Sc
 
 
 
-
-
-
-
 template <typename in1, typename in2, typename out>
-std::deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, BagOfTasks<in1, in2, out> &bot, experiment_parameters params)
-{
-    // Calculate info for data partitioning.
-    std::deque<uint32_t> schedules = calc_schedules(input1_size, params.number_of_threads, params.initial_schedule, params.initial_chunk_size);
+std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out> &bot, experiment_parameters params) {
 
-    // Output thread data
+    // Calculate info for data partitioning.
+    std::deque<uint32_t> chunks = calc_chunks(params);
+
+    // Output deque of thread data
     std::deque<thread_data<in1, in2, out>> output;
 
     // Set thread data values.
-    for (uint32_t i = 0; i < params.number_of_threads; i++)
-    {
+    for (uint32_t i = 0; i < params.number_of_threads; i++) {
+
         struct thread_data<in1, in2, out> iter_data;
 
         iter_data.threadId     = i;
-        iter_data.chunk_size   = schedules.at(i);
+        iter_data.chunk_size   = chunks.at(i);
         iter_data.bot          = &bot;
         iter_data.cpu_affinity = i;
 
-        if (params.initial_schedule == Tapered)
-        {
+        if (params.initial_schedule == Tapered) {
             iter_data.tapered_schedule = true;
         }
 
@@ -336,77 +326,64 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(uint32_t input1_size, Ba
 
 // Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
-void *mapArrayThread(void *threadarg)
-{
-    // Pointer to store personal data
-    struct thread_data<in1, in2, out> *my_data;
-    my_data = (struct thread_data<in1, in2, out> *) threadarg;
+void *mapArrayThread(void *threadarg) {
 
-    stick_this_thread_to_cpu(my_data->cpu_affinity);
+    // Store personal data
+    struct thread_data<in1, in2, out> *my_data = (struct thread_data<in1, in2, out> *) threadarg;
 
-
-
-
-
-    // Print starting parameters
-    print("[Thread ", my_data->threadId, "] Hello! \n");
-
-    // Initialise metrics
+    // Initialise metrics.
     metrics_thread_start(my_data->cpu_affinity);
 
+    // Stick to our designated CPU.
+    stick_this_thread_to_cpu(my_data->cpu_affinity);
 
-
-    // Get tasks
+    // Get tasks.
     tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
 
+    // Print hello, and the number of tasks.
+    print("[Thread ", my_data->threadId, "] Hello! \n[Thread ", my_data->threadId, "] Initial chunk size: ", my_tasks.in1End - my_tasks.in1Begin, "\n");
+
+    // Calculate taper.
     uint32_t tapered_chunk_size = my_data->chunk_size / 2;
 
-    print("Number of tasks: ", my_tasks.in1End - my_tasks.in1Begin, "\n");
-
     // While we have tasks to do;
-    while (my_tasks.in1End - my_tasks.in1Begin > 0 )
-    {
-        // Run between iterator ranges, stepping through input1 and output vectors
-        for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin)
-        {
-            // Ms(metrics_starting_work(my_data->threadId));
+    while (my_tasks.in1End - my_tasks.in1Begin > 0 ) {
+
+        // Run between iterator ranges, stepping through input1 and output vectors.
+        for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin) {
+
             DM(metrics_starting_work(my_data->threadId));
 
-            // Run user function
+            // Run user function.
             *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
 
             DM(metrics_finishing_work(my_data->threadId));
-
-            // Ms(metrics_finishing_work(my_data->threadId));
         }
 
         // If we should still be executing, get more tasks!
-        if ((*my_data->bot).thread_control.at(my_data->threadId) == Execute)
-        {
-            if (my_data->tapered_schedule)
-            {
+        if ((*my_data->bot).thread_control.at(my_data->threadId) == Execute) {
+
+            // Check for tapered schedule.
+            if (my_data->tapered_schedule) {
+
                 my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
 
                 print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
 
-                if (tapered_chunk_size > 1)
-                {
+                // Recalculate taper.
+                if (tapered_chunk_size > 1) {
+
                     tapered_chunk_size = tapered_chunk_size / 2;
                 }
-            }
-            else
-            {
+            } else {
                 my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
 
                 print("[Thread ", my_data->threadId, "] Chunk size: ", my_data->chunk_size, "\n");
             }
         }
-
     }
 
     metrics_thread_finished(my_data->cpu_affinity);
-
-    // Ms(metrics_thread_finished(my_data->threadId));
 
     pthread_exit(NULL);
 }

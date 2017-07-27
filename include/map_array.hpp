@@ -39,14 +39,14 @@
 template <typename in1, typename in2, typename out>
 void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
 
-    // Print the number of processors we can detect.
-    print("[Main] Found ", work.params.number_of_threads, " processors\n");
+    // Print the number of processors we will use.
+    print("[Main] Using ", work.params.number_of_threads, " processors\n");
 
     // Create bag of tasks.
     BagOfTasks<in1, in2, out> bot(work, output);
 
     // Calculate info for data partitioning.
-    deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot.numTasksRemaining(), bot, work.params);
+    deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot, work.params);
 
     // Variables for creating and managing threads.
     deque<pthread_t> threads(work.params.number_of_threads);
