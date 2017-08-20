@@ -8,7 +8,7 @@
  * Test user function
  */
 
-int returnOne(int in1, deque<int> in2)
+int returnOne(int in1, std::deque<int> in2)
 {
     return 1;
 }
@@ -19,7 +19,7 @@ int returnOne(int in1, deque<int> in2)
  * Test user function
  */
 
-int oneTouch(int in1, deque<int> in2)
+int oneTouch(int in1, std::deque<int> in2)
 {
     return in1 + in2[0];
 }
@@ -30,7 +30,7 @@ int oneTouch(int in1, deque<int> in2)
  * Test user function
  */
 
-int collatz(int weight, deque<int> seeds) {
+int collatz(int weight, std::deque<int> seeds) {
     for (int i = 0; i < weight; i++)     {
         int start = seeds[0];
 

@@ -5,19 +5,19 @@
 
 #include "config_files_utils.hpp" // For experiment_parameters
 
-using namespace std;
+
 
 // Structure to contain our workload.
 template <typename in1, typename in2, typename out>
 struct workload {
 	// First input deque.
-	deque<in1> input1;
+	std::deque<in1> input1;
 
 	// Second input deque.
-	deque<in2> input2;
+	std::deque<in2> input2;
 
 	// User function pointer.
-	out (*userFunction) (in1, deque<in2>);
+	out (*userFunction) (in1, std::deque<in2>);
 
 	struct experiment_parameters params;
 };
@@ -26,7 +26,7 @@ struct workload {
  * Test user function
  */
 
-int returnOne(int in1, deque<int> in2);
+int returnOne(int in1, std::deque<int> in2);
 
 
 
@@ -34,7 +34,7 @@ int returnOne(int in1, deque<int> in2);
  * Test user function
  */
 
-int oneTouch(int in1, deque<int> in2);
+int oneTouch(int in1, std::deque<int> in2);
 
 
 
@@ -42,7 +42,7 @@ int oneTouch(int in1, deque<int> in2);
  * Test user function
  */
 
-int collatz(int weight, deque<int> seeds);
+int collatz(int weight, std::deque<int> seeds);
 
 //
 template <typename in1, typename in2, typename out>

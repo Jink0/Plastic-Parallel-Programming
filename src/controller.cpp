@@ -7,62 +7,33 @@
 
 #include "comms.hpp"
 
-using namespace std;
-using namespace zmq;
+
 
 #define MAX_CLIENTS 4
 
-enum Message_type {
-    Sending, Receving
-};
 
-void message_printout(Message_type type, struct message mess) {
-    switch (type) {
-    case Sending:
-        cout << "Sending ACK to PID:     ";
-        break;
-
-    case Receving:
-        cout << "Received SYN from PID:  ";
-        break;
-
-    default:
-        break;
-    }
-
-    cout << mess.pid << endl;
-    cout << "   With schedule:       " << schedules[mess.parameters.schedule] << endl;
-    cout << "   And thread pinnings: ";
-
-    uint32_t i_w = 0;
-
-    // while (mess.parameters.thread_pinnings[i_w] != -1) {
-    //     cout << mess.parameters.thread_pinnings[i_w] << ' ';
-    //     i_w++;
-    // }
-
-    cout << endl << endl;
-}
 
 int main () {
     // Prepare our context and sockets.
-    context_t context(1);
+    zmq::context_t context(1);
 
-    socket_t port_req_socket(context, ZMQ_REP);
-    socket_t client1(context, ZMQ_PAIR);
-    socket_t client2(context, ZMQ_PAIR);
-    socket_t client3(context, ZMQ_PAIR);
-    socket_t client4(context, ZMQ_PAIR);
+    zmq::socket_t port_req_socket(context, ZMQ_REP);
+    zmq::socket_t client1(context, ZMQ_PAIR);
+    zmq::socket_t client2(context, ZMQ_PAIR);
+    zmq::socket_t client3(context, ZMQ_PAIR);
+    zmq::socket_t client4(context, ZMQ_PAIR);
 
-    port_req_socket.bind("tcp://*:5555");
-    client1.bind("tcp://*:5556");
-    client2.bind("tcp://*:5557");
-    client3.bind("tcp://*:5558");
-    client4.bind("tcp://*:5559");
+    // Bind sockets to ports.
+    port_req_socket.bind("tcp://*:" + std::to_string(DEFAULT_PORT));
+    client1.bind("tcp://*:" + std::to_string(DEFAULT_PORT + 1));
+    client2.bind("tcp://*:" + std::to_string(DEFAULT_PORT + 2));
+    client3.bind("tcp://*:" + std::to_string(DEFAULT_PORT + 3));
+    client4.bind("tcp://*:" + std::to_string(DEFAULT_PORT + 4));
 
-    uint32_t next_port = 5556;
+    // Setup the next port to allocate.
+    uint32_t next_port = DEFAULT_PORT + 1;
 
-    // Initialize poll set
+    // Initialize poll set.
     zmq::pollitem_t items[MAX_CLIENTS + 1] = {
         { port_req_socket, 0, ZMQ_POLLIN, 0 },
         { client1, 0, ZMQ_POLLIN, 0 },
@@ -71,170 +42,67 @@ int main () {
         { client4, 0, ZMQ_POLLIN, 0 }
     };
 
-    // Process messages from all sockets
+    // Continually poll for messages from all sockets.
     while (true) {
         zmq::message_t message;
         zmq::poll(&items[0], MAX_CLIENTS + 1, -1);
         
+        // If we have a port request,
         if (items[0].revents & ZMQ_POLLIN) {
 
+            // Receive message.
             struct message data = m_recv(port_req_socket);
 
-            std::cout << "Received port request from: " + std::to_string(data.pid) + "\n";
+            if (data.header == APP_P_REQ) {
 
-            uint32_t_send(port_req_socket, next_port);
+                // Reply with port allocation.
+                uint32_t_send(port_req_socket, next_port);
 
-            next_port++;
+                next_port++;
+            }
         }
 
+        // If we have a message from client 1,
         if (items[1].revents & ZMQ_POLLIN) {
 
+            // Receive message.
             struct message data = m_recv(client1);
 
-            std::cout << "Connected with: " + std::to_string(data.pid) + " on port: " + std::to_string(5556) + "\n";
+            // Switch on message type.
+            switch (data.header) {
+                case APP_INIT: {
 
-            struct message rep;
+                    std::deque<uint32_t> thread_pinnings;
 
-            rep.header              = CON_UPDT;
-            rep.pid                 = data.pid;
-            rep.parameters          = data.parameters;
-            rep.parameters.schedule = Static;
+                    for (uint32_t i = 0; i < data.parameters.number_of_threads; i++) {
+                        thread_pinnings.push_back(uint32_t_recv(client1));
+                    }
 
-            // fill_n(rep.parameters.thread_pinnings, MAX_NUM_THREADS, -1);
+                    struct message update;
 
-            // for (uint32_t i = 0; i < 4; i++)
-            // {
-            //     rep.parameters.thread_pinnings[i] = i;
-            // }
+                    update.header              = CON_UPDT;
+                    update.pid                 = data.pid;
+                    update.parameters          = data.parameters;
+                    update.parameters.schedule = Static;
 
-            // Send reply to client.
-            m_send(client1, rep);
-        }
+                    // Send update to client.
+                    m_send(client1, update);
 
-        if (items[2].revents & ZMQ_POLLIN) {
+                    for (uint32_t i = 0; i < data.parameters.number_of_threads; i++) {
+                        uint32_t_send(client1, 1);
+                    }
 
-            struct message data = m_recv(client2);
+                    break;
+                }
 
-            std::cout << "Connected with: " + std::to_string(data.pid) + " on port: " + std::to_string(5557) + "\n";
+                case APP_TERM: {
+                    // Remove application from active list.
 
-            struct message rep;
-
-            rep.header              = CON_UPDT;
-            rep.pid                 = data.pid;
-            rep.parameters          = data.parameters;
-            rep.parameters.schedule = Static;
-
-            // fill_n(rep.parameters.thread_pinnings, MAX_NUM_THREADS, -1);
-
-            // for (uint32_t i = 0; i < 4; i++)
-            // {
-            //     rep.parameters.thread_pinnings[i] = i;
-            // }
-
-            // Send reply to client.
-            m_send(client2, rep);
-        }
-
-        if (items[3].revents & ZMQ_POLLIN) {
-
-            struct message data = m_recv(client3);
-
-            std::cout << "Connected with: " + std::to_string(data.pid) + " on port: " + std::to_string(5558) + "\n";
-
-            struct message rep;
-
-            rep.header              = CON_UPDT;
-            rep.pid                 = data.pid;
-            rep.parameters          = data.parameters;
-            rep.parameters.schedule = Static;
-
-            // fill_n(rep.parameters.thread_pinnings, MAX_NUM_THREADS, -1);
-
-            // for (uint32_t i = 0; i < 4; i++)
-            // {
-            //     rep.parameters.thread_pinnings[i] = i;
-            // }
-
-            // Send reply to client.
-            m_send(client3, rep);
-        }
-
-        if (items[4].revents & ZMQ_POLLIN) {
-
-            struct message data = m_recv(client4);
-
-            std::cout << "Connected with: " + std::to_string(data.pid) + " on port: " + std::to_string(5559) + "\n";
-
-            struct message rep;
-
-            rep.header              = CON_UPDT;
-            rep.pid                 = data.pid;
-            rep.parameters          = data.parameters;
-            rep.parameters.schedule = Static;
-
-            // fill_n(rep.parameters.thread_pinnings, MAX_NUM_THREADS, -1);
-
-            // for (uint32_t i = 0; i < 4; i++)
-            // {
-            //     rep.parameters.thread_pinnings[i] = i;
-            // }
-
-            // Send reply to client.
-            m_send(client4, rep);
+                    break;
+                }
+            }
         }
     }
-
-        // Wait for next message from client
-        // struct message data = m_recv(socket);
-
-        // switch (data.header) {
-            // case APP_C_REQ: {
-
-            //     // uint32_t_send(socket, next_port);
-
-            //     next_port++;
-
-            //     break;
-            // }
-
-            // case APP_INIT: {
-            //         message_printout(Receving, data);
-
-            //         struct message rep;
-
-            //         rep.header              = CON_UPDT;
-            //         rep.pid                 = data.pid;
-            //         rep.parameters.schedule = Static;
-
-            //         // fill_n(rep.parameters.thread_pinnings, MAX_NUM_THREADS, -1);
-
-            //         // for (uint32_t i = 0; i < 4; i++)
-            //         // {
-            //         //     rep.parameters.thread_pinnings[i] = i;
-            //         // }
-
-            //         // Send reply to client.
-            //         m_send(socket, rep);
-
-            //         message_printout(Sending, rep);
-
-            //         //sleep(30);
-
-            //         // m_send(socket, rep);
-
-            //         // message_printout(Sending, rep);
-
-            //         break;
-            //     }
-
-            // case APP_TERM: {
-            //         cout << "PID: " << data.pid << " terminated" << endl << endl;
-
-            //         // Remove application from active list.
-
-            //         break;
-            //     }
-        // }
 
     return 0;
 }

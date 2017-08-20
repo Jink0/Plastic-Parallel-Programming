@@ -37,7 +37,7 @@
  */
 
 template <typename in1, typename in2, typename out>
-void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
+void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
     // Print the number of processors we will use.
     print("[Main] Using ", work.params.number_of_threads, " processors\n");
@@ -46,10 +46,10 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
     BagOfTasks<in1, in2, out> bot(work, output);
 
     // Calculate info for data partitioning.
-    deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot, work.params);
+    std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot, work.params);
 
     // Variables for creating and managing threads.
-    deque<pthread_t> threads(work.params.number_of_threads);
+    std::deque<pthread_t> threads(work.params.number_of_threads);
 
     // Create all our needed threads.
     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
@@ -75,11 +75,9 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
     // Get our PID to send to the controller.
     uint32_t pid = pthread_self();
 
-    using namespace zmq;
-
     //  Prepare our context and socket
-    context_t context(1);
-    socket_t  port_socket(context, ZMQ_REQ);
+    zmq::context_t context(1);
+    zmq::socket_t  port_socket(context, ZMQ_REQ);
 
     port_socket.connect("tcp://localhost:5555");
 
@@ -98,7 +96,7 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
 
     print("\n[Main] Received new port from controller: " + std::to_string(port) + "\n\n");
 
-    socket_t socket(context, ZMQ_PAIR);
+    zmq::socket_t socket(context, ZMQ_PAIR);
 
     socket.connect("tcp://localhost:" + std::to_string(port));
 
@@ -109,21 +107,14 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
     rgstr.parameters.chunk_size        = work.params.initial_chunk_size;
     rgstr.parameters.array_size        = work.params.array_size;
 
-    // fill_n(rgstr.parameters.thread_pinnings, MAX_NUM_THREADS, -1);
-
-    // copy(work.params.thread_pinnings.begin(), work.params.thread_pinnings.end(), rgstr.settings.thread_pinnings);
-
     m_send(socket, rgstr);
 
-    
-
-
+    for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
+        uint32_t_send(socket, work.params.thread_pinnings.at(i));
+    }
 
     while (bot.empty == false) {
         usleep(5);
-
-        // Get message from controller.
-        // struct message msg = m_no_block_recv(socket);
 
         // Poll socket for a reply, with timeout
         zmq::pollitem_t items[] = { { socket, 0, ZMQ_POLLIN, 0 } };
@@ -134,44 +125,48 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
 
             struct message msg = m_recv(socket);
 
-        
+            std::deque<uint32_t> thread_pinnings;
+            std::stringstream thread_pinnings_stringstream;
 
-        // if (msg.header != -1) {
+            for (uint32_t i = 0; i < msg.parameters.number_of_threads; i++) {
 
-        //     print("\n[Main] Received new parameters from controller!\n\n");
+                uint32_t item = uint32_t_recv(socket);
 
-        //     // Calculate new number of threads.
-        //     // uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.parameters.thread_pinnings), end(msg.parameters.thread_pinnings), -1);
-
-        //     // If we have a surplus of threads;
-        //     if (work.params.number_of_threads > msg.parameters.number_of_threads) {
-
-        //         uint32_t iterator = bot.thread_control.size() - 1;
-
-        //         // Set excess threads to terminate.
-        //         while(iterator > msg.parameters.number_of_threads - 1) {
-
-        //             bot.thread_control.at(iterator) = Terminate;
-        //         }
-
-        //         // Join with terminating threads.
-        //         join_with_threads(threads, work.params.number_of_threads - msg.parameters.number_of_threads);
-
-        //         // Cleanup thread control vars.
-        //         bot.thread_control.resize(msg.parameters.number_of_threads);
-        //     }
-
-        //     if (work.params.number_of_threads < msg.parameters.number_of_threads) {
-
-        //     }
-        // }
+                thread_pinnings.push_back(item);
+                thread_pinnings_stringstream << item << " ";
+            }
 
             if (msg.header == CON_UPDT) {
 
                 print("\n[Main] New parameters received!",
                       "\n[Main] Changing schedule to: ", schedules[msg.parameters.schedule],
-                      // "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
+                      "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
                       "\n\n");
+
+                //     // Calculate new number of threads.
+                //     // uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.parameters.thread_pinnings), end(msg.parameters.thread_pinnings), -1);
+
+                //     // If we have a surplus of threads;
+                //     if (work.params.number_of_threads > msg.parameters.number_of_threads) {
+
+                //         uint32_t iterator = bot.thread_control.size() - 1;
+
+                //         // Set excess threads to terminate.
+                //         while(iterator > msg.parameters.number_of_threads - 1) {
+
+                //             bot.thread_control.at(iterator) = Terminate;
+                //         }
+
+                //         // Join with terminating threads.
+                //         join_with_threads(threads, work.params.number_of_threads - msg.parameters.number_of_threads);
+
+                //         // Cleanup thread control vars.
+                //         bot.thread_control.resize(msg.parameters.number_of_threads);
+                //     }
+
+                //     if (work.params.number_of_threads < msg.parameters.number_of_threads) {
+
+                //     }
 
                 // Terminating threads.
                 bot.thread_control.assign(work.params.number_of_threads, Terminate);
@@ -187,19 +182,11 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
                 // Clear previous thread pinnings.
                 // work.params.thread_pinnings.clear();
 
-                // uint32_t i_w = 0;
-                // stringstream thread_pinnings_stringstream;
+                // Copy new thread pinnings.
+                work.params.thread_pinnings = thread_pinnings;
 
-                // while (msg.settings.thread_pinnings[i_w] != -1)
-                // {
-                //   // Record and update thread pinnings.
-                //   thread_pinnings_stringstream << msg.settings.thread_pinnings[i_w] << " ";
-                //   work.params.thread_pinnings.push_back(msg.settings.thread_pinnings[i_w]);
-                //   i_w++;
-                // }
-
-                
-
+        
+        
                 // Restart map_array:
 
                 // Reset terminate variables.
@@ -208,7 +195,7 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
                 thread_data_deque.clear();
 
                 // Recalculate info for data partitioning.
-                deque<thread_data<in1, in2, out>> thread_data_deque2 = calc_thread_data(bot, work.params);
+                std::deque<thread_data<in1, in2, out>> thread_data_deque2 = calc_thread_data(bot, work.params);
 
                 // Reset thread ids.
                 threads.clear();
@@ -237,16 +224,11 @@ void map_array(struct workload<in1, in2, out>& work, deque<out>& output) {
     term.header = APP_TERM;
     term.pid = pid;
 
-    // m_send(socket, term);
+    m_send(socket, term);
 
     socket.close();
 
-    // zmq_close(socket);
-    // zmq_term(socket);
-
     join_with_threads(threads, work.params.number_of_threads);
-
-    // exit(1);
 
     return;
 }

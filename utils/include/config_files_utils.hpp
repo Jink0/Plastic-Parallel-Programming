@@ -42,6 +42,9 @@ struct experiment_parameters {
 	// Number of threads to use.
 	uint32_t number_of_threads;
 
+	// Thread pinnings to use.
+	std::deque<uint32_t> thread_pinnings;
+
 	// Schedule to start with.
 	Schedule initial_schedule;
 

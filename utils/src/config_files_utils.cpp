@@ -115,12 +115,33 @@ boost::property_tree::ptree read_config_file(int argc, char *argv[]) {
 // Translates the parameters of an individual experiment from a property tree to our experiment_parameters struct. 
 // Writes the parameters it finds to the given experiment_parameters struct, possibly overwriting existing values.
 void translate_experiment_parameters(boost::property_tree::ptree pt, struct experiment_parameters &params) {
+
 	// For each node,
 	for (auto& node : pt) {
 		// Check against expected parameters.
         if (node.first.compare("number_of_threads") == 0) {
         	// Retrieve value.
         	params.number_of_threads = node.second.get_value<uint32_t>();
+
+        } else if (node.first.compare("thread_pinnings") == 0) {
+
+            // First clear existing pinnings.
+            params.thread_pinnings.clear();
+
+            // For each node,
+            for (auto& child : node.second) {
+                
+                if (child.first.compare("value") == 0) {
+                    // Retrieve value.
+                    params.thread_pinnings.push_back(child.second.get_value<uint32_t>());
+
+                // Catch unexpected nodes, ignoring "<xmlattr>".
+                } else if (child.first.compare("<xmlattr>") != 0) {
+                    print("Unrecognised node in config: ", child.first, "\n\n");
+
+                    exit(EXIT_FAILURE);
+                }
+            }
 
         } else if (node.first.compare("threading_library") == 0) { 
             const std::string *t_lib = std::find(threading_libraries, threading_libraries + NUM_THREADING_LIBRARIES, node.second.get_value<std::string>());
@@ -207,6 +228,21 @@ run_parameters translate_run_parameters(boost::property_tree::ptree pt) {
         	// Retrieve default experiment parameters.
        		translate_experiment_parameters(node.second, defaults);
 
+            // Check for thread pinnings.
+            if (defaults.thread_pinnings.size() == 0) {
+                for (uint32_t i = 0; i < defaults.number_of_threads; i++) {
+                    defaults.thread_pinnings.push_back(i);
+                }
+            }
+
+            // Check integrity of config.
+            if (defaults.number_of_threads != defaults.thread_pinnings.size()) {
+                print("Malformed config file, number of threads (", defaults.number_of_threads, 
+                      ") doesn't match number of thread pinnings (", defaults.thread_pinnings.size(),
+                      ")\n\n");
+                exit(1);
+            }
+
         } else if (node.first.compare("experiments") == 0) {
         	// For each node (each experiment),
         	for (auto& child : node.second) {
@@ -215,6 +251,14 @@ run_parameters translate_run_parameters(boost::property_tree::ptree pt) {
 
 	        	// Overwrite with differing parameters.
 	        	translate_experiment_parameters(child.second, exp_params);
+
+                // Check integrity of config.
+                if (exp_params.number_of_threads != exp_params.thread_pinnings.size()) {
+                    print("Malformed config file, number of threads (", exp_params.number_of_threads, 
+                          ") doesn't match number of thread pinnings (", exp_params.thread_pinnings.size(),
+                          ")\n\n");
+                    exit(1);
+                }
 
 	        	// Add to deque of experiment parameters.
 	        	params.experiments.push_back(exp_params);

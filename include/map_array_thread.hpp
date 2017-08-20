@@ -81,7 +81,7 @@ public:
 
     // Constructor using just a workload and an output deque.
     BagOfTasks(struct workload<in1, in2, out>& work,
-               deque<out>& output) :
+               std::deque<out>& output) :
 
         in1Begin(work.input1.begin()),
         in1End(work.input1.end()),
@@ -337,7 +337,7 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out
         iter_data.threadId     = i;
         iter_data.chunk_size   = chunks.at(i);
         iter_data.bot          = &bot;
-        iter_data.cpu_affinity = i;
+        iter_data.cpu_affinity = params.thread_pinnings.at(i);
 
         if (params.initial_schedule == Tapered) {
             iter_data.tapered_schedule = true;
@@ -348,6 +348,8 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out
 
     return output;
 }
+
+
 
 // Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
