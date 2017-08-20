@@ -48,14 +48,14 @@ struct experiment_parameters {
 	// Chunk size to start with.
 	uint32_t initial_chunk_size;
 
-	// User function to use.
-	User_function user_function;
-
 	// Array size to use.
 	uint32_t array_size;
 
 	// Relative distribution of tasks, e.g. 1 1 1 4 means last 1/4 of the array has tasks 4x as large.
 	std::deque<uint32_t> task_size_distribution;
+
+	// User function to use.
+	User_function user_function;
 
 	// Threading library to use.
 	Threading_library threading_lib;

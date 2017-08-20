@@ -112,7 +112,7 @@ public:
     // Destructor
     ~BagOfTasks() {};
 
-    // Overloads << operator for easy printing with streams. Mainly used for development.
+    // Overloads << operator for easy printing with streams. Used for development.
     friend std::ostream& operator<< (std::ostream &outS, BagOfTasks<in1, in2, out> &bot) {
 
         // Get mutex. When control leaves the scope in which the lock_guard object was created, the lock_guard is destroyed and the mutex is released.
@@ -120,10 +120,10 @@ public:
 
         // Print all our important data.
         return outS << "Bag of tasks: " << std::endl
-               << "Data types - <" << type_name<in1>() << ", "
-               << type_name<in2>() << ", "
-               << type_name<out>() << ">" << std::endl
-               << "Number of tasks - " << bot.in1End - bot.in1Begin << std::endl << std::endl;
+                    << "Data types - <" << type_name<in1>() << ", "
+                    << type_name<in2>() << ", "
+                    << type_name<out>() << ">" << std::endl
+                    << "Number of tasks - " << bot.in1End - bot.in1Begin << std::endl << std::endl;
     };
 
     uint32_t numTasksRemaining() {
@@ -193,7 +193,15 @@ private:
 
 
 
+#define NUM_STATUSES 3
+
 enum Status {Alive, Sleeping, Terminated};
+
+const std::string statuses[NUM_STATUSES] = {"Alive", "Sleeping", "Terminated"};
+
+const std::string bools[2] = {"False", "True"};
+
+
 
 // Data struct to pass to each thread.
 template <typename in1, typename in2, typename out>
@@ -220,6 +228,19 @@ struct thread_data {
     Status status = Alive;
 };
 
+// // Overloads << operator for easy printing with streams. Used for development.
+// template <typename in1, typename in2, typename out>
+// std::ostream& operator<< (std::ostream &outS, thread_data<in1, in2, out> &td) {
+
+//     // Print our data.
+//     return outS << "Thread data for thread " << td.threadId << ":" << std::endl
+//                 << "CPU affinity:     " << td.cpu_affinity << std::endl
+//                 << "Chunk size:       " << td.chunk_size << std::endl
+//                 << "Tapered_schedule: " << bools[td.tapered_schedule] << std::endl
+//                 << "New insts check:  " << bools[td.check_for_new_instructions] << std::endl
+//                 << "Status:           " << statuses[td.status] << std::endl << std::endl;
+// };
+
 
 
 /*
@@ -228,7 +249,11 @@ struct thread_data {
 
 
 
-std::deque<uint32_t> calc_chunks(experiment_parameters params) {
+std::deque<uint32_t> calc_chunks(experiment_parameters params, uint32_t num_tasks = 0) {
+
+    if (num_tasks == 0) {
+        num_tasks = num_tasks;
+    }
 
     // Output deque of chunk sizes, one for each thread.
     std::deque<uint32_t> output(params.number_of_threads);
@@ -237,8 +262,8 @@ std::deque<uint32_t> calc_chunks(experiment_parameters params) {
         case Static:
         {
             // Calculate info for data partitioning.
-            uint32_t quotient  = params.array_size / params.number_of_threads;
-            uint32_t remainder = params.array_size % params.number_of_threads;
+            uint32_t quotient  = num_tasks / params.number_of_threads;
+            uint32_t remainder = num_tasks % params.number_of_threads;
 
             for (uint32_t i = 0; i < params.number_of_threads; i++) {
 
@@ -258,7 +283,7 @@ std::deque<uint32_t> calc_chunks(experiment_parameters params) {
         {
             // If the chunk size is set to zero, guess at a reasonable chunk size.
             if (params.initial_chunk_size == 0) {
-                params.initial_chunk_size = params.array_size / (params.number_of_threads * 10);
+                params.initial_chunk_size = num_tasks / (params.number_of_threads * 10);
             }
 
             // Set chunk sizes.
@@ -272,7 +297,7 @@ std::deque<uint32_t> calc_chunks(experiment_parameters params) {
         case Tapered:
         {
             // Calculate info for data partitioning.
-            uint32_t quotient  = params.array_size / (params.number_of_threads * 2);
+            uint32_t quotient = num_tasks / (params.number_of_threads * 2);
 
             // Set chunk sizes.
             for (uint32_t i = 0; i < params.number_of_threads; i++) {
@@ -299,7 +324,7 @@ template <typename in1, typename in2, typename out>
 std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out> &bot, experiment_parameters params) {
 
     // Calculate info for data partitioning.
-    std::deque<uint32_t> chunks = calc_chunks(params);
+    std::deque<uint32_t> chunks = calc_chunks(params, bot.numTasksRemaining());
 
     // Output deque of thread data
     std::deque<thread_data<in1, in2, out>> output;
@@ -318,7 +343,7 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out
             iter_data.tapered_schedule = true;
         }
 
-        output.push_front(iter_data);
+        output.push_back(iter_data);
     }
 
     return output;
