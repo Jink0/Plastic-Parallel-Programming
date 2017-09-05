@@ -36,8 +36,8 @@
  * Data structures
  */
 
-// Thread control enum. threads either run (execute), change strategies (update), or stop (terminte).
-enum Thread_Control {Execute, Update, Terminate};
+// Thread control enum. threads either run (execute), change strategies (update), pause (sleep), or stop (terminate).
+enum Thread_Control {Execute, Update, Sleep, Terminate};
 
 
 
@@ -177,8 +177,116 @@ public:
         return output;
     };
 
+
+
+    // Returns tasks of the specified count or less.
+    std::deque<tasks<in1, in2, out>> get_tasks(uint32_t num) {
+
+        // Get mutex.
+        std::lock_guard<std::mutex> lock(m);
+
+        uint32_t num_tasks;
+
+        // Calculate number of tasks to return.
+        if (num < num_tasks_in_bag) {
+            num_tasks = num;
+
+        } else {
+            num_tasks = num_tasks_in_bag;
+        }
+
+        uint32_t count = 0;
+        uint32_t i = 0;
+
+        // Calculate which iterator pairs to return.
+        while (count < num_tasks) {
+            count += task_iterators.at(i).second() - task_iterators.at(i).first();
+            i++;
+        }
+
+        uint32_t remainder = num_tasks;
+        std::deque<tasks<in1, in2, out>> output;
+
+        // Add pairs to output.
+        for (uint32_t j = 0; j < i - 1; j++) {
+
+            // Create tasks data structure to add to output.
+            struct tasks<in1, in2, out> temp = {
+                task_iterators.front().first(),
+                task_iterators.front().second(),
+                input2,
+                userFunction,
+                output_iterators.front()
+            };
+
+            // Update remainder total.
+            remainder - (task_iterators.front().second() - task_iterators.front().first());
+
+            // Pop iterators.
+            task_iterators.pop_front();
+            output_iterators.pop_front();
+
+            // Add to output.
+            output.push_back(temp);
+        }
+
+        // Record the start of the remainder.
+        typename std::deque<in1>::iterator remainder_begin = task_iterators.front().first();
+
+        // Advance iterator so it now marks the end of the remainder.
+        advance(task_iterators.front().first(), remainder);
+
+        // Create tasks data structure for remainder tasks.
+        struct tasks<in1, in2, out> remainder_tasks = {
+            remainder_begin,
+            task_iterators.front().first(),
+            input2,
+            userFunction,
+            output_iterators.front()
+        };
+
+        // Add to output.
+        output.push_back(remainder_tasks); 
+
+        // Advance the output iterator to output in the correct place next time.
+        advance(output_iterators.front(), remainder);
+
+        // Check for the case where we had precisely the right amount of tasks.
+        if (task_iterators.front().first() == task_iterators.front().second()) {
+            task_iterators.pop_front();
+            output_iterators.pop_front();
+        }
+
+        // Update the number of tasks in the bag.
+        num_tasks_in_bag - num_tasks;
+
+        return output;
+    };
+
+
+
+    // Replaces tasks into the bag.
+    void replace_tasks(std::deque<tasks<in1, in2, out>> returned_tasks, std::deque<typename std::deque<in1>::iterator> returned_output_iterators) {
+
+        // Get mutex.
+        std::lock_guard<std::mutex> lock(m);
+
+        // Add tasks to the front.
+        
+
+        // Update the number of tasks in the bag.
+        num_tasks_in_bag - num_tasks;
+    }
+
+
+
 private:
     std::mutex m;
+
+    std::deque<std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>> task_iterators;
+    std::deque<typename std::deque<in1>::iterator> output_iterators;
+
+    uint32_t num_tasks_in_bag;
 
     typename std::deque<in1>::iterator in1Begin;
     typename std::deque<in1>::iterator in1End;
@@ -353,25 +461,22 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out
 
 // Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
-void *mapArrayThread(void *threadarg) {
-
-    // Store personal data
-    struct thread_data<in1, in2, out> *my_data = (struct thread_data<in1, in2, out> *) threadarg;
+void mapArrayThread(thread_data<in1, in2, out> my_data) {
 
     // Initialise metrics.
-    metrics_thread_start(my_data->cpu_affinity);
+    metrics_thread_start(my_data.cpu_affinity);
 
     // Stick to our designated CPU.
-    stick_this_thread_to_cpu(my_data->cpu_affinity);
+    stick_this_thread_to_cpu(my_data.cpu_affinity);
 
     // Get tasks.
-    tasks<in1, in2, out> my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+    tasks<in1, in2, out> my_tasks = my_data.bot->getTasks(my_data.chunk_size);
 
     // Print hello, and the number of tasks.
-    print("[Thread ", my_data->threadId, "] Hello! \n[Thread ", my_data->threadId, "] Initial chunk size: ", my_tasks.in1End - my_tasks.in1Begin, "\n");
+    print("[Thread ", my_data.threadId, "] Hello! \n[Thread ", my_data.threadId, "] Initial chunk size: ", my_tasks.in1End - my_tasks.in1Begin, "\n");
 
     // Calculate taper.
-    uint32_t tapered_chunk_size = my_data->chunk_size / 2;
+    uint32_t tapered_chunk_size = my_data.chunk_size / 2;
 
     // While we have tasks to do;
     while (my_tasks.in1End - my_tasks.in1Begin > 0 ) {
@@ -379,23 +484,23 @@ void *mapArrayThread(void *threadarg) {
         // Run between iterator ranges, stepping through input1 and output vectors.
         for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin) {
 
-            DM(metrics_starting_work(my_data->threadId));
+            DM(metrics_starting_work(my_data.threadId));
 
             // Run user function.
             *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
 
-            DM(metrics_finishing_work(my_data->threadId));
+            DM(metrics_finishing_work(my_data.threadId));
         }
 
         // If we should still be executing, get more tasks!
-        if ((*my_data->bot).thread_control.at(my_data->threadId) == Execute) {
+        if (my_data.bot->thread_control.at(my_data.threadId) == Execute) {
 
             // Check for tapered schedule.
-            if (my_data->tapered_schedule) {
+            if (my_data.tapered_schedule) {
 
-                my_tasks = (*my_data->bot).getTasks(tapered_chunk_size);
+                my_tasks = my_data.bot->getTasks(tapered_chunk_size);
 
-                print("[Thread ", my_data->threadId, "] Chunk size: ", tapered_chunk_size, "\n");
+                print("[Thread ", my_data.threadId, "] Chunk size: ", tapered_chunk_size, "\n");
 
                 // Recalculate taper.
                 if (tapered_chunk_size > 1) {
@@ -403,16 +508,16 @@ void *mapArrayThread(void *threadarg) {
                     tapered_chunk_size = tapered_chunk_size / 2;
                 }
             } else {
-                my_tasks = (*my_data->bot).getTasks(my_data->chunk_size);
+                my_tasks = my_data.bot->getTasks(my_data.chunk_size);
 
-                print("[Thread ", my_data->threadId, "] Chunk size: ", my_data->chunk_size, "\n");
+                print("[Thread ", my_data.threadId, "] Chunk size: ", my_data.chunk_size, "\n");
             }
         }
     }
 
-    metrics_thread_finished(my_data->cpu_affinity);
+    metrics_thread_finished(my_data.cpu_affinity);
 
-    pthread_exit(NULL);
+    return;
 }
 
 #endif // MAP_ARRAY_THREAD_HPP

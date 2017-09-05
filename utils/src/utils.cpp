@@ -1,8 +1,10 @@
 #include <utils.hpp>
 
-#include <pthread.h>
+// #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
+
+// #include <thread>
 
 /*
  * Non-Templated print functions. Cannot be defined in header file like the templated functions.
@@ -41,23 +43,42 @@ int stick_this_thread_to_cpu(uint32_t core_id) {
 
 
 
-void join_with_threads(std::deque<pthread_t> threads, uint32_t num_threads_to_join)
-{
-    int inital_threads_max_index = threads.size() - 1;
+// void join_with_threads_legacy(std::deque<pthread_t> threads, uint32_t num_threads_to_join)
+// {
+//     int inital_threads_max_index = threads.size() - 1;
 
-    for (uint32_t i = 0; i < num_threads_to_join; i++)
-    {
-        int rc = pthread_join(threads.back(), NULL);
+//     for (uint32_t i = 0; i < num_threads_to_join; i++)
+//     {
+//         int rc = pthread_join(threads.back(), NULL);
 
-        threads.pop_back();
+//         threads.pop_back();
 
-        if (rc)
-        {
-            // If we couldn't create a new thread, throw an error and exit.
-            print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
-            exit(-1);
-        }
+//         if (rc)
+//         {
+//             // If we couldn't create a new thread, throw an error and exit.
+//             print("[Main] ERROR; return code from pthread_join() is ", rc, "\n");
+//             exit(-1);
+//         }
 
-        print("[Main] Joined with thread ", inital_threads_max_index - i, "\n");
-    }
-}
+//         print("[Main] Joined with thread ", inital_threads_max_index - i, "\n");
+//     }
+// }
+
+
+
+// void join_with_threads(std::deque<std::thread> threads, uint32_t num_threads_to_join) {
+//     uint32_t threads_size = threads.size();
+
+//     if (num_threads_to_join == 0 || num_threads_to_join > threads_size) {
+//         num_threads_to_join = threads_size;
+//     }
+
+//     for (uint32_t i = threads_size - 1; i >= 0; i--) {
+
+//         threads.at(i).join();
+
+//         threads.pop_back();
+
+//         print("[Main] Joined with thread ", i, "\n");
+//     }
+// }

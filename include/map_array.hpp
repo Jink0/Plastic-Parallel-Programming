@@ -20,6 +20,12 @@
 
 
 
+#include <thread>
+
+
+
+
+
 /*
  * This file contains the definition of the map array pattern. Note - all the definitions are in the header file, as
  * you cannot separate the definition of a template class from its declaration and put it inside a .cpp file.
@@ -46,30 +52,33 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
     BagOfTasks<in1, in2, out> bot(work, output);
 
     // Calculate info for data partitioning.
-    std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data(bot, work.params);
+    std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data<in1, in2, out>(bot, work.params);
 
     // Variables for creating and managing threads.
-    std::deque<pthread_t> threads(work.params.number_of_threads);
+    // std::deque<pthread_t> threads(work.params.number_of_threads);
+    std::deque<std::thread> threads(work.params.number_of_threads);
 
     // Create all our needed threads.
     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
 
         print("[Main] Creating thread ", i , "\n");
 
-        int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
+
+        // int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
 
         // Create thread name.
-        char thread_name[16];
-        sprintf(thread_name, "MA Thread %u", i);
+        // char thread_name[16];
+        // sprintf(thread_name, "MA Thread %u", i);
 
-        // Set thread name to something recognizable.
-        pthread_setname_np(threads.at(i), thread_name);
+        // // Set thread name to something recognizable.
+        // pthread_setname_np(threads.at(i), thread_name);
 
-        if (rc) {
-            // If we couldn't create a new thread, throw an error and exit.
-            print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-            exit(-1);
-        }
+        // if (rc) {
+        //     // If we couldn't create a new thread, throw an error and exit.
+        //     print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
+        //     exit(-1);
+        // }
     }
 
     // Get our PID to send to the controller.
@@ -172,7 +181,9 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 bot.thread_control.assign(work.params.number_of_threads, Terminate);
 
                 // Joining with threads.
-                join_with_threads(threads, work.params.number_of_threads);
+                for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
+                    threads.at(i).join();
+                }
 
                 // Update parameters.
                 work.params.number_of_threads  = msg.parameters.number_of_threads;
@@ -180,7 +191,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 work.params.initial_chunk_size = msg.parameters.chunk_size;
 
                 // Clear previous thread pinnings.
-                // work.params.thread_pinnings.clear();
+                work.params.thread_pinnings.clear();
 
                 // Copy new thread pinnings.
                 work.params.thread_pinnings = thread_pinnings;
@@ -195,24 +206,15 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 thread_data_deque.clear();
 
                 // Recalculate info for data partitioning.
-                std::deque<thread_data<in1, in2, out>> thread_data_deque2 = calc_thread_data(bot, work.params);
-
-                // Reset thread ids.
-                threads.clear();
-                threads.resize(work.params.number_of_threads);
+                std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data<in1, in2, out>(bot, work.params);
 
                 // Create all our needed threads.
                 for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
                     print("[Main] Creating thread ", i , "\n");
 
-                    int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque2.at(i));
-
-                    if (rc) {
-                        // If we couldn't create a new thread, throw an error and exit.
-                        print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-                        exit(-1);
-                    }
+                    threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
                 }
+
             } else {
                 print("MALFORMED MESSAGE!");
                 exit(EXIT_FAILURE);
@@ -228,7 +230,9 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
     socket.close();
 
-    join_with_threads(threads, work.params.number_of_threads);
+    for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
+        threads.at(i).join();
+    }
 
     return;
 }

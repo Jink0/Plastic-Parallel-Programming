@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     for (uint32_t i = 0; i < params.experiments.size(); i++) {
 
         // Create output filename.
-        std::string output_filename = ("Experiment" + to_string(i + 1) + ".csv");
+        std::string output_filename = ("Experiment" + std::to_string(i + 1) + ".csv");
 
         metrics_start(output_filename);
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
             struct workload<int, int, int> work = generate_workload<int, int, int>(params.experiments.at(i));
 
             // Create output deque.
-            deque<int> output(work.input1.size(), 0);
+            std::deque<int> output(work.input1.size(), 0);
 
             metrics_repeat_start(params.experiments.at(i).number_of_threads);
             metrics_thread_start(0);

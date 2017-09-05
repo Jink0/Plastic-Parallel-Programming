@@ -23,13 +23,5 @@
 	</defaults>
 	<experiments>
 		<experiment/>
-		<experiment>
-			<thread_pinnings>
-				<value>1</value>
-				<value>1</value>
-				<value>1</value>
-				<value>1</value>
-			</thread_pinnings>
-		</experiment>
 	</experiments>
 </parameters>

@@ -169,11 +169,7 @@ static struct message m_recv(zmq::socket_t &socket) {
     zmq::message_t msg;
     socket.recv(&msg);
 
-    struct message data = *(static_cast<struct message*>(msg.data()));
-
-    // message_printout(data, RECEIVE);
-
-    return data;
+    return *(static_cast<struct message*>(msg.data()));
 }
 
 
@@ -198,8 +194,6 @@ static bool m_send(zmq::socket_t &socket, const struct message &to_send) {
     memcpy(msg.data(), &to_send, sizeof(to_send));
 
     bool rc = socket.send(msg);
-
-    message_printout(to_send, SEND);
 
     return rc;
 }

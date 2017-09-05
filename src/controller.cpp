@@ -82,14 +82,17 @@ int main () {
 
                     update.header              = CON_UPDT;
                     update.pid                 = data.pid;
-                    update.parameters          = data.parameters;
+                    // update.parameters          = data.parameters;
                     update.parameters.schedule = Static;
+                    update.parameters.number_of_threads = 1;
+                    update.parameters.chunk_size = 100;
+                    update.parameters.array_size = 0;
 
                     // Send update to client.
                     m_send(client1, update);
 
-                    for (uint32_t i = 0; i < data.parameters.number_of_threads; i++) {
-                        uint32_t_send(client1, 1);
+                    for (uint32_t i = 0; i < update.parameters.number_of_threads; i++) {
+                        uint32_t_send(client1, i);
                     }
 
                     break;
