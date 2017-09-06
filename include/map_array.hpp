@@ -63,9 +63,9 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
         print("[Main] Creating thread ", i , "\n");
 
-        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
+        threads.at(i) = std::thread(mapArrayThread2<in1, in2, out>, thread_data_deque.at(i));
 
-        // int rc = pthread_create(&threads.at(i), NULL, mapArrayThread<in1, in2, out>, (void *) &thread_data_deque.at(i));
+        // int rc = pthread_create(&threads.at(i), NULL, mapArrayThread2<in1, in2, out>, (void *) &thread_data_deque.at(i));
 
         // Create thread name.
         // char thread_name[16];
@@ -183,6 +183,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 // Joining with threads.
                 for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
                     threads.at(i).join();
+
                 }
 
                 // Update parameters.
@@ -212,7 +213,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
                     print("[Main] Creating thread ", i , "\n");
 
-                    threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
+                    threads.at(i) = std::thread(mapArrayThread2<in1, in2, out>, thread_data_deque.at(i));
                 }
 
             } else {

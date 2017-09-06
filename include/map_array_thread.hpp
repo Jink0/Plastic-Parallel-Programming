@@ -87,9 +87,12 @@ public:
         in1End(work.input1.end()),
         input2(&work.input2),
         userFunction(work.userFunction),
-        outBegin(output.begin()) 
+        outBegin(output.begin()), 
+        task_iterators(1, std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(work.input1.begin(), work.input1.end())),
+        output_iterators(1, output.begin())
     {
         thread_control.assign(work.params.number_of_threads, Execute);
+        num_tasks_in_bag = work.input1.end() - work.input1.begin();
     }
 
     // Constructor
@@ -104,9 +107,12 @@ public:
         in1End(in1E),
         input2(in2p),
         userFunction(userF),
-        outBegin(outB) 
+        outBegin(outB),
+        task_iterators(1, std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(in1B, in1E)),
+        output_iterators(1, outB)
     {
         thread_control.assign(num_threads, Execute);
+        num_tasks_in_bag = in1E - in1B;
     }
 
     // Destructor
@@ -200,7 +206,7 @@ public:
 
         // Calculate which iterator pairs to return.
         while (count < num_tasks) {
-            count += task_iterators.at(i).second() - task_iterators.at(i).first();
+            count += task_iterators.at(i).second - task_iterators.at(i).first;
             i++;
         }
 
@@ -212,15 +218,15 @@ public:
 
             // Create tasks data structure to add to output.
             struct tasks<in1, in2, out> temp = {
-                task_iterators.front().first(),
-                task_iterators.front().second(),
+                task_iterators.front().first,
+                task_iterators.front().second,
                 input2,
                 userFunction,
                 output_iterators.front()
             };
 
             // Update remainder total.
-            remainder - (task_iterators.front().second() - task_iterators.front().first());
+            remainder -= (task_iterators.front().second - task_iterators.front().first);
 
             // Pop iterators.
             task_iterators.pop_front();
@@ -231,15 +237,15 @@ public:
         }
 
         // Record the start of the remainder.
-        typename std::deque<in1>::iterator remainder_begin = task_iterators.front().first();
+        typename std::deque<in1>::iterator remainder_begin = task_iterators.front().first;
 
         // Advance iterator so it now marks the end of the remainder.
-        advance(task_iterators.front().first(), remainder);
+        advance(task_iterators.front().first, remainder);
 
         // Create tasks data structure for remainder tasks.
         struct tasks<in1, in2, out> remainder_tasks = {
             remainder_begin,
-            task_iterators.front().first(),
+            task_iterators.front().first,
             input2,
             userFunction,
             output_iterators.front()
@@ -252,41 +258,42 @@ public:
         advance(output_iterators.front(), remainder);
 
         // Check for the case where we had precisely the right amount of tasks.
-        if (task_iterators.front().first() == task_iterators.front().second()) {
+        if (task_iterators.front().first == task_iterators.front().second) {
             task_iterators.pop_front();
             output_iterators.pop_front();
         }
 
         // Update the number of tasks in the bag.
-        num_tasks_in_bag - num_tasks;
+        num_tasks_in_bag -= num_tasks;
 
         return output;
     };
 
 
 
-    // Replaces tasks into the bag.
-    void replace_tasks(std::deque<tasks<in1, in2, out>> returned_tasks, std::deque<typename std::deque<in1>::iterator> returned_output_iterators) {
+    // Returns tasks into the bag.
+    void return_tasks(std::deque<tasks<in1, in2, out>> &returned_tasks) {
 
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
         // Add tasks to the front.
-        
+        for (uint32_t i = returned_tasks.size() - 1; i >= 0; i--) {
 
-        // Update the number of tasks in the bag.
-        num_tasks_in_bag - num_tasks;
+            task_iterators.push_front(std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(returned_tasks.at(0).in1Begin, returned_tasks.at(0).in1End));
+
+            // // Add corresponding output iterators.
+            // output_iterators.push_front(returned_tasks.at(i).outBegin);
+
+            // // Update task total.
+            // num_tasks_in_bag += returned_tasks.at(i).in1End - returned_tasks.at(i).in1Begin;
+        }
     }
 
 
 
 private:
     std::mutex m;
-
-    std::deque<std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>> task_iterators;
-    std::deque<typename std::deque<in1>::iterator> output_iterators;
-
-    uint32_t num_tasks_in_bag;
 
     typename std::deque<in1>::iterator in1Begin;
     typename std::deque<in1>::iterator in1End;
@@ -296,6 +303,11 @@ private:
     out (*userFunction) (in1, std::deque<in2>);
 
     typename std::deque<out>::iterator outBegin;
+
+    std::deque<std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>> task_iterators;
+    std::deque<typename std::deque<in1>::iterator> output_iterators;
+
+    uint32_t num_tasks_in_bag;
 };
 
 
@@ -514,6 +526,96 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
             }
         }
     }
+
+    metrics_thread_finished(my_data.cpu_affinity);
+
+    return;
+}
+
+
+
+// Function to start each thread of mapArray on.
+template <typename in1, typename in2, typename out>
+void mapArrayThread2(thread_data<in1, in2, out> my_data) {
+
+    // Initialise metrics.
+    metrics_thread_start(my_data.cpu_affinity);
+
+    // Stick to our designated CPU.
+    stick_this_thread_to_cpu(my_data.cpu_affinity);
+
+    // Get tasks.
+    std::deque<tasks<in1, in2, out>> my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
+
+    // Print hello, and the number of tasks.
+    print("[Thread ", my_data.threadId, "] Hello! \n[Thread ", my_data.threadId, "] Initial chunk size: ", my_tasks.at(0).in1End - my_tasks.at(0).in1Begin, "\n");
+
+    // Calculate taper.
+    uint32_t tapered_chunk_size = my_data.chunk_size / 2;
+
+    for (uint32_t i = 0; i < my_tasks.size(); i++) {
+
+        // While we have tasks to do;
+        while (my_tasks.at(i).in1End - my_tasks.at(i).in1Begin > i) {
+
+            // Run between iterator ranges, stepping through input1 and output vectors.
+            for (; my_tasks.at(i).in1Begin != my_tasks.at(i).in1End; ++my_tasks.at(i).in1Begin, ++my_tasks.at(i).outBegin) {
+
+                DM(metrics_starting_work(my_data.threadId));
+
+                // Run user function.
+                *(my_tasks.at(i).outBegin) = my_tasks.at(i).userFunction(*(my_tasks.at(i).in1Begin), *(my_tasks.at(i).input2));
+
+                DM(metrics_finishing_work(my_data.threadId));
+
+                // Check if we should still be executing.
+                if (my_data.bot->thread_control.at(my_data.threadId) != Execute) {
+
+                    my_data.bot->return_tasks(my_tasks);
+                    my_tasks.clear();
+
+                    switch (my_data.bot->thread_control.at(my_data.threadId)) {
+                        case Update: {
+
+                            break;
+                        } 
+
+                        case Sleep: {
+
+                            break;
+                        } 
+
+                        case Terminate: {
+
+                            goto end;
+
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Check for tapered schedule.
+            if (my_data.tapered_schedule) {
+
+                my_tasks.at(i) = my_data.bot->getTasks(tapered_chunk_size);
+
+                print("[Thread ", my_data.threadId, "] Chunk size: ", tapered_chunk_size, "\n");
+
+                // Recalculate taper.
+                if (tapered_chunk_size > 1) {
+
+                    tapered_chunk_size = tapered_chunk_size / 2;
+                }
+            } else {
+                my_tasks.at(i) = my_data.bot->getTasks(my_data.chunk_size);
+
+                print("[Thread ", my_data.threadId, "] Chunk size: ", my_data.chunk_size, "\n");
+            }
+        }
+    }
+
+    end:
 
     metrics_thread_finished(my_data.cpu_affinity);
 
