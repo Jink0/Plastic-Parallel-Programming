@@ -218,6 +218,8 @@ public:
 
         uint32_t remainder = (task_iterators.at(i - 1).second - task_iterators.at(i - 1).first) + num_tasks - count;
 
+        print("\n\n\n\n\n\n\n\n\n\n\n\n\n\nRemainder: ", remainder, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+
         // Record the start of the remainder.
         typename std::deque<in1>::iterator remainder_begin = task_iterators.at(i - 1).first;
         typename std::deque<in1>::iterator remainder_end   = task_iterators.at(i - 1).first;
@@ -227,7 +229,7 @@ public:
         task_iterators.insert(task_iterators.begin() + (i - 1), std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(remainder_begin, remainder_end));
         output_iterators.insert(output_iterators.begin() + (i - 1), output_iterators.at(i - 1));
 
-        advance(task_iterators.at(i).first(), remainder);
+        advance(task_iterators.at(i).first, remainder);
         advance(output_iterators.at(i), remainder);
 
         // Advance iterator so it now marks the end of the remainder.
