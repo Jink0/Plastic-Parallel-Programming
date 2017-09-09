@@ -92,7 +92,7 @@ public:
         output_iterators(1, output.begin())
     {
         thread_control.assign(work.params.number_of_threads, Execute);
-        num_tasks_in_bag = work.input1.end() - work.input1.begin();
+        num_tasks_in_bag = in1End - in1Begin;
     }
 
     // Constructor
@@ -112,7 +112,7 @@ public:
         output_iterators(1, outB)
     {
         thread_control.assign(num_threads, Execute);
-        num_tasks_in_bag = in1E - in1B;
+        num_tasks_in_bag = in1End - in1Begin;
     }
 
     // Destructor
@@ -191,6 +191,12 @@ public:
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
+        std::deque<tasks<in1, in2, out>> output;
+
+        if (num_tasks_in_bag == 0) {
+            return output;
+        }
+
         uint32_t num_tasks;
 
         // Calculate number of tasks to return.
@@ -205,16 +211,34 @@ public:
         uint32_t i = 0;
 
         // Calculate which iterator pairs to return.
-        while (count < num_tasks) {
+        while (count < num_tasks && i < task_iterators.size()) {
             count += task_iterators.at(i).second - task_iterators.at(i).first;
             i++;
         }
 
-        uint32_t remainder = num_tasks;
-        std::deque<tasks<in1, in2, out>> output;
+        uint32_t remainder = (task_iterators.at(i - 1).second - task_iterators.at(i - 1).first) + num_tasks - count;
+
+        // Record the start of the remainder.
+        typename std::deque<in1>::iterator remainder_begin = task_iterators.at(i - 1).first;
+        typename std::deque<in1>::iterator remainder_end   = task_iterators.at(i - 1).first;
+
+        advance(remainder_end, remainder);
+
+        task_iterators.insert(task_iterators.begin() + (i - 1), std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(remainder_begin, remainder_end));
+        output_iterators.insert(output_iterators.begin() + (i - 1), output_iterators.at(i - 1));
+
+        advance(task_iterators.at(i).first(), remainder);
+        advance(output_iterators.at(i), remainder);
+
+        // Advance iterator so it now marks the end of the remainder.
+        // advance(task_iterators.front().first, remainder);
 
         // Add pairs to output.
-        for (uint32_t j = 0; j < i - 1; j++) {
+        for (uint32_t j = 0; j < i; j++) {
+
+            if (i == 0) {
+                break;
+            }
 
             // Create tasks data structure to add to output.
             struct tasks<in1, in2, out> temp = {
@@ -225,9 +249,6 @@ public:
                 output_iterators.front()
             };
 
-            // Update remainder total.
-            remainder -= (task_iterators.front().second - task_iterators.front().first);
-
             // Pop iterators.
             task_iterators.pop_front();
             output_iterators.pop_front();
@@ -237,25 +258,25 @@ public:
         }
 
         // Record the start of the remainder.
-        typename std::deque<in1>::iterator remainder_begin = task_iterators.front().first;
+        // typename std::deque<in1>::iterator remainder_begin = task_iterators.front().first;
 
-        // Advance iterator so it now marks the end of the remainder.
-        advance(task_iterators.front().first, remainder);
+        // // Advance iterator so it now marks the end of the remainder.
+        // advance(task_iterators.front().first, remainder);
 
-        // Create tasks data structure for remainder tasks.
-        struct tasks<in1, in2, out> remainder_tasks = {
-            remainder_begin,
-            task_iterators.front().first,
-            input2,
-            userFunction,
-            output_iterators.front()
-        };
+        // // Create tasks data structure for remainder tasks.
+        // struct tasks<in1, in2, out> remainder_tasks = {
+        //     remainder_begin,
+        //     task_iterators.front().first,
+        //     input2,
+        //     userFunction,
+        //     output_iterators.front()
+        // };
 
-        // Add to output.
-        output.push_back(remainder_tasks); 
+        // // Add to output.
+        // output.push_back(remainder_tasks); 
 
-        // Advance the output iterator to output in the correct place next time.
-        advance(output_iterators.front(), remainder);
+        // // Advance the output iterator to output in the correct place next time.
+        // advance(output_iterators.front(), remainder);
 
         // Check for the case where we had precisely the right amount of tasks.
         if (task_iterators.front().first == task_iterators.front().second) {
@@ -272,23 +293,39 @@ public:
 
 
     // Returns tasks into the bag.
-    void return_tasks(std::deque<tasks<in1, in2, out>> &returned_tasks) {
+    void return_tasks(std::deque<tasks<in1, in2, out>> returned_tasks) {
 
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
+        print("\nReturning ", returned_tasks.size(), " set(s) of tasks", "\n");
+
         // Add tasks to the front.
-        for (uint32_t i = returned_tasks.size() - 1; i >= 0; i--) {
+        while (returned_tasks.size() != 0) {
 
-            task_iterators.push_front(std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(returned_tasks.at(0).in1Begin, returned_tasks.at(0).in1End));
+            task_iterators.push_front(std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(returned_tasks.back().in1Begin, returned_tasks.back().in1End));
 
-            // // Add corresponding output iterators.
-            // output_iterators.push_front(returned_tasks.at(i).outBegin);
+            // Add corresponding output iterators.
+            output_iterators.push_front(returned_tasks.back().outBegin);
 
-            // // Update task total.
-            // num_tasks_in_bag += returned_tasks.at(i).in1End - returned_tasks.at(i).in1Begin;
+            // Update task total.
+            num_tasks_in_bag += returned_tasks.back().in1End - returned_tasks.back().in1Begin;
+
+            returned_tasks.pop_back();
         }
-    }
+
+        print("Bag contains ", task_iterators.size(), " set(s) of tasks, with ", num_tasks_in_bag, " total tasks\n\n");
+    };
+
+
+
+    uint32_t read_num_tasks_in_bag() const { 
+
+        // Get mutex. Necessary?
+        // std::lock_guard<std::mutex> lock(m);
+
+        return num_tasks_in_bag; 
+    };
 
 
 
@@ -547,72 +584,102 @@ void mapArrayThread2(thread_data<in1, in2, out> my_data) {
     // Get tasks.
     std::deque<tasks<in1, in2, out>> my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
 
+    print("\n\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks\n\n");
+
     // Print hello, and the number of tasks.
-    print("[Thread ", my_data.threadId, "] Hello! \n[Thread ", my_data.threadId, "] Initial chunk size: ", my_tasks.at(0).in1End - my_tasks.at(0).in1Begin, "\n");
+    print("[Thread ", my_data.threadId, "] Hello! \n[Thread ", my_data.threadId, "] Initial chunk size(s):\n");
+
+    for (uint32_t i = 0; i < my_tasks.size(); i++) {
+        print(my_tasks.at(i).in1End - my_tasks.at(i).in1Begin, "\n");
+    }
 
     // Calculate taper.
     uint32_t tapered_chunk_size = my_data.chunk_size / 2;
 
+    start:
+
     for (uint32_t i = 0; i < my_tasks.size(); i++) {
 
-        // While we have tasks to do;
-        while (my_tasks.at(i).in1End - my_tasks.at(i).in1Begin > i) {
+        // // While we have tasks to do;
+        // while (my_tasks.at(i).in1End - my_tasks.at(i).in1Begin > i) {
 
-            // Run between iterator ranges, stepping through input1 and output vectors.
-            for (; my_tasks.at(i).in1Begin != my_tasks.at(i).in1End; ++my_tasks.at(i).in1Begin, ++my_tasks.at(i).outBegin) {
+        // Run between iterator ranges, stepping through input1 and output vectors.
+        for (; my_tasks.at(i).in1Begin != my_tasks.at(i).in1End; ++my_tasks.at(i).in1Begin, ++my_tasks.at(i).outBegin) {
 
-                DM(metrics_starting_work(my_data.threadId));
+            DM(metrics_starting_work(my_data.threadId));
 
-                // Run user function.
-                *(my_tasks.at(i).outBegin) = my_tasks.at(i).userFunction(*(my_tasks.at(i).in1Begin), *(my_tasks.at(i).input2));
+            // Run user function.
+            *(my_tasks.at(i).outBegin) = my_tasks.at(i).userFunction(*(my_tasks.at(i).in1Begin), *(my_tasks.at(i).input2));
 
-                DM(metrics_finishing_work(my_data.threadId));
+            DM(metrics_finishing_work(my_data.threadId));
 
-                // Check if we should still be executing.
-                if (my_data.bot->thread_control.at(my_data.threadId) != Execute) {
+            // Check if we should still be executing.
+            if (my_data.bot->thread_control.at(my_data.threadId) != Execute) {
 
-                    my_data.bot->return_tasks(my_tasks);
-                    my_tasks.clear();
+                my_data.bot->return_tasks(my_tasks);
+                my_tasks.clear();
 
-                    switch (my_data.bot->thread_control.at(my_data.threadId)) {
-                        case Update: {
+                switch (my_data.bot->thread_control.at(my_data.threadId)) {
+                    case Update: {
 
-                            break;
-                        } 
+                        break;
+                    } 
 
-                        case Sleep: {
+                    case Sleep: {
 
-                            break;
-                        } 
+                        break;
+                    } 
 
-                        case Terminate: {
+                    case Terminate: {
 
-                            goto end;
+                        goto end;
 
-                            break;
-                        }
+                        break;
                     }
                 }
             }
-
-            // Check for tapered schedule.
-            if (my_data.tapered_schedule) {
-
-                my_tasks.at(i) = my_data.bot->getTasks(tapered_chunk_size);
-
-                print("[Thread ", my_data.threadId, "] Chunk size: ", tapered_chunk_size, "\n");
-
-                // Recalculate taper.
-                if (tapered_chunk_size > 1) {
-
-                    tapered_chunk_size = tapered_chunk_size / 2;
-                }
-            } else {
-                my_tasks.at(i) = my_data.bot->getTasks(my_data.chunk_size);
-
-                print("[Thread ", my_data.threadId, "] Chunk size: ", my_data.chunk_size, "\n");
-            }
         }
+    }
+
+    // Check for tapered schedule.
+    if (my_data.tapered_schedule) {
+
+        my_tasks.clear();
+
+        my_tasks = my_data.bot->get_tasks(tapered_chunk_size);
+
+        print("\n\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks\n\n");
+        print("[Thread ", my_data.threadId, "] Initial chunk size(s):\n");
+
+        for (uint32_t i = 0; i < my_tasks.size(); i++) {
+            print(my_tasks.at(i).in1End - my_tasks.at(i).in1Begin, "\n");
+        }
+
+        // print("[Thread ", my_data.threadId, "] Chunk size: ", tapered_chunk_size, "\n");
+
+        // Recalculate taper.
+        if (tapered_chunk_size > 1) {
+
+            tapered_chunk_size = tapered_chunk_size / 2;
+        }
+    } else {
+
+        my_tasks.clear();
+
+        my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
+
+        print("\n\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks\n\n");
+        print("[Thread ", my_data.threadId, "] Initial chunk size(s):\n");
+
+        for (uint32_t i = 0; i < my_tasks.size(); i++) {
+            print(my_tasks.at(i).in1End - my_tasks.at(i).in1Begin, "\n");
+        }
+
+        // print("[Thread ", my_data.threadId, "] Chunk size: ", my_data.chunk_size, "\n");
+    }
+
+    if (my_tasks.size() != 0) {
+        goto start;
     }
 
     end:

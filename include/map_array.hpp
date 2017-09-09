@@ -122,7 +122,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
         uint32_t_send(socket, work.params.thread_pinnings.at(i));
     }
 
-    while (bot.empty == false) {
+    while (bot.read_num_tasks_in_bag() != 0) {
         usleep(5);
 
         // Poll socket for a reply, with timeout
