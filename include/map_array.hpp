@@ -63,7 +63,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
         print("[Main] Creating thread ", i , "\n");
 
-        threads.at(i) = std::thread(mapArrayThread2<in1, in2, out>, thread_data_deque.at(i));
+        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
 
         // int rc = pthread_create(&threads.at(i), NULL, mapArrayThread2<in1, in2, out>, (void *) &thread_data_deque.at(i));
 
@@ -209,11 +209,13 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 // Recalculate info for data partitioning.
                 std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data<in1, in2, out>(bot, work.params);
 
+                print("\n");
+
                 // Create all our needed threads.
                 for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
                     print("[Main] Creating thread ", i , "\n");
 
-                    threads.at(i) = std::thread(mapArrayThread2<in1, in2, out>, thread_data_deque.at(i));
+                    threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
                 }
 
             } else {

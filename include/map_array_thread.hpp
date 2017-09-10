@@ -141,48 +141,6 @@ public:
         return in1End - in1Begin;
     }
 
-    // // Returns tasks of the specified count or less.
-    // tasks<in1, in2, out> getTasks(uint32_t num) {
-
-    //     // Get mutex.
-    //     std::lock_guard<std::mutex> lock(m);
-
-    //     // Record where we should start in our task list.
-    //     typename std::deque<in1>::iterator tasksBegin = in1Begin;
-
-    //     uint32_t num_tasks;
-
-    //     // Calculate number of tasks to return.
-    //     if (num < in1End - in1Begin) {
-    //         num_tasks = num;
-
-    //     } else {
-    //         num_tasks = in1End - in1Begin;
-    //     }
-
-    //     // Check if the bag is empty.
-    //     if (num_tasks == 0) {
-    //         empty = true;
-    //     }
-
-    //     // Advance our iterator so it now marks the end of our tasks.
-    //     advance(in1Begin, num_tasks);
-
-    //     // Create tasks data structure to return.
-    //     struct tasks<in1, in2, out> output = {
-    //         tasksBegin,
-    //         in1Begin,
-    //         input2,
-    //         userFunction,
-    //         outBegin
-    //     };
-
-    //     // Advance the output iterator to output in the correct place next time.
-    //     advance(outBegin, num_tasks);
-
-    //     return output;
-    // };
-
 
 
     // Returns tasks of the specified count or less.
@@ -484,72 +442,9 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out
 
 
 
-// // Function to start each thread of mapArray on.
-// template <typename in1, typename in2, typename out>
-// void mapArrayThread(thread_data<in1, in2, out> my_data) {
-
-//     // Initialise metrics.
-//     metrics_thread_start(my_data.cpu_affinity);
-
-//     // Stick to our designated CPU.
-//     stick_this_thread_to_cpu(my_data.cpu_affinity);
-
-//     // Get tasks.
-//     tasks<in1, in2, out> my_tasks = my_data.bot->getTasks(my_data.chunk_size);
-
-//     // Print hello, and the number of tasks.
-//     print("[Thread ", my_data.threadId, "] Hello! \n[Thread ", my_data.threadId, "] Initial chunk size: ", my_tasks.in1End - my_tasks.in1Begin, "\n");
-
-//     // Calculate taper.
-//     uint32_t tapered_chunk_size = my_data.chunk_size / 2;
-
-//     // While we have tasks to do;
-//     while (my_tasks.in1End - my_tasks.in1Begin > 0 ) {
-
-//         // Run between iterator ranges, stepping through input1 and output vectors.
-//         for (; my_tasks.in1Begin != my_tasks.in1End; ++my_tasks.in1Begin, ++my_tasks.outBegin) {
-
-//             DM(metrics_starting_work(my_data.threadId));
-
-//             // Run user function.
-//             *(my_tasks.outBegin) = my_tasks.userFunction(*(my_tasks.in1Begin), *(my_tasks.input2));
-
-//             DM(metrics_finishing_work(my_data.threadId));
-//         }
-
-//         // If we should still be executing, get more tasks!
-//         if (my_data.bot->thread_control.at(my_data.threadId) == Execute) {
-
-//             // Check for tapered schedule.
-//             if (my_data.tapered_schedule) {
-
-//                 my_tasks = my_data.bot->getTasks(tapered_chunk_size);
-
-//                 print("[Thread ", my_data.threadId, "] Chunk size: ", tapered_chunk_size, "\n");
-
-//                 // Recalculate taper.
-//                 if (tapered_chunk_size > 1) {
-
-//                     tapered_chunk_size = tapered_chunk_size / 2;
-//                 }
-//             } else {
-//                 my_tasks = my_data.bot->getTasks(my_data.chunk_size);
-
-//                 print("[Thread ", my_data.threadId, "] Chunk size: ", my_data.chunk_size, "\n");
-//             }
-//         }
-//     }
-
-//     metrics_thread_finished(my_data.cpu_affinity);
-
-//     return;
-// }
-
-
-
 // Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
-void mapArrayThread2(thread_data<in1, in2, out> my_data) {
+void mapArrayThread(thread_data<in1, in2, out> my_data) {
 
     // Initialise metrics.
     metrics_thread_start(my_data.cpu_affinity);
@@ -571,10 +466,8 @@ void mapArrayThread2(thread_data<in1, in2, out> my_data) {
 
     start:
 
+    // While we have tasks to do;
     for (uint32_t i = 0; i < my_tasks.size(); i++) {
-
-        // // While we have tasks to do;
-        // while (my_tasks.at(i).in1End - my_tasks.at(i).in1Begin > i) {
 
         // Run between iterator ranges, stepping through input1 and output vectors.
         for (; my_tasks.at(i).in1Begin != my_tasks.at(i).in1End; ++my_tasks.at(i).in1Begin, ++my_tasks.at(i).outBegin) {
@@ -623,8 +516,8 @@ void mapArrayThread2(thread_data<in1, in2, out> my_data) {
 
         print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
 
-        for (uint32_t i = 0; i < my_tasks.size(); i++) {
-            print(my_tasks.at(i).in1End - my_tasks.at(i).in1Begin, "\n");
+        for (uint32_t j = 0; j < my_tasks.size(); j++) {
+            print(my_tasks.at(j).in1End - my_tasks.at(j).in1Begin, "\n");
         }
 
         // Recalculate taper.
@@ -640,8 +533,8 @@ void mapArrayThread2(thread_data<in1, in2, out> my_data) {
 
         print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
 
-        for (uint32_t i = 0; i < my_tasks.size(); i++) {
-            print(my_tasks.at(i).in1End - my_tasks.at(i).in1Begin, "\n");
+        for (uint32_t j = 0; j < my_tasks.size(); j++) {
+            print(my_tasks.at(j).in1End - my_tasks.at(j).in1Begin, "\n");
         }
     }
 
