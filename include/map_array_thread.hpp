@@ -464,82 +464,86 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
     // Calculate taper.
     uint32_t tapered_chunk_size = my_data.chunk_size / 2;
 
-    start:
+    // While we have work to do:
+    while (my_tasks.size() != 0) {
 
-    // While we have tasks to do;
-    for (uint32_t i = 0; i < my_tasks.size(); i++) {
+        // Run through each set of tasks.
+        for (uint32_t i = 0; i < my_tasks.size(); i++) {
 
-        // Run between iterator ranges, stepping through input1 and output vectors.
-        for (; my_tasks.at(i).in1Begin != my_tasks.at(i).in1End; ++my_tasks.at(i).in1Begin, ++my_tasks.at(i).outBegin) {
+            // Run each task in set, stepping through input1 and output vectors.
+            for (; my_tasks.at(i).in1Begin != my_tasks.at(i).in1End; ++my_tasks.at(i).in1Begin, ++my_tasks.at(i).outBegin) {
 
-            DM(metrics_starting_work(my_data.threadId));
+                DM(metrics_starting_work(my_data.threadId));
 
-            // Run user function.
-            *(my_tasks.at(i).outBegin) = my_tasks.at(i).userFunction(*(my_tasks.at(i).in1Begin), *(my_tasks.at(i).input2));
+                // Run user function.
+                *(my_tasks.at(i).outBegin) = my_tasks.at(i).userFunction(*(my_tasks.at(i).in1Begin), *(my_tasks.at(i).input2));
 
-            DM(metrics_finishing_work(my_data.threadId));
+                DM(metrics_finishing_work(my_data.threadId));
 
-            // Check if we should still be executing.
-            if (my_data.bot->thread_control.at(my_data.threadId) != Execute) {
+                // Check if we should still be executing.
+                if (my_data.bot->thread_control.at(my_data.threadId) != Execute) {
 
-                my_data.bot->return_tasks(my_tasks);
-                my_tasks.clear();
+                    // Return our tasks.
+                    my_data.bot->return_tasks(my_tasks);
+                    my_tasks.clear();
 
-                switch (my_data.bot->thread_control.at(my_data.threadId)) {
-                    case Update: {
+                    // Perform relevant action.
+                    switch (my_data.bot->thread_control.at(my_data.threadId)) {
 
-                        break;
-                    } 
+                        // Update our parameters.
+                        case Update: {
 
-                    case Sleep: {
+                            break;
+                        } 
 
-                        break;
-                    } 
+                        // Go to sleep.
+                        case Sleep: {
 
-                    case Terminate: {
+                            break;
+                        } 
 
-                        goto end;
+                        // Terminate our computation.
+                        case Terminate: {
 
-                        break;
+                            goto end;
+
+                            break;
+                        }
                     }
                 }
             }
         }
-    }
 
-    // Check for tapered schedule.
-    if (my_data.tapered_schedule) {
+        // Check for tapered schedule.
+        if (my_data.tapered_schedule) {
 
-        my_tasks.clear();
+            my_tasks.clear();
 
-        my_tasks = my_data.bot->get_tasks(tapered_chunk_size);
+            my_tasks = my_data.bot->get_tasks(tapered_chunk_size);
 
-        print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
+            print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
 
-        for (uint32_t j = 0; j < my_tasks.size(); j++) {
-            print(my_tasks.at(j).in1End - my_tasks.at(j).in1Begin, "\n");
+            for (uint32_t j = 0; j < my_tasks.size(); j++) {
+                print(my_tasks.at(j).in1End - my_tasks.at(j).in1Begin, "\n");
+            }
+
+            // Recalculate taper.
+            if (tapered_chunk_size > 1) {
+
+                tapered_chunk_size = tapered_chunk_size / 2;
+            }
+        } else {
+
+            my_tasks.clear();
+
+            my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
+
+            print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
+
+            for (uint32_t j = 0; j < my_tasks.size(); j++) {
+                print(my_tasks.at(j).in1End - my_tasks.at(j).in1Begin, "\n");
+            }
         }
-
-        // Recalculate taper.
-        if (tapered_chunk_size > 1) {
-
-            tapered_chunk_size = tapered_chunk_size / 2;
-        }
-    } else {
-
-        my_tasks.clear();
-
-        my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
-
-        print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
-
-        for (uint32_t j = 0; j < my_tasks.size(); j++) {
-            print(my_tasks.at(j).in1End - my_tasks.at(j).in1Begin, "\n");
-        }
-    }
-
-    if (my_tasks.size() != 0) {
-        goto start;
     }
 
     end:
