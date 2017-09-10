@@ -90,7 +90,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
     port_socket.connect("tcp://localhost:5555");
 
-    print("\n[Main] Attempting registration with controller...\n\n");
+    print("\n[Main] Attempting registration with controller...\n");
 
     struct message rgstr;
 
@@ -103,7 +103,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
     port_socket.close();
 
-    print("\n[Main] Received new port from controller: " + std::to_string(port) + "\n\n");
+    print("\n[Main] Received new port from controller: " + std::to_string(port) + "\n");
 
     zmq::socket_t socket(context, ZMQ_PAIR);
 
@@ -150,7 +150,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 print("\n[Main] New parameters received!",
                       "\n[Main] Changing schedule to: ", schedules[msg.parameters.schedule],
                       "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
-                      "\n\n");
+                      "\n");
 
                 //     // Calculate new number of threads.
                 //     // uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.parameters.thread_pinnings), end(msg.parameters.thread_pinnings), -1);
