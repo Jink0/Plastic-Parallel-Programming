@@ -83,9 +83,9 @@ int main () {
                     update.header              = CON_UPDT;
                     update.pid                 = data.pid;
                     // update.parameters          = data.parameters;
-                    update.parameters.schedule = Tapered;
-                    update.parameters.number_of_threads = 1;
-                    update.parameters.chunk_size = 1000;
+                    update.parameters.schedule = Dynamic_chunks;
+                    update.parameters.number_of_threads = 4;
+                    update.parameters.chunk_size = 10000;
                     update.parameters.array_size = 0;
 
                     // Send update to client.

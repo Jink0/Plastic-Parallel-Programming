@@ -54,8 +54,13 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
     // Calculate info for data partitioning.
     std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data<in1, in2, out>(bot, work.params);
 
+    for (uint32_t m = 0; m < thread_data_deque.size(); m++) {
+        bot.thread_control.at(m).data.cpu_affinity = thread_data_deque.at(m).cpu_affinity;
+        bot.thread_control.at(m).data.chunk_size = thread_data_deque.at(m).chunk_size;
+        bot.thread_control.at(m).data.tapered_schedule = thread_data_deque.at(m).tapered_schedule;
+    }
+
     // Variables for creating and managing threads.
-    // std::deque<pthread_t> threads(work.params.number_of_threads);
     std::deque<std::thread> threads(work.params.number_of_threads);
 
     // Create all our needed threads.
@@ -64,21 +69,6 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
         print("[Main] Creating thread ", i , "\n");
 
         threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
-
-        // int rc = pthread_create(&threads.at(i), NULL, mapArrayThread2<in1, in2, out>, (void *) &thread_data_deque.at(i));
-
-        // Create thread name.
-        // char thread_name[16];
-        // sprintf(thread_name, "MA Thread %u", i);
-
-        // // Set thread name to something recognizable.
-        // pthread_setname_np(threads.at(i), thread_name);
-
-        // if (rc) {
-        //     // If we couldn't create a new thread, throw an error and exit.
-        //     print("[Main] ERROR; return code from pthread_create() is ", rc, "\n");
-        //     exit(-1);
-        // }
     }
 
     // Get our PID to send to the controller.
@@ -122,7 +112,7 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
         uint32_t_send(socket, work.params.thread_pinnings.at(i));
     }
 
-    while (bot.read_num_tasks_in_bag() != 0) {
+    while (bot.read_num_tasks_uncompleted() != 0) {
         usleep(5);
 
         // Poll socket for a reply, with timeout
@@ -149,74 +139,73 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
                 print("\n[Main] New parameters received!",
                       "\n[Main] Changing schedule to: ", schedules[msg.parameters.schedule],
+                      "\n[Main] With a chunk size of: ", msg.parameters.chunk_size,
                       "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
                       "\n");
 
-                //     // Calculate new number of threads.
-                //     // uint32_t new_num_threads = MAX_NUM_THREADS - count(begin(msg.parameters.thread_pinnings), end(msg.parameters.thread_pinnings), -1);
+                // uint32_t current_num_threads = bot.thread_control.size();
 
-                //     // If we have a surplus of threads;
-                //     if (work.params.number_of_threads > msg.parameters.number_of_threads) {
+                // // Calculate difference in thread counts.
+                // int thread_num_diff = msg.parameters.number_of_threads - bot.thread_control.size();
 
-                //         uint32_t iterator = bot.thread_control.size() - 1;
+                // If we have a surplus of threads;
+                // if (thread_num_diff < 0) {
 
-                //         // Set excess threads to terminate.
-                //         while(iterator > msg.parameters.number_of_threads - 1) {
-
-                //             bot.thread_control.at(iterator) = Terminate;
-                //         }
-
-                //         // Join with terminating threads.
-                //         join_with_threads(threads, work.params.number_of_threads - msg.parameters.number_of_threads);
-
-                //         // Cleanup thread control vars.
-                //         bot.thread_control.resize(msg.parameters.number_of_threads);
+                //     // Sleep excess threads.
+                //     for (int i = 0; i > thread_num_diff; i--) {
+                //         bot.thread_control.at(current_num_threads + i - 1).state = Sleep;
                 //     }
+                // } 
 
-                //     if (work.params.number_of_threads < msg.parameters.number_of_threads) {
+                // if (thread_num_diff > 0) {
 
+                //     uint32_t prev_num_threads = bot.thread_control.size();
+
+                //     // Expand thread control data for our new threads.
+                //     bot.thread_control.resize(msg.parameters.number_of_threads);
+
+                //     // Write thread ids.
+                //     for (int i = 0; i < thread_num_diff; i++) {
+                //         bot.thread_control.at(prev_num_threads + i).data.threadId = prev_num_threads + i;
                 //     }
-
-                // Terminating threads.
-                bot.thread_control.assign(work.params.number_of_threads, Terminate);
-
-                // Joining with threads.
-                for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
-                    threads.at(i).join();
-
-                }
+                // }
 
                 // Update parameters.
                 work.params.number_of_threads  = msg.parameters.number_of_threads;
                 work.params.initial_schedule   = msg.parameters.schedule;
                 work.params.initial_chunk_size = msg.parameters.chunk_size;
 
-                // Clear previous thread pinnings.
-                work.params.thread_pinnings.clear();
-
-                // Copy new thread pinnings.
-                work.params.thread_pinnings = thread_pinnings;
-
-        
-        
-                // Restart map_array:
-
-                // Reset terminate variables.
-                bot.thread_control.assign(work.params.number_of_threads, Execute);
-
-                thread_data_deque.clear();
-
                 // Recalculate info for data partitioning.
-                std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data<in1, in2, out>(bot, work.params);
+                std::deque<thread_data<in1, in2, out>> thread_data_deque2 = calc_thread_data<in1, in2, out>(bot, work.params);
 
-                print("\n");
+                // Copy updated data.
+                for (uint32_t m = 0; m < work.params.number_of_threads; m++) {
+                    bot.thread_control.at(m).data.cpu_affinity     = thread_data_deque2.at(m).cpu_affinity;
+                    bot.thread_control.at(m).data.chunk_size       = thread_data_deque2.at(m).chunk_size;
 
-                // Create all our needed threads.
-                for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
-                    print("[Main] Creating thread ", i , "\n");
+                    bot.thread_control.at(m).data.tapered_schedule = thread_data_deque2.at(m).tapered_schedule;
 
-                    threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
+                    // std::lock_guard<std::mutex> lk(bot.thread_control.at(m).m);
+
+                    // bot.thread_control.at(m).cv.notify_all();
+
+                    bot.thread_control.at(m).state = Update;
                 }
+
+                // If we need more threads;
+                // if (thread_num_diff > 0) {
+
+                //     // Create our needed threads.
+                //     threads.resize(work.params.number_of_threads);
+
+                //     // Create all our needed threads.
+                //     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
+
+                //         print("[Main] Creating thread ", i , "\n");
+
+                //         threads.at(work.params.number_of_threads - thread_num_diff + i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(work.params.number_of_threads - thread_num_diff + i));
+                //     }
+                // }
 
             } else {
                 print("MALFORMED MESSAGE!");
