@@ -143,31 +143,32 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                       "\n[Main] With thread pinnings: ", thread_pinnings_stringstream.str(),
                       "\n");
 
-                // uint32_t current_num_threads = bot.thread_control.size();
+                std::pair<uint32_t, uint32_t> thread_state_counts = bot.num_active_and_inactive_threads();
 
-                // // Calculate difference in thread counts.
-                // int thread_num_diff = msg.parameters.number_of_threads - bot.thread_control.size();
+                uint32_t current_num_threads = thread_state_counts.first + thread_state_counts.second;
 
-                // If we have a surplus of threads;
+                // Calculate difference in thread counts.
+                int thread_num_diff = msg.parameters.number_of_threads - current_num_threads;
+
+                // If we have a excess of threads;
                 // if (thread_num_diff < 0) {
 
                 //     // Sleep excess threads.
-                //     for (int i = 0; i > thread_num_diff; i--) {
-                //         bot.thread_control.at(current_num_threads + i - 1).state = Sleep;
-                //     }
+                //     bot.sleep_n_threads(abs(thread_num_diff));
                 // } 
 
+                // If we have a shortage of threads;
                 // if (thread_num_diff > 0) {
-
-                //     uint32_t prev_num_threads = bot.thread_control.size();
 
                 //     // Expand thread control data for our new threads.
                 //     bot.thread_control.resize(msg.parameters.number_of_threads);
 
                 //     // Write thread ids.
                 //     for (int i = 0; i < thread_num_diff; i++) {
-                //         bot.thread_control.at(prev_num_threads + i).data.threadId = prev_num_threads + i;
+                //         bot.thread_control.at(current_num_threads + i).data.threadId = current_num_threads + i;
                 //     }
+
+                    
                 // }
 
                 // Update parameters.
@@ -191,6 +192,10 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
                     bot.thread_control.at(m).state = Update;
                 }
+
+                // if (thread_state_counts.second != 0) {
+                    
+                // }
 
                 // If we need more threads;
                 // if (thread_num_diff > 0) {
@@ -221,6 +226,16 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
     m_send(socket, term);
 
     socket.close();
+
+    for (uint32_t i = 0; i < bot.thread_control.size(); i++) {
+        bot.thread_control.at(i).state = Terminate;
+    }
+
+    // Get thread state counts.
+    std::pair<uint32_t, uint32_t> thread_state_counts = bot.num_active_and_inactive_threads();
+
+    // Wake sleeping threads so they can return.
+    bot.wake_n_threads(thread_state_counts.second);
 
     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
         threads.at(i).join();

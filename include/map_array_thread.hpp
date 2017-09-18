@@ -277,6 +277,79 @@ public:
 
 
 
+    void sleep_n_threads(uint32_t n) {
+
+        uint32_t count = n;
+
+        for (uint32_t i = thread_control.size() - 1; i >= 0; i--) {
+
+            if (count == 0) {
+                break;
+            }
+
+            if (thread_control.at(i).state == Execute) {
+
+                thread_control.at(i).state = Sleep;
+
+                count--;
+            }
+        }
+
+        if (count > 0) {
+            print("\nCouldn't sleep ", n, " threads!\n\n");
+            exit(1);
+        }
+    }
+
+
+
+    void wake_n_threads(uint32_t n) {
+
+        uint32_t count = n;
+
+        for (uint32_t i = 0; i < thread_control.size(); i++) {
+
+            if (count == 0) {
+                break;
+            }
+
+            if (thread_control.at(i).state == Sleep) {
+
+                // thread_control.at(i).state = Update;
+                std::unique_lock<std::mutex> lk(thread_control.at(i).m);
+                thread_control.at(i).cv.notify_all();
+
+                count--;
+            }
+        }
+
+        if (count > 0) {
+            print("\nCouldn't wake ", n, " threads!\n\n");
+            exit(1);
+        }
+    }
+
+
+
+    std::pair<uint32_t, uint32_t> num_active_and_inactive_threads() {
+
+        std::pair<uint32_t, uint32_t> output(0, 0);
+
+        for (uint32_t i = 0; i < thread_control.size(); i++) {
+
+            if (thread_control.at(i).state == Execute) {
+                output.first++;
+
+            } else if (thread_control.at(i).state == Sleep) {
+                output.second++;
+            }
+        }
+
+        return output;
+    }
+
+
+
     uint32_t read_num_tasks_in_bag() { 
 
         // Get mutex. Necessary?
@@ -572,6 +645,8 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
                     my_data.bot->return_tasks(my_tasks);
                     my_tasks.clear();
 
+                    check:
+
                     // Perform relevant action.
                     switch (my_data.bot->thread_control.at(my_data.threadId).state) {
 
@@ -596,9 +671,11 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
                             std::unique_lock<std::mutex> lk(my_data.bot->thread_control.at(my_data.threadId).m);
                             my_data.bot->thread_control.at(my_data.threadId).cv.wait(lk);
 
-                            my_data.bot->thread_control.at(my_data.threadId).state = Execute;
+                            print("\n[Thread ", my_data.threadId, "] Woken up!\n\n\n\n\n");
 
-                            goto restart;
+                            // my_data.bot->thread_control.at(my_data.threadId).state = Execute;
+
+                            goto check;
 
                             break;
                         } 
