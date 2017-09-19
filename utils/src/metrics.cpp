@@ -62,6 +62,12 @@ void metrics_repeat_start(uint32_t num_threads) {
     clock_gettime(CLOCK_MONOTONIC, &metrics.repeats.back().start_time);
 }
 
+// Expand the number of threads by num_threads.
+void metrics_expand_threads(uint32_t num_threads) {
+
+    metrics.repeats.back().thread_times.resize(metrics.repeats.back().thread_times.size() + num_threads);
+}
+
 // Start metrics for a single thread.
 void metrics_thread_start(uint32_t thread_id) {
     struct timespec now;

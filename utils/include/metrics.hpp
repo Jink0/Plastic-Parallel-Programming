@@ -92,6 +92,9 @@ void metrics_start(std::string output_filename);
 // Start metrics for a single repeat.
 void metrics_repeat_start(uint32_t num_threads);
 
+// Expand the number of threads by num_threads.
+void metrics_expand_threads(uint32_t num_threads);
+
 // Start metrics for a single thread.
 void metrics_thread_start(uint32_t thread_id);
 

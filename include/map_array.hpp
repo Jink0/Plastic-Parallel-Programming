@@ -66,11 +66,12 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
     // Create all our needed threads.
     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
 
-        thread_init_data<in1, in2, out> test = {i, &bot};
-
         print("[Main] Creating thread ", i , "\n");
 
-        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, test);
+        // Thread number and bag pointer for the new thread.
+        thread_init_data<in1, in2, out> init_data = {i, &bot};
+
+        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, init_data);
     }
 
     // Get our PID to send to the controller.
@@ -159,24 +160,23 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 //     bot.sleep_n_threads(abs(thread_num_diff));
                 // } 
 
-                // If we have a shortage of threads;
-                // if (thread_num_diff > 0) {
+                // If we have a shortage of threads.
+                if (thread_num_diff > 0) {
 
-                //     // Expand thread control data for our new threads.
-                //     bot.thread_control.resize(msg.parameters.number_of_threads);
-
-                //     // Write thread ids.
-                //     for (int i = 0; i < thread_num_diff; i++) {
-                //         bot.thread_control.at(current_num_threads + i).data.threadId = current_num_threads + i;
-                //     }
-
-                    
-                // }
+                    // Expand thread control data for our new threads.
+                    bot.thread_control.resize(msg.parameters.number_of_threads);
+                }
 
                 // Update parameters.
                 work.params.number_of_threads  = msg.parameters.number_of_threads;
                 work.params.initial_schedule   = msg.parameters.schedule;
                 work.params.initial_chunk_size = msg.parameters.chunk_size;
+
+                work.params.thread_pinnings.clear();
+
+                for (uint32_t i = 0; i < thread_pinnings.size(); i++) {
+                    work.params.thread_pinnings.push_back(thread_pinnings.at(i));
+                }
 
                 // Recalculate info for data partitioning.
                 std::deque<work_data> thread_data_deque2 = calc_work_data<in1, in2, out>(bot, work.params);
@@ -200,19 +200,25 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 // }
 
                 // If we need more threads;
-                // if (thread_num_diff > 0) {
+                if (thread_num_diff > 0) {
 
-                //     // Create our needed threads.
-                //     threads.resize(work.params.number_of_threads);
+                    // Expand metrics for the new threads.
+                    metrics_expand_threads(thread_num_diff);
 
-                //     // Create all our needed threads.
-                //     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
+                    // Expand threads.
+                    threads.resize(work.params.number_of_threads);
 
-                //         print("[Main] Creating thread ", i , "\n");
+                    // Create all our needed threads.
+                    for (uint32_t i = current_num_threads; i < work.params.number_of_threads; i++) {
 
-                //         threads.at(work.params.number_of_threads - thread_num_diff + i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(work.params.number_of_threads - thread_num_diff + i));
-                //     }
-                // }
+                        print("[Main] Creating thread ", i , "\n");
+
+                        // Thread number and bag pointer for the new thread.
+                        thread_init_data<in1, in2, out> init_data = {i, &bot};
+
+                        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, init_data);
+                    }
+                }
 
             } else {
                 print("MALFORMED MESSAGE!");

@@ -135,8 +135,8 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
                     // Retrieve value.
                     params.thread_pinnings.push_back(child.second.get_value<uint32_t>());
 
-                // Catch unexpected nodes, ignoring "<xmlattr>".
-                } else if (child.first.compare("<xmlattr>") != 0) {
+                // Catch unexpected nodes, ignoring "<xmlattr>" and "<xmlcomment>".
+                } else if (child.first.compare("<xmlattr>") != 0 && child.first.compare("<xmlcomment>") != 0) {
                     print("Unrecognised node in config: ", child.first, "\n\n");
 
                     exit(EXIT_FAILURE);

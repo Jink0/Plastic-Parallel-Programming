@@ -571,6 +571,8 @@ void mapArrayThread(thread_init_data<in1, in2, out> my_data) {
     // Initialise metrics.
     metrics_thread_start(my_data.threadId);
 
+    print("\n\n\n\n\n\nHello from thread ", my_data.threadId, "!\n\n\n\n");
+
     work_data work_data = {my_data.bot->thread_control.at(my_data.threadId).data.cpu_affinity,
                                           my_data.bot->thread_control.at(my_data.threadId).data.chunk_size,
                                           my_data.bot->thread_control.at(my_data.threadId).data.tapered_schedule};
