@@ -84,7 +84,7 @@ int main () {
                     update.pid                 = data.pid;
                     // update.parameters          = data.parameters;
                     update.parameters.schedule = Dynamic_chunks;
-                    update.parameters.number_of_threads = 4;
+                    update.parameters.number_of_threads = 2;
                     update.parameters.chunk_size = 10000;
                     update.parameters.array_size = 0;
 
@@ -94,6 +94,18 @@ int main () {
                     for (uint32_t i = 0; i < update.parameters.number_of_threads; i++) {
                         uint32_t_send(client1, i);
                     }
+
+                    sleep(2);
+
+                    update.parameters.number_of_threads = 4;
+                    update.parameters.chunk_size = 50000;
+
+                    // Send update to client.
+                    // m_send(client1, update);
+
+                    // for (uint32_t i = 0; i < update.parameters.number_of_threads; i++) {
+                    //     uint32_t_send(client1, i);
+                    // }
 
                     break;
                 }

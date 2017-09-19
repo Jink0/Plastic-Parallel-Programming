@@ -41,7 +41,7 @@
  */
 
 // Thread control enum. threads either run (execute), change strategies (update), pause (sleep), or stop (terminate).
-enum Thread_Control {Execute, Update, Sleep, Terminate};
+enum Thread_Control {Execute = 0, Update = 1, Sleep = 2, Terminate = 3};
 
 // Variables which define map_array_thread behavior. May be updated by controller.
 struct work_data {
@@ -257,12 +257,12 @@ public:
 
 
     // Returns tasks into the bag.
-    void return_tasks(std::deque<task_set<in1, in2, out>> returned_tasks) {
+    void return_tasks(std::deque<task_set<in1, in2, out>> returned_tasks, uint32_t i) {
 
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
-        print("\nReturning ", returned_tasks.size(), " set(s) of tasks, ");
+        uint32_t num_tasks_returned = returned_tasks.size();
 
         // Add tasks to the front of the bag.
         while (returned_tasks.size() != 0) {
@@ -279,7 +279,7 @@ public:
             returned_tasks.pop_back();
         }
 
-        print("bag contains ", task_iterators.size(), " set(s) with ", num_tasks_in_bag, " total tasks\n");
+        print("\n[Thread ", i, "] Returning ", num_tasks_returned, " set(s) of tasks, bag contains ", task_iterators.size(), " set(s) with ", num_tasks_in_bag, " total tasks\n");
     };
 
 
@@ -324,16 +324,16 @@ public:
 
             if (thread_control.at(i).state == Sleep) {
 
-                // thread_control.at(i).state = Update;
-                std::unique_lock<std::mutex> lk(thread_control.at(i).m);
-                thread_control.at(i).cv.notify_all();
+                thread_control.at(i).state = Update;
+                std::unique_lock<std::mutex> lock(thread_control.at(i).m);
+                thread_control.at(i).cv.notify_one();
 
                 count--;
             }
         }
 
         if (count > 0) {
-            print("\nCouldn't wake ", n, " threads!\n\n");
+            print("\nCouldn't wake ", n, " threads! Managed to wake ", n - count, "\n\n");
             exit(1);
         }
     }
@@ -416,17 +416,6 @@ private:
     uint32_t num_tasks_in_bag;
     uint32_t num_tasks_uncompleted;
 };
-
-
-
-
-#define NUM_STATUSES 3
-
-enum Status {Alive, Sleeping, Terminated};
-
-const std::string statuses[NUM_STATUSES] = {"Alive", "Sleeping", "Terminated"};
-
-const std::string bools[2] = {"False", "True"};
 
 
 
@@ -571,8 +560,6 @@ void mapArrayThread(thread_init_data<in1, in2, out> my_data) {
     // Initialise metrics.
     metrics_thread_start(my_data.threadId);
 
-    print("\n\n\n\n\n\nHello from thread ", my_data.threadId, "!\n\n\n\n");
-
     work_data work_data = {my_data.bot->thread_control.at(my_data.threadId).data.cpu_affinity,
                                           my_data.bot->thread_control.at(my_data.threadId).data.chunk_size,
                                           my_data.bot->thread_control.at(my_data.threadId).data.tapered_schedule};
@@ -615,8 +602,14 @@ void mapArrayThread(thread_init_data<in1, in2, out> my_data) {
                     // Update completed tasks.
                     my_data.bot->update_num_tasks_uncompleted(total_num_tasks - calc_num_tasks(my_tasks));
 
-                    // Return our tasks.
-                    my_data.bot->return_tasks(my_tasks);
+                    if (calc_num_tasks(my_tasks) != 0) {
+
+                        // print("\n[Thread ", my_data.threadId, "] ");
+
+                        // Return our tasks.
+                        my_data.bot->return_tasks(my_tasks, i);
+                    }
+
                     my_tasks.clear();
 
                     check:
@@ -642,10 +635,15 @@ void mapArrayThread(thread_init_data<in1, in2, out> my_data) {
                         case Sleep: {
 
                             // Wait until we are woken.
-                            std::unique_lock<std::mutex> lk(my_data.bot->thread_control.at(my_data.threadId).m);
-                            my_data.bot->thread_control.at(my_data.threadId).cv.wait(lk);
+                            std::unique_lock<std::mutex> lock(my_data.bot->thread_control.at(my_data.threadId).m);
 
-                            print("\n[Thread ", my_data.threadId, "] Woken up!\n");
+                            // Used to avoid spurious wakeups.
+                            while (my_data.bot->thread_control.at(my_data.threadId).state == Sleep) {
+
+                                my_data.bot->thread_control.at(my_data.threadId).cv.wait(lock);
+                            }
+
+                            print("\n[Thread ", my_data.threadId, "] Woken up! Updating...\n");
 
                             // my_data.bot->thread_control.at(my_data.threadId).state = Execute;
 

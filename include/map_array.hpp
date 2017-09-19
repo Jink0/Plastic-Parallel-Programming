@@ -154,11 +154,11 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 int thread_num_diff = msg.parameters.number_of_threads - current_num_threads;
 
                 // If we have a excess of threads;
-                // if (thread_num_diff < 0) {
+                if (thread_num_diff < 0) {
 
-                //     // Sleep excess threads.
-                //     bot.sleep_n_threads(abs(thread_num_diff));
-                // } 
+                    // Sleep excess threads.
+                    bot.sleep_n_threads(abs(thread_num_diff));
+                } 
 
                 // If we have a shortage of threads.
                 if (thread_num_diff > 0) {
@@ -235,17 +235,13 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
 
     socket.close();
 
-    for (uint32_t i = 0; i < bot.thread_control.size(); i++) {
-        bot.thread_control.at(i).state = Terminate;
-    }
-
     // Get thread state counts.
     std::pair<uint32_t, uint32_t> thread_state_counts = bot.num_active_and_inactive_threads();
 
     // Wake sleeping threads so they can return.
     bot.wake_n_threads(thread_state_counts.second);
 
-    for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
+    for (uint32_t i = 0; i < threads.size(); i++) {
         threads.at(i).join();
     }
 
