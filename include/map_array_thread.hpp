@@ -43,13 +43,20 @@
 // Thread control enum. threads either run (execute), change strategies (update), pause (sleep), or stop (terminate).
 enum Thread_Control {Execute, Update, Sleep, Terminate};
 
+// Variables which define map_array_thread behavior. May be updated by controller.
+struct work_data {
 
+    // CPU for thread to run on.
+    uint32_t cpu_affinity;
 
-template <typename in1, typename in2, typename out>
-struct thread_data2;
+    // Starting chunk size of tasks to retrieve.
+    uint32_t chunk_size;
 
+    // Check for tapered schedule.
+    bool tapered_schedule = false;
+};
 
-
+// Structure for complete thread control by the main thread.
 template <typename in1, typename in2, typename out>
 struct thread_control_struct {
 
@@ -63,12 +70,12 @@ struct thread_control_struct {
     std::mutex m;
 
     // Thread data for updates.
-    thread_data2<in1, in2, out> data;
+    struct work_data data;
 };
 
-// Structure to contain a group of tasks.
+// Structure to contain a set of tasks.
 template <typename in1, typename in2, typename out>
-struct tasks {
+struct task_set {
 
     // Start of input.
     typename std::deque<in1>::iterator in1Begin;
@@ -169,12 +176,12 @@ public:
 
 
     // Returns tasks of the specified count or less.
-    std::deque<tasks<in1, in2, out>> get_tasks(uint32_t num) {
+    std::deque<task_set<in1, in2, out>> get_tasks(uint32_t num) {
 
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
-        std::deque<tasks<in1, in2, out>> output;
+        std::deque<task_set<in1, in2, out>> output;
 
         // Check if we have any tasks left.
         if (num_tasks_in_bag == 0) {
@@ -225,7 +232,7 @@ public:
         for (uint32_t j = 0; j < i; j++) {
 
             // Create tasks data structure to add to output.
-            struct tasks<in1, in2, out> temp = {
+            struct task_set<in1, in2, out> temp = {
                 task_iterators.front().first,
                 task_iterators.front().second,
                 input2,
@@ -250,20 +257,20 @@ public:
 
 
     // Returns tasks into the bag.
-    void return_tasks(std::deque<tasks<in1, in2, out>> returned_tasks) {
+    void return_tasks(std::deque<task_set<in1, in2, out>> returned_tasks) {
 
         // Get mutex.
         std::lock_guard<std::mutex> lock(m);
 
         print("\nReturning ", returned_tasks.size(), " set(s) of tasks, ");
 
-        // Add tasks to the front.
+        // Add tasks to the front of the bag.
         while (returned_tasks.size() != 0) {
 
             // Add iterator pair to bag.
             task_iterators.push_front(std::pair<typename std::deque<in1>::iterator, typename std::deque<in1>::iterator>(returned_tasks.back().in1Begin, returned_tasks.back().in1End));
 
-            // Add corresponding output iterators.
+            // Add corresponding output iterator.
             output_iterators.push_front(returned_tasks.back().outBegin);
 
             // Update task total.
@@ -277,6 +284,7 @@ public:
 
 
 
+    // Sets the last n threads to sleep.
     void sleep_n_threads(uint32_t n) {
 
         uint32_t count = n;
@@ -303,6 +311,7 @@ public:
 
 
 
+    // Wakes the next n threads (not including running threads.)
     void wake_n_threads(uint32_t n) {
 
         uint32_t count = n;
@@ -331,6 +340,7 @@ public:
 
 
 
+    // Returns a pair with the active/inactive thread counts.
     std::pair<uint32_t, uint32_t> num_active_and_inactive_threads() {
 
         std::pair<uint32_t, uint32_t> output(0, 0);
@@ -422,57 +432,14 @@ const std::string bools[2] = {"False", "True"};
 
 // Data struct to pass to each thread.
 template <typename in1, typename in2, typename out>
-struct thread_data {
+struct thread_init_data {
 
     // Id of this thread.
     uint32_t threadId;
-
-    // CPU for thread to run on.
-    uint32_t cpu_affinity;
-
-    // Starting chunk size of tasks to retrieve.
-    uint32_t chunk_size;
-
-    // Check for tapered schedule.
-    bool tapered_schedule = false;
 
     // Pointer to the shared bag of tasks object.
     BagOfTasks<in1, in2, out> *bot;
 };
-
-
-
-// Data struct to pass to each thread.
-template <typename in1, typename in2, typename out>
-struct thread_data2 {
-
-    // Id of this thread.
-    uint32_t threadId;
-
-    // CPU for thread to run on.
-    uint32_t cpu_affinity;
-
-    // Starting chunk size of tasks to retrieve.
-    uint32_t chunk_size;
-
-    // Check for tapered schedule.
-    bool tapered_schedule = false;
-};
-
-
-
-// // Overloads << operator for easy printing with streams. Used for development.
-// template <typename in1, typename in2, typename out>
-// std::ostream& operator<< (std::ostream &outS, thread_data<in1, in2, out> &td) {
-
-//     // Print our data.
-//     return outS << "Thread data for thread " << td.threadId << ":" << std::endl
-//                 << "CPU affinity:     " << td.cpu_affinity << std::endl
-//                 << "Chunk size:       " << td.chunk_size << std::endl
-//                 << "Tapered_schedule: " << bools[td.tapered_schedule] << std::endl
-//                 << "New insts check:  " << bools[td.check_for_new_instructions] << std::endl
-//                 << "Status:           " << statuses[td.status] << std::endl << std::endl;
-// };
 
 
 
@@ -482,6 +449,7 @@ struct thread_data2 {
 
 
 
+// Returns a deque of appropriate chunk sizes.
 std::deque<uint32_t> calc_chunks(experiment_parameters params, uint32_t num_tasks) {
 
     // Output deque of chunk sizes, one for each thread.
@@ -550,23 +518,22 @@ std::deque<uint32_t> calc_chunks(experiment_parameters params, uint32_t num_task
 
 
 
+// Returns a deque of complete work data for every thread.
 template <typename in1, typename in2, typename out>
-std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out> &bot, experiment_parameters params) {
+std::deque<work_data> calc_work_data(BagOfTasks<in1, in2, out> &bot, experiment_parameters params) {
 
     // Calculate info for data partitioning.
     std::deque<uint32_t> chunks = calc_chunks(params, bot.read_num_tasks_uncompleted());
 
     // Output deque of thread data
-    std::deque<thread_data<in1, in2, out>> output;
+    std::deque<work_data> output;
 
     // Set thread data values.
     for (uint32_t i = 0; i < params.number_of_threads; i++) {
 
-        struct thread_data<in1, in2, out> iter_data;
+        struct work_data iter_data;
 
-        iter_data.threadId     = i;
         iter_data.chunk_size   = chunks.at(i);
-        iter_data.bot          = &bot;
         iter_data.cpu_affinity = params.thread_pinnings.at(i);
 
         if (params.initial_schedule == Tapered) {
@@ -581,8 +548,9 @@ std::deque<thread_data<in1, in2, out>> calc_thread_data(BagOfTasks<in1, in2, out
 
 
 
+// Calculates the total number of tasks in a group (deque) of task sets.
 template <typename in1, typename in2, typename out>
-uint32_t calc_num_tasks(std::deque<tasks<in1, in2, out>> tasks) {
+uint32_t calc_num_tasks(std::deque<task_set<in1, in2, out>> tasks) {
 
     uint32_t total = 0;
 
@@ -598,18 +566,22 @@ uint32_t calc_num_tasks(std::deque<tasks<in1, in2, out>> tasks) {
 
 // Function to start each thread of mapArray on.
 template <typename in1, typename in2, typename out>
-void mapArrayThread(thread_data<in1, in2, out> my_data) {
+void mapArrayThread(thread_init_data<in1, in2, out> my_data) {
 
     // Initialise metrics.
     metrics_thread_start(my_data.threadId);
 
+    work_data work_data = {my_data.bot->thread_control.at(my_data.threadId).data.cpu_affinity,
+                                          my_data.bot->thread_control.at(my_data.threadId).data.chunk_size,
+                                          my_data.bot->thread_control.at(my_data.threadId).data.tapered_schedule};
+
     restart:
 
     // Stick to our designated CPU.
-    stick_this_thread_to_cpu(my_data.cpu_affinity);
+    stick_this_thread_to_cpu(work_data.cpu_affinity);
 
     // Get tasks.
-    std::deque<tasks<in1, in2, out>> my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
+    std::deque<task_set<in1, in2, out>> my_tasks = my_data.bot->get_tasks(work_data.chunk_size);
 
     print("\n[Thread ", my_data.threadId, "] Received ", my_tasks.size(), " sets of tasks with chunk size(s):\n");
 
@@ -653,9 +625,9 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
                         // Update our parameters.
                         case Update: {
 
-                            my_data.cpu_affinity     = my_data.bot->thread_control.at(my_data.threadId).data.cpu_affinity;
-                            my_data.chunk_size       = my_data.bot->thread_control.at(my_data.threadId).data.chunk_size;
-                            my_data.tapered_schedule = my_data.bot->thread_control.at(my_data.threadId).data.tapered_schedule;
+                            work_data.cpu_affinity     = my_data.bot->thread_control.at(my_data.threadId).data.cpu_affinity;
+                            work_data.chunk_size       = my_data.bot->thread_control.at(my_data.threadId).data.chunk_size;
+                            work_data.tapered_schedule = my_data.bot->thread_control.at(my_data.threadId).data.tapered_schedule;
 
                             my_data.bot->thread_control.at(my_data.threadId).state = Execute;
 
@@ -671,7 +643,7 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
                             std::unique_lock<std::mutex> lk(my_data.bot->thread_control.at(my_data.threadId).m);
                             my_data.bot->thread_control.at(my_data.threadId).cv.wait(lk);
 
-                            print("\n[Thread ", my_data.threadId, "] Woken up!\n\n\n\n\n");
+                            print("\n[Thread ", my_data.threadId, "] Woken up!\n");
 
                             // my_data.bot->thread_control.at(my_data.threadId).state = Execute;
 
@@ -696,13 +668,13 @@ void mapArrayThread(thread_data<in1, in2, out> my_data) {
         my_data.bot->update_num_tasks_uncompleted(total_num_tasks);
 
         // Check for tapered schedule.
-        if (my_data.tapered_schedule && my_data.chunk_size > 1) {
-            my_data.chunk_size = my_data.chunk_size / 2;
+        if (work_data.tapered_schedule && work_data.chunk_size > 1) {
+            work_data.chunk_size = work_data.chunk_size / 2;
         }
 
         my_tasks.clear();
 
-        my_tasks = my_data.bot->get_tasks(my_data.chunk_size);
+        my_tasks = my_data.bot->get_tasks(work_data.chunk_size);
 
         total_num_tasks = calc_num_tasks(my_tasks);
 

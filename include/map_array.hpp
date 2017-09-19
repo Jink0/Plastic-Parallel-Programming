@@ -52,12 +52,12 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
     BagOfTasks<in1, in2, out> bot(work, output);
 
     // Calculate info for data partitioning.
-    std::deque<thread_data<in1, in2, out>> thread_data_deque = calc_thread_data<in1, in2, out>(bot, work.params);
+    std::deque<work_data> work_data_deque = calc_work_data<in1, in2, out>(bot, work.params);
 
-    for (uint32_t m = 0; m < thread_data_deque.size(); m++) {
-        bot.thread_control.at(m).data.cpu_affinity = thread_data_deque.at(m).cpu_affinity;
-        bot.thread_control.at(m).data.chunk_size = thread_data_deque.at(m).chunk_size;
-        bot.thread_control.at(m).data.tapered_schedule = thread_data_deque.at(m).tapered_schedule;
+    for (uint32_t m = 0; m < work_data_deque.size(); m++) {
+        bot.thread_control.at(m).data.cpu_affinity = work_data_deque.at(m).cpu_affinity;
+        bot.thread_control.at(m).data.chunk_size = work_data_deque.at(m).chunk_size;
+        bot.thread_control.at(m).data.tapered_schedule = work_data_deque.at(m).tapered_schedule;
     }
 
     // Variables for creating and managing threads.
@@ -66,9 +66,11 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
     // Create all our needed threads.
     for (uint32_t i = 0; i < work.params.number_of_threads; i++) {
 
+        thread_init_data<in1, in2, out> test = {i, &bot};
+
         print("[Main] Creating thread ", i , "\n");
 
-        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, thread_data_deque.at(i));
+        threads.at(i) = std::thread(mapArrayThread<in1, in2, out>, test);
     }
 
     // Get our PID to send to the controller.
@@ -177,13 +179,13 @@ void map_array(struct workload<in1, in2, out>& work, std::deque<out>& output) {
                 work.params.initial_chunk_size = msg.parameters.chunk_size;
 
                 // Recalculate info for data partitioning.
-                std::deque<thread_data<in1, in2, out>> thread_data_deque2 = calc_thread_data<in1, in2, out>(bot, work.params);
+                std::deque<work_data> thread_data_deque2 = calc_work_data<in1, in2, out>(bot, work.params);
 
                 // Copy updated data.
                 for (uint32_t m = 0; m < work.params.number_of_threads; m++) {
+
                     bot.thread_control.at(m).data.cpu_affinity     = thread_data_deque2.at(m).cpu_affinity;
                     bot.thread_control.at(m).data.chunk_size       = thread_data_deque2.at(m).chunk_size;
-
                     bot.thread_control.at(m).data.tapered_schedule = thread_data_deque2.at(m).tapered_schedule;
 
                     // std::lock_guard<std::mutex> lk(bot.thread_control.at(m).m);
