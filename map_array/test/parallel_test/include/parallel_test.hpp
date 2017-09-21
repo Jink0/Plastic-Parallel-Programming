@@ -1,0 +1,4 @@
+#ifndef PARALLEL_TEST_HPP
+#define PARALLEL_TEST_HPP
+
+#endif // PARALLEL_TEST_HPP

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+	<number_of_repeats>1</number_of_repeats>
+	<defaults>
+		<number_of_threads>1</number_of_threads>
+		<thread_pinnings>
+			<value>0</value>
+<!-- 			<value>1</value>
+			<value>2</value>
+			<value>3</value> -->
+		</thread_pinnings>
+		<initial_schedule>Static</initial_schedule>
+		<initial_chunk_size>500</initial_chunk_size>
+		<user_function>Collatz</user_function>
+		<array_size>2000000</array_size>
+		<task_size_distribution type="array">
+			<value>1</value>
+			<value>1</value>
+			<value>1</value>
+			<value>100000</value>
+		</task_size_distribution>
+		<threading_library>Default</threading_library>
+	</defaults>
+	<experiments>
+		<experiment/>
+	</experiments>
+</parameters>
