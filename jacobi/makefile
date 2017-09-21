@@ -9,9 +9,9 @@ UTILS_DIR           = utils
 # Flags and includes
 
 GCC       = g++
-CXXFLAGS  = -Wall -std=c++11 -std=c++1y -pthread -fopenmp -O3 -DDETAILED_METRICS -g
+CXXFLAGS  = -Wall -O3 -DDETAILED_METRICS
 INCLUDES  = -I$(INCLUDE_DIR)/ -I$(UTILS_DIR)/include
-LIB_FLAGS = -lboost_system -lboost_filesystem -lboost_thread -lzmq -ltbb
+LIB_FLAGS = -lpthread
 
 
 
