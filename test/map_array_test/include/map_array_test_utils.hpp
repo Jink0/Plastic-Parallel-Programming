@@ -1,4 +1,0 @@
-#ifndef MAP_ARRAY_TEST_HPP
-#define MAP_ARRAY_TEST_HPP
-
-#endif // MAP_ARRAY_TEST_HPP
