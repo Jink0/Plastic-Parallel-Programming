@@ -9,13 +9,13 @@ UTILS_DIR           = utils
 # Flags and includes
 
 GCC       = g++
-CXXFLAGS  = -Wall -O3 -DDETAILED_METRICS
+CXXFLAGS  = -Wall -O3 -DDETAILED_METRICS -g
 INCLUDES  = -I$(INCLUDE_DIR)/ -I$(UTILS_DIR)/include
 LIB_FLAGS = -lpthread
 
 
 
-_JAC_OBJ = jacobi.o
+_JAC_OBJ = jacobi.o utils.o
 JAC_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_JAC_OBJ))
 
 

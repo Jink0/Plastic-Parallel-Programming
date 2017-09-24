@@ -1,160 +1,196 @@
 #define _REENTRANT
+
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/times.h>
 #include <limits.h>
-#define SHARED 1
-#define MAXGRID 258   /* maximum grid size, including boundaries */
-#define MAXWORKERS 4  /* maximum number of worker threads */
 
-void *Worker(void *);
+#include <iostream>
+#include <vector>
+#include <thread>
+
+#include <sstream>
+
+#include <utils.hpp>
+
+
+#define MAXGRID 258   // Maximum grid size, including boundaries
+
+void Worker(long long myid);
 void InitializeGrids();
 void Barrier();
 
-struct tms buffer;        /* used for timing */
-clock_t start, finish;
+struct tms buffer;        // Used for timing
+clock_t start, end;
 
-pthread_mutex_t barrier;  /* mutex semaphore for the barrier */
-pthread_cond_t go;        /* condition variable for leaving */
-int numArrived = 0;       /* count of the number who have arrived */
+pthread_mutex_t barrier;  // Mutex semaphore for the barrier
+pthread_cond_t go;        // Condition variable for leaving
+uint32_t num_arrived = 0;       // Count of the number who have arrived
 
-int gridSize, numWorkers, numIters, stripSize;
-double maxDiff[MAXWORKERS];
+uint32_t grid_size, num_workers, num_iterations, strip_size;
+std::vector<double> max_difference_global;
 double grid1[MAXGRID][MAXGRID], grid2[MAXGRID][MAXGRID];
 
 
-/* main() -- read command line, initialize grids, and create threads
-             when the threads are done, print the results */
-
+// main() -- read command line, initialize grids, and create threads when the threads are done, print the results
 int main(int argc, char *argv[]) {
-  /* thread ids and attributes */
-  pthread_t workerid[MAXWORKERS];
-  pthread_attr_t attr;
-  int i, j;
-  double maxdiff = 0.0;
-  FILE *results;
 
-  /* set global thread attributes */
-  pthread_attr_init(&attr);
-  pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
+	// Read command line arguments
+	grid_size      = atoi(argv[1]);
+	num_workers    = atoi(argv[2]);
+	num_iterations = atoi(argv[3]);
 
-  /* initialize mutex and condition variable */
-  pthread_mutex_init(&barrier, NULL);
-  pthread_cond_init(&go, NULL);
+	//  Calculate strip size
+	strip_size = grid_size / num_workers;
 
-  /* read command line and initialize grids */
-  gridSize = atoi(argv[1]);
-  numWorkers = atoi(argv[2]);
-  numIters = atoi(argv[3]);
-  stripSize = gridSize/numWorkers;
-  InitializeGrids();
+	InitializeGrids();
 
-  start = times(&buffer);
-  /* create the workers, then wait for them to finish */
-  for (i = 0; i < numWorkers; i++)
-    pthread_create(&workerid[i], &attr, Worker, (void *) i);
-  for (i = 0; i < numWorkers; i++)
-    pthread_join(workerid[i], NULL);
+  	// Thread handles
+	std::vector<std::thread> threads(num_workers);
 
-  finish = times(&buffer);
-  /* print the results */
-  for (i = 0; i < numWorkers; i++)
-    if (maxdiff < maxDiff[i])
-      maxdiff = maxDiff[i];
-  printf("number of iterations:  %d\nmaximum difference:  %e\n",
-          numIters, maxdiff);
-  printf("start:  %d   finish:  %d\n", start, finish);
-  printf("elapsed time:  %d\n", finish-start);
-  results = fopen("results", "w");
-  for (i = 1; i <= gridSize; i++) {
-    for (j = 1; j <= gridSize; j++) {
-      fprintf(results, "%f ", grid2[i][j]);
-    }
-    fprintf(results, "\n");
-  }
+	max_difference_global.resize(num_workers);
+
+	double max_diff = 0.0;
+
+	// Initialize mutex and condition variable
+	pthread_mutex_init(&barrier, NULL);
+	pthread_cond_init(&go, NULL);
+
+	// Print arguments
+	print("\n");
+
+	// Record start time
+	start = times(&buffer);
+
+	// Create workers
+	for (uint32_t i = 0; i < num_workers; i++) {
+		threads.at(i) = std::thread(Worker, i);
+	}
+
+	// Join with workers
+	for (uint32_t i = 0; i < num_workers; i++) {
+		threads.at(i).join();
+	}
+
+	// Record end time
+	end = times(&buffer);
+
+	for (uint32_t i = 0; i < num_workers; i++) {
+		if (max_diff < max_difference_global[i]) {
+	  		max_diff = max_difference_global[i];
+		}
+	}
+
+	// Print results
+	print("\nNumber of iterations: ", num_iterations, "\n",
+		    "Maximum difference:   ", max_diff, "\n",
+	        "Elapsed time:         ", end - start, "\n",
+	        "\n");
 }
 
 
-/* Each Worker computes values in one strip of the grids.
-   The main worker loop does two computations to avoid copying from
-   one grid to the other.  */
 
-void *Worker(void *arg) {
-  long long myid = (long long) arg;
-  double maxdiff, temp;
-  int i, j, iters;
-  int first, last;
+// Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
+void Worker(long long myid) {
 
-  printf("worker %d (pthread id %d) has started\n", myid, pthread_self());
+	// Print starting message
+	print("Worker ", myid, " has started\n");
 
-  /* determine first and last rows of my strip of the grids */
-  first = myid*stripSize + 1;
-  last = first + stripSize - 1;
+	// Determine first and last rows of my strip of the grids
+	uint32_t first = myid * strip_size + 1;
+	uint32_t last = first + strip_size - 1;
 
-  for (iters = 1; iters <= numIters; iters++) {
-    /* update my points */
-    for (i = first; i <= last; i++) {
-      for (j = 1; j <= gridSize; j++) {
-        grid2[i][j] = (grid1[i-1][j] + grid1[i+1][j] + 
-                       grid1[i][j-1] + grid1[i][j+1]) * 0.25;
-      }
-    }
-    Barrier();
-    /* update my points again */
-    for (i = first; i <= last; i++) {
-      for (j = 1; j <= gridSize; j++) {
-        grid1[i][j] = (grid2[i-1][j] + grid2[i+1][j] +
-               grid2[i][j-1] + grid2[i][j+1]) * 0.25;
-      }
-    }
-    Barrier();
-  }
-  /* compute the maximum difference in my strip and set global variable */
-  maxdiff = 0.0;
-  for (i = first; i <= last; i++) {
-    for (j = 1; j <= gridSize; j++) {
-      temp = grid1[i][j]-grid2[i][j];
-      if (temp < 0)
-        temp = -temp;
-      if (maxdiff < temp)
-        maxdiff = temp;
-    }
-  }
-  maxDiff[myid] = maxdiff;
+	for (uint32_t iters = 1; iters <= num_iterations; iters++) {
+
+		// Update my points
+		for (uint32_t i = first; i <= last; i++) {
+			for (uint32_t j = 1; j <= grid_size; j++) {
+				grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;
+			}
+		}
+
+		Barrier();
+
+		// Update my points again
+		for (uint32_t i = first; i <= last; i++) {
+			for (uint32_t j = 1; j <= grid_size; j++) {
+				grid1[i][j] = (grid2[i-1][j] + grid2[i+1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;
+			}
+		}
+
+		Barrier();
+	}
+
+  // Compute the maximum difference in my strip and set global variable
+  double max_diff = 0.0;
+
+	for (uint32_t i = first; i <= last; i++) {
+		for (uint32_t j = 1; j <= grid_size; j++) {
+			uint32_t temp = grid1[i][j]-grid2[i][j];
+
+			if (temp < 0) {
+				temp = -temp;
+			}
+
+			if (max_diff < temp) {
+				max_diff = temp;
+			}
+		}
+	}
+
+	max_difference_global[myid] = max_diff;
 }
 
+
+
+// Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
 void InitializeGrids() {
-  /* initialize the grids (grid1 and grid2)
-     set boundaries to 1.0 and interior points to 0.0  */
-  int i, j;
-  for (i = 0; i <= gridSize+1; i++)
-    for (j = 0; j <= gridSize+1; j++) {
-      grid1[i][j] = 0.0;
-      grid2[i][j] = 0.0;
-    }
-  for (i = 0; i <= gridSize+1; i++) {
-    grid1[i][0] = 1.0;
-    grid1[i][gridSize+1] = 1.0;
-    grid2[i][0] = 1.0;
-    grid2[i][gridSize+1] = 1.0;
-  }
-  for (j = 0; j <= gridSize+1; j++) {
-    grid1[0][j] = 1.0;
-    grid2[0][j] = 1.0;
-    grid1[gridSize+1][j] = 1.0;
-    grid2[gridSize+1][j] = 1.0;
-  }
+ 
+	for (uint32_t i = 0; i <= grid_size + 1; i++) {
+		for (uint32_t j = 0; j <= grid_size + 1; j++) {
+
+		    grid1[i][j] = 0.0;
+		    grid2[i][j] = 0.0;
+		}
+	}
+
+	for (uint32_t i = 0; i <= grid_size + 1; i++) {
+
+		grid1[i][0] = 1.0;
+	    grid1[i][grid_size + 1] = 1.0;
+	    grid2[i][0] = 1.0;
+	    grid2[i][grid_size + 1] = 1.0;
+	}
+
+  	for (uint32_t j = 0; j <= grid_size + 1; j++) {
+
+	    grid1[0][j] = 1.0;
+	    grid2[0][j] = 1.0;
+	    grid1[grid_size + 1][j] = 1.0;
+	    grid2[grid_size + 1][j] = 1.0;
+  	}
 }
 
+
+
+// Reusable counter barrier. Not sense reversing?
 void Barrier() {
-  pthread_mutex_lock(&barrier);
-  numArrived++;
-  if (numArrived == numWorkers) {
-    numArrived = 0;
-    pthread_cond_broadcast(&go);
-  } else
-    pthread_cond_wait(&go, &barrier);
-  pthread_mutex_unlock(&barrier);
+
+	pthread_mutex_lock(&barrier);
+
+  	num_arrived++;
+
+  	if (num_arrived == num_workers) {
+
+    	num_arrived = 0;
+    	pthread_cond_broadcast(&go);
+
+  	} else {
+
+    	pthread_cond_wait(&go, &barrier);
+	}
+
+  	pthread_mutex_unlock(&barrier);
 }
