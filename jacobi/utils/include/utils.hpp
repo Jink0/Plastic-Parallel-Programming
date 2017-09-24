@@ -9,6 +9,8 @@
 #include <deque>
 #include <string>
 
+#include <vector>
+
 // For parsing config file
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
@@ -78,7 +80,7 @@ std::string type_name()
 
 
 
-int stick_this_thread_to_cpu(uint32_t core_id);
+int force_affinity_set(std::vector<uint32_t> core_ids);
 
 void join_with_threads(std::deque<pthread_t> threads, uint32_t num_threads_to_join);
 

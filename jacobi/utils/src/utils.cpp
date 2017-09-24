@@ -26,15 +26,20 @@ std::mutex& get_cout_mutex()
 
 
 
-int stick_this_thread_to_cpu(uint32_t core_id) {
+int force_affinity_set(std::vector<uint32_t> core_ids) {
     uint32_t num_cores = sysconf(_SC_NPROCESSORS_ONLN);
-
-    if (core_id >= num_cores)
-        return EINVAL;
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(core_id, &cpuset);
+
+    for (uint32_t i = 0; i < core_ids.size(); i++) {
+
+        if (core_ids[i] >= num_cores) {
+            return EINVAL;
+        }
+
+        CPU_SET(core_ids[i], &cpuset);
+    }
 
     pthread_t current_thread = pthread_self();
 

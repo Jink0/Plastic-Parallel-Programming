@@ -15,10 +15,7 @@
 
 #include <utils.hpp>
 
-
-#define MAXGRID 258   // Maximum grid size, including boundaries
-
-void Worker(long long myid);
+void Worker(long long my_id);
 void InitializeGrids();
 void Barrier();
 
@@ -29,9 +26,10 @@ pthread_mutex_t barrier;  // Mutex semaphore for the barrier
 pthread_cond_t go;        // Condition variable for leaving
 uint32_t num_arrived = 0;       // Count of the number who have arrived
 
-uint32_t grid_size, num_workers, num_iterations, strip_size;
+uint32_t grid_size, num_workers, num_iterations, set_pin_bool, num_cores, strip_size;
 std::vector<double> max_difference_global;
-double grid1[MAXGRID][MAXGRID], grid2[MAXGRID][MAXGRID];
+std::vector<std::vector<double>> grid1, grid2;
+
 
 
 // main() -- read command line, initialize grids, and create threads when the threads are done, print the results
@@ -41,6 +39,11 @@ int main(int argc, char *argv[]) {
 	grid_size      = atoi(argv[1]);
 	num_workers    = atoi(argv[2]);
 	num_iterations = atoi(argv[3]);
+	set_pin_bool   = atoi(argv[4]);
+
+	if (set_pin_bool != 0) {
+		num_cores = atoi(argv[5]);
+	}
 
 	//  Calculate strip size
 	strip_size = grid_size / num_workers;
@@ -93,13 +96,26 @@ int main(int argc, char *argv[]) {
 
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
-void Worker(long long myid) {
+void Worker(long long my_id) {
+
+	std::vector<uint32_t> core_ids;
+
+	if (set_pin_bool != 0) {
+		for (uint32_t i = 0; i < num_cores; i++) {
+			core_ids.push_back(i);
+		}
+
+	} else {
+		core_ids.push_back(my_id);
+	}
+
+	force_affinity_set(core_ids);
 
 	// Print starting message
-	print("Worker ", myid, " has started\n");
+	print("Worker ", my_id, " has started\n");
 
 	// Determine first and last rows of my strip of the grids
-	uint32_t first = myid * strip_size + 1;
+	uint32_t first = my_id * strip_size + 1;
 	uint32_t last = first + strip_size - 1;
 
 	for (uint32_t iters = 1; iters <= num_iterations; iters++) {
@@ -116,7 +132,7 @@ void Worker(long long myid) {
 		// Update my points again
 		for (uint32_t i = first; i <= last; i++) {
 			for (uint32_t j = 1; j <= grid_size; j++) {
-				grid1[i][j] = (grid2[i-1][j] + grid2[i+1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;
+				grid1[i][j] = (grid2[i - 1][j] + grid2[i + 1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;
 			}
 		}
 
@@ -140,24 +156,28 @@ void Worker(long long myid) {
 		}
 	}
 
-	max_difference_global[myid] = max_diff;
+	max_difference_global[my_id] = max_diff;
 }
 
 
 
 // Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
 void InitializeGrids() {
+
+	grid1.resize(grid_size + 2);
+	grid2.resize(grid_size + 2);
  
 	for (uint32_t i = 0; i <= grid_size + 1; i++) {
-		for (uint32_t j = 0; j <= grid_size + 1; j++) {
+		grid1[i].resize(grid_size + 2);
+		grid2[i].resize(grid_size + 2);
 
+		for (uint32_t j = 0; j <= grid_size + 1; j++) {
 		    grid1[i][j] = 0.0;
 		    grid2[i][j] = 0.0;
 		}
 	}
 
 	for (uint32_t i = 0; i <= grid_size + 1; i++) {
-
 		grid1[i][0] = 1.0;
 	    grid1[i][grid_size + 1] = 1.0;
 	    grid2[i][0] = 1.0;
@@ -165,7 +185,6 @@ void InitializeGrids() {
 	}
 
   	for (uint32_t j = 0; j <= grid_size + 1; j++) {
-
 	    grid1[0][j] = 1.0;
 	    grid2[0][j] = 1.0;
 	    grid1[grid_size + 1][j] = 1.0;
