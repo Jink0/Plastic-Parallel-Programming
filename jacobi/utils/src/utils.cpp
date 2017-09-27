@@ -27,6 +27,10 @@ std::mutex& get_cout_mutex()
 
 
 int force_affinity_set(std::vector<uint32_t> core_ids) {
+    if (core_ids.size() == 0) {
+        print("ERROR: force_affinity_set called with an empty set of core_ids!");
+        exit(1);
+    }
     uint32_t num_cores = sysconf(_SC_NPROCESSORS_ONLN);
 
     cpu_set_t cpuset;
