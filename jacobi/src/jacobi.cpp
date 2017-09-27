@@ -174,26 +174,26 @@ void Worker(long long my_id, uint32_t stage) {
 		}
 
 		Barrier(stage);
-	}
 
-  // Compute the maximum difference in my strip and set global variable
-  double max_diff = 0.0;
+		// Compute the maximum difference in my strip and set global variable
+	  	double max_diff = 0.0;
 
-	for (uint32_t i = first; i <= last; i++) {
-		for (uint32_t j = 1; j <= grid_size; j++) {
-			uint32_t temp = grid1[i][j]-grid2[i][j];
+		for (uint32_t i = first; i <= last; i++) {
+			for (uint32_t j = 1; j <= grid_size; j++) {
+				uint32_t temp = grid1[i][j]-grid2[i][j];
 
-			if (temp < 0) {
-				temp = -temp;
-			}
+				if (temp < 0) {
+					temp = -temp;
+				}
 
-			if (max_diff < temp) {
-				max_diff = temp;
+				if (max_diff < temp) {
+					max_diff = temp;
+				}
 			}
 		}
-	}
 
-	max_difference_global[stage][my_id] = max_diff;
+		max_difference_global[stage][my_id] = max_diff;
+	}
 }
 
 
