@@ -14,19 +14,27 @@
 #include <sstream>
 
 #include <utils.hpp>
+// #include <config_files_utils.hpp>
+
+#include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
+// #include <boost.hpp>
 
 void Worker(long long my_id, uint32_t stage);
 void InitializeGrids();
 void Barrier(uint32_t stage);
+
+void moveAndCopy(std::string prog_dir_name, std::string config_filename);
 
 struct tms buffer;        // Used for timing
 clock_t start, end;
 
 pthread_mutex_t barrier;  // Mutex semaphore for the barrier
 pthread_cond_t go;        // Condition variable for leaving
-uint32_t num_arrived = 0;       // Count of the number who have arrived
+uint32_t num_arrived = 0; // Count of the number who have arrived
 
-uint32_t grid_size, num_stages;
+uint32_t repeats, grid_size, num_stages;
 
 std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, num_cores, strip_size;
 
@@ -35,14 +43,14 @@ std::vector<std::vector<double>> grid1, grid2;
 
 
 
-// main() -- read command line, initialize grids, and create threads when the threads are done, print the results
 int main(int argc, char *argv[]) {
 
 	// Read command line arguments
-	grid_size      = atoi(argv[1]);
-	num_stages     = atoi(argv[2]);
+	repeats    = atoi(argv[1]);
+	grid_size  = atoi(argv[2]);
+	num_stages = atoi(argv[3]);
 
-	uint32_t cl_arg_iter = 3;
+	uint32_t cl_arg_iter = 4;
 
 	for (uint32_t i = 0; i < num_stages; i++) {
 		num_workers.push_back(atoi(argv[cl_arg_iter++]));
@@ -65,8 +73,6 @@ int main(int argc, char *argv[]) {
 	// Print intro
 	print("\nGrid size:        ", grid_size, "\n",
 		  "Number of stages: ", num_stages, "\n");
-	
-	InitializeGrids();
 
 	// Calculate the max number of workers we will need
 	uint32_t max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
@@ -85,52 +91,70 @@ int main(int argc, char *argv[]) {
 	pthread_mutex_init(&barrier, NULL);
 	pthread_cond_init(&go, NULL);
 
-	// Print arguments
-	print("\n");
+	moveAndCopy("jacobi", "");
 
-	// Record start time
-	start = times(&buffer);
+	// Save results. Attempt to open/create output file
+	FILE *output_stream = fopen((char*) "output", "w");
 
-	for (uint32_t stage = 0; stage < num_stages; stage++) {
-		// Create workers
-		for (uint32_t i = 0; i < num_workers.at(stage); i++) {
-			threads.at(i) = std::thread(Worker, i, stage);
+	if (output_stream == NULL) {
+        // If we couldn't open the file, throw an error
+        perror("Error, metric could not open file");
+        exit(EXIT_FAILURE);
+    }
+
+	for (uint32_t r = 0; r < repeats + 1; r++) {
+
+		// Print arguments
+		print("\n");
+
+		InitializeGrids();
+
+		// Record start time
+		start = times(&buffer);
+
+		for (uint32_t stage = 0; stage < num_stages; stage++) {
+			// Create workers
+			for (uint32_t i = 0; i < num_workers.at(stage); i++) {
+				threads.at(i) = std::thread(Worker, i, stage);
+			}
+
+			// Join with workers
+			for (uint32_t i = 0; i < num_workers.at(stage); i++) {
+				threads.at(i).join();
+			}
 		}
 
-		// Join with workers
-		for (uint32_t i = 0; i < num_workers.at(stage); i++) {
-			threads.at(i).join();
+		// Record end time
+		end = times(&buffer);
+
+		double max_diff = 0.0;
+
+		// Find maximum difference
+		for (uint32_t i = 0; i < num_workers.back(); i++) {
+			if (max_diff < max_difference_global.back().at(i)) {
+		  		max_diff = max_difference_global.back().at(i);
+			}
 		}
+
+		std::vector<std::string> booleans = {"False", "True"};
+
+		// Print results
+		for (uint32_t i = 0; i < num_stages; i++) {
+			print("\n\nStage ", i + 1, ":\n\n",
+				  "Number of workers:    ", num_workers.at(i), "\n",
+				  "Number of iterations: ", num_iterations.at(i), "\n",
+				  "Set-pinning:          ", booleans.at(set_pin_bool.at(i)), "\n");
+
+			if (set_pin_bool.at(i) == 1) {
+				print("Number of cores:      ", num_cores.at(i), "\n");
+			}
+		}
+
+		print("\n\nMaximum difference:   ", max_diff, "\n",
+		      "Elapsed time:         ", end - start, "\n\n\n\n");
+
+	    fputs((std::to_string(end - start) + "\n").c_str(), output_stream);
 	}
-
-	// Record end time
-	end = times(&buffer);
-
-	double max_diff = 0.0;
-
-	// Find maximum difference
-	for (uint32_t i = 0; i < num_workers.back(); i++) {
-		if (max_diff < max_difference_global.back().at(i)) {
-	  		max_diff = max_difference_global.back().at(i);
-		}
-	}
-
-	std::vector<std::string> booleans = {"False", "True"};
-
-	// Print results
-	for (uint32_t i = 0; i < num_stages; i++) {
-		print("\n\nStage ", i + 1, ":\n\n",
-			  "Number of workers:    ", num_workers.at(i), "\n",
-			  "Number of iterations: ", num_iterations.at(i), "\n",
-			  "Set-pinning:          ", booleans.at(set_pin_bool.at(i)), "\n");
-
-		if (set_pin_bool.at(i) == 1) {
-			print("Number of cores:      ", num_cores.at(i), "\n");
-		}
-	}
-
-	print("\n\nMaximum difference:   ", max_diff, "\n",
-	      "Elapsed time:         ", end - start, "\n\n\n\n");
 }
 
 
@@ -252,4 +276,51 @@ void Barrier(uint32_t stage) {
 	}
 
   	pthread_mutex_unlock(&barrier);
+}
+
+void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
+
+	boost::filesystem::path c_p;
+
+    if (config_filename != "") {
+        // Record filepath of the config file before we move so we can copy it later.
+        c_p = (boost::filesystem::current_path() /= config_filename);
+    }
+
+    // Create runs directory if it doesn't exist.
+    boost::filesystem::path r_p("runs");
+    create_directory(r_p);
+
+    // Move into the runs directory.
+    boost::filesystem::current_path("runs");
+
+    // Create program directory.
+    boost::filesystem::path p_p(prog_dir_name.c_str());
+    create_directory(p_p);
+
+    // Move into the program directory.
+    boost::filesystem::current_path(prog_dir_name.c_str());
+
+    // Directory name to start at.
+    int i = 1;
+    
+    // Root directory word.
+    std::string root_dir_name = "run";
+
+    // Find what the next run number should be.
+    while (boost::filesystem::is_directory(root_dir_name + std::to_string(i).c_str())) {
+        i++;
+    }
+
+    // Create our run directory.
+    boost::filesystem::path rr_p(root_dir_name + std::to_string(i).c_str());
+    create_directory(rr_p);
+
+    // Move into our run directory.
+    boost::filesystem::current_path(root_dir_name + std::to_string(i).c_str());
+
+    if (config_filename != "") {
+        // Copy our config file so we know what parameters were used.
+        copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
+    }
 }

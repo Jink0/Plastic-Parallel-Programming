@@ -276,9 +276,12 @@ run_parameters translate_run_parameters(boost::property_tree::ptree pt) {
 }
 
 
-void moveAndCopy(std::string config_filename, std::string prog_dir_name) {
-    // Record filepath of the config file before we move so we can copy it later.
-    boost::filesystem::path c_p(boost::filesystem::current_path() /= config_filename);
+void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
+
+    if (config_filename != "") {
+        // Record filepath of the config file before we move so we can copy it later.
+        boost::filesystem::path c_p(boost::filesystem::current_path() /= config_filename);
+    }
 
     // Create runs directory if it doesn't exist.
     boost::filesystem::path r_p("runs");
@@ -312,6 +315,8 @@ void moveAndCopy(std::string config_filename, std::string prog_dir_name) {
     // Move into our run directory.
     boost::filesystem::current_path(root_dir_name + std::to_string(i).c_str());
 
-    // Copy our config file so we know what parameters were used.
-    copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
+    if (config_filename != "") {
+        // Copy our config file so we know what parameters were used.
+        copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
+    }
 }

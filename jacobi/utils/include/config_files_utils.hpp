@@ -114,7 +114,7 @@ void translate_experiment_parameters(boost::property_tree::ptree pt, struct expe
 run_parameters translate_run_parameters(boost::property_tree::ptree pt);
 
 
-void moveAndCopy(std::string config_filename, std::string prog_dir_name);
+void moveAndCopy(std::string prog_dir_name, std::string config_filename);
 
 
 
