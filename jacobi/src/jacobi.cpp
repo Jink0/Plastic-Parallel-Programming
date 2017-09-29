@@ -175,6 +175,7 @@ void Worker(long long my_id, uint32_t stage) {
 
 		Barrier(stage);
 
+		// Simulate a convergence test.
 		// Compute the maximum difference in my strip and set global variable
 	  	double max_diff = 0.0;
 
