@@ -16,9 +16,9 @@
 #include <utils.hpp>
 // #include <config_files_utils.hpp>
 
-#include <boost/filesystem.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
+// #include <boost/filesystem.hpp>
+// #include <boost/property_tree/ptree.hpp>
+// #include <boost/property_tree/xml_parser.hpp>
 // #include <boost.hpp>
 
 void Worker(long long my_id, uint32_t stage);
@@ -291,49 +291,101 @@ void Barrier(uint32_t stage) {
   	pthread_mutex_unlock(&barrier);
 }
 
+
+
+#include <string>
+#include <limits.h>
+#include <unistd.h>
+
+std::string get_working_dir() {
+
+  char result[PATH_MAX];
+  ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+
+  return std::string(result, (count > 0) ? count : 0);
+}
+
+
+
+#include <sys/stat.h>
+
 void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
 
-	boost::filesystem::path c_p;
+    // Record filepath of the config file before we move so we can copy it later
+    std::string working_dir = get_working_dir();
 
-    if (config_filename != "") {
-        // Record filepath of the config file before we move so we can copy it later.
-        c_p = (boost::filesystem::current_path() /= config_filename);
-    }
+    // Create runs directory if it doesn't exist
+    mkdir("runs", S_IRWXU | S_IRWXG | S_IRWXO);
 
-    // Create runs directory if it doesn't exist.
-    boost::filesystem::path r_p("runs");
-    create_directory(r_p);
+    // Move into the runs directory
+    chdir("runs");
 
-    // Move into the runs directory.
-    boost::filesystem::current_path("runs");
+    // Create program directory if it doesn't exist
+    mkdir("jacobi", S_IRWXU | S_IRWXG | S_IRWXO);
 
-    // Create program directory.
-    boost::filesystem::path p_p(prog_dir_name.c_str());
-    create_directory(p_p);
+    // Move into the program directory
+    chdir("jacobi");
 
-    // Move into the program directory.
-    boost::filesystem::current_path(prog_dir_name.c_str());
-
-    // Directory name to start at.
-    int i = 1;
+    // Directory name to start at
+    uint32_t i = 1;
     
-    // Root directory word.
+    // Root directory word
     std::string root_dir_name = "run";
 
-    // Find what the next run number should be.
-    while (boost::filesystem::is_directory(root_dir_name + std::to_string(i).c_str())) {
-        i++;
+    struct stat sb;
+
+    // Find what the next run number should be
+    while (stat((root_dir_name + std::to_string(i)).c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
+    	i++;
     }
 
-    // Create our run directory.
-    boost::filesystem::path rr_p(root_dir_name + std::to_string(i).c_str());
-    create_directory(rr_p);
+	// Create run directory
+    mkdir((root_dir_name + std::to_string(i)).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 
-    // Move into our run directory.
-    boost::filesystem::current_path(root_dir_name + std::to_string(i).c_str());
+	// Move into run directory
+    chdir((root_dir_name + std::to_string(i)).c_str());
 
-    if (config_filename != "") {
-        // Copy our config file so we know what parameters were used.
-        copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
-    }
+ //    boost::filesystem::path c_p;
+
+ //    if (config_filename != "") {
+ //        // Record filepath of the config file before we move so we can copy it later.
+ //        c_p = (boost::filesystem::current_path() /= config_filename);
+ //    }
+
+ //    // Create runs directory if it doesn't exist.
+ //    boost::filesystem::path r_p("runs");
+ //    create_directory(r_p);
+
+ //    // Move into the runs directory.
+ //    boost::filesystem::current_path("runs");
+
+ //    // Create program directory.
+ //    boost::filesystem::path p_p(prog_dir_name.c_str());
+ //    create_directory(p_p);
+
+ //    // Move into the program directory.
+ //    boost::filesystem::current_path(prog_dir_name.c_str());
+
+ //    // Directory name to start at.
+ //    int i = 1;
+    
+ //    // Root directory word.
+ //    std::string root_dir_name = "run";
+
+ //    // Find what the next run number should be.
+ //    while (boost::filesystem::is_directory(root_dir_name + std::to_string(i).c_str())) {
+ //        i++;
+ //    }
+
+ //    // Create our run directory.
+ //    boost::filesystem::path rr_p(root_dir_name + std::to_string(i).c_str());
+ //    create_directory(rr_p);
+
+ //    // Move into our run directory.
+ //    boost::filesystem::current_path(root_dir_name + std::to_string(i).c_str());
+
+ //    if (config_filename != "") {
+ //        // Copy our config file so we know what parameters were used.
+ //        copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
+ //    }
 }
