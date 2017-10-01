@@ -11,7 +11,7 @@ printf "0.000%%"
 
 for ((i=1; i<=$NUM_RUNS; i++))
 do 
-	bin/jacobi 0 256 1   $i 5000 1 32 >> /dev/null
+	bin/jacobi 9 256 1   $i 5000 1 32 >> /dev/null
 	printf "\r%.3f%%" "$TOTAL"
 	TOTAL=$(bc -l <<< "$TOTAL + $STEP")
 done
