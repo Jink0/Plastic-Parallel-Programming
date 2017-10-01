@@ -34,21 +34,23 @@ pthread_mutex_t barrier;  // Mutex semaphore for the barrier
 pthread_cond_t go;        // Condition variable for leaving
 uint32_t num_arrived = 0; // Count of the number who have arrived
 
-uint32_t repeats, grid_size, num_stages;
+uint32_t num_repeats, grid_size, num_stages;
 
 std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, num_cores, strip_size;
 
 std::vector<std::vector<double>> max_difference_global;
 std::vector<std::vector<double>> grid1, grid2;
 
+std::vector<std::string> booleans = {"False", "True"};
+
 
 
 int main(int argc, char *argv[]) {
 
 	// Read command line arguments
-	repeats    = atoi(argv[1]);
-	grid_size  = atoi(argv[2]);
-	num_stages = atoi(argv[3]);
+	num_repeats = atoi(argv[1]);
+	grid_size   = atoi(argv[2]);
+	num_stages  = atoi(argv[3]);
 
 	uint32_t cl_arg_iter = 4;
 
@@ -70,9 +72,44 @@ int main(int argc, char *argv[]) {
 		strip_size.push_back(grid_size / num_workers.at(i));
 	}
 
+	moveAndCopy("jacobi", "");
+
+	// Attempt to open/create output file
+	FILE *output_stream = fopen((char*) "output", "w");
+
+	if (output_stream == NULL) {
+        // If we couldn't open the file, throw an error
+        perror("Error, metric could not open file");
+        exit(EXIT_FAILURE);
+    }
+
 	// Print intro
-	print("\nGrid size:        ", grid_size, "\n",
-		  "Number of stages: ", num_stages, "\n");
+	print("\nNumber of repeats: ", num_repeats, "\n",
+		  "Grid size:         ", grid_size, "\n",
+		  "Number of stages:  ", num_stages, "\n");
+
+	fputs(("Number of repeats: ," + std::to_string(num_repeats) + "\n" +
+           "Grid size: ," + std::to_string(grid_size) + "\n" +
+           "Number of stages: ," + std::to_string(num_stages) + "\n\n\n").c_str(), output_stream);
+
+	for (uint32_t i = 0; i < num_stages; i++) {
+		print("\n\nStage ", i + 1, ":\n\n",
+			  "Number of workers:    ", num_workers.at(i), "\n",
+			  "Number of iterations: ", num_iterations.at(i), "\n",
+			  "Set-pinning:          ", booleans.at(set_pin_bool.at(i)), "\n");
+
+		if (set_pin_bool.at(i) == 1) {
+			print("Number of cores:      ", num_cores.at(i), "\n");
+		}
+
+		fputs(("\nStage: ," + std::to_string(i) + "\n" +
+		   "Number of workers: ," + std::to_string(num_workers.at(i)) + "\n" +
+		   "Number of iterations: ," + std::to_string(num_iterations.at(i)) + "\n" +
+		   "Set-pinning: ," + booleans.at(set_pin_bool.at(i)) + "\n" +
+		   "Number of cores: ," + std::to_string(num_cores.at(i)) + "\n").c_str(), output_stream);
+	}
+
+	fputs("\n\n", output_stream);
 
 	// Calculate the max number of workers we will need
 	uint32_t max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
@@ -91,18 +128,7 @@ int main(int argc, char *argv[]) {
 	pthread_mutex_init(&barrier, NULL);
 	pthread_cond_init(&go, NULL);
 
-	moveAndCopy("jacobi", "");
-
-	// Save results. Attempt to open/create output file
-	FILE *output_stream = fopen((char*) "output", "w");
-
-	if (output_stream == NULL) {
-        // If we couldn't open the file, throw an error
-        perror("Error, metric could not open file");
-        exit(EXIT_FAILURE);
-    }
-
-	for (uint32_t r = 0; r < repeats + 1; r++) {
+	for (uint32_t r = 0; r < num_repeats + 1; r++) {
 
 		// Print arguments
 		print("\n");
@@ -136,24 +162,11 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		std::vector<std::string> booleans = {"False", "True"};
+		print("Repeat ", r, "\n",
+			  "Elapsed time: ", end - start, "\n\n\n\n");
 
-		// Print results
-		for (uint32_t i = 0; i < num_stages; i++) {
-			print("\n\nStage ", i + 1, ":\n\n",
-				  "Number of workers:    ", num_workers.at(i), "\n",
-				  "Number of iterations: ", num_iterations.at(i), "\n",
-				  "Set-pinning:          ", booleans.at(set_pin_bool.at(i)), "\n");
-
-			if (set_pin_bool.at(i) == 1) {
-				print("Number of cores:      ", num_cores.at(i), "\n");
-			}
-		}
-
-		print("\n\nMaximum difference:   ", max_diff, "\n",
-		      "Elapsed time:         ", end - start, "\n\n\n\n");
-
-	    fputs((std::to_string(end - start) + "\n").c_str(), output_stream);
+		fputs(("\nRepeat: ," + std::to_string(r) + "\n" +
+	           "Elapsed time: ," + std::to_string(end - start) + "\n").c_str(), output_stream);
 	}
 }
 
