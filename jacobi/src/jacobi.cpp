@@ -11,21 +11,26 @@
 #include <vector>
 #include <thread>
 
+#include <map>
+
 #include <sstream>
 
 #include <utils.hpp>
-// #include <config_files_utils.hpp>
-
-// #include <boost/filesystem.hpp>
-// #include <boost/property_tree/ptree.hpp>
-// #include <boost/property_tree/xml_parser.hpp>
-// #include <boost.hpp>
 
 void Worker(long long my_id, uint32_t stage);
 void InitializeGrids();
 void Barrier(uint32_t stage);
 
 void moveAndCopy(std::string prog_dir_name, std::string config_filename);
+
+// Returns a map of key-value pairsfrom the conifuration file
+std::map<std::string, uint32_t> parse_config(std::string filename);
+
+// Reads config file, and returns s_exp_parameters
+void read_config(std::map<std::string, uint32_t> config);
+
+
+
 
 struct tms buffer;        // Used for timing
 clock_t start, end;
@@ -34,7 +39,7 @@ pthread_mutex_t barrier;  // Mutex semaphore for the barrier
 pthread_cond_t go;        // Condition variable for leaving
 uint32_t num_arrived = 0; // Count of the number who have arrived
 
-uint32_t num_repeats, grid_size, num_stages;
+uint32_t num_runs, grid_size, num_stages;
 
 std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, num_cores, strip_size;
 
@@ -43,29 +48,30 @@ std::vector<std::vector<double>> grid1, grid2;
 
 std::vector<std::string> booleans = {"False", "True"};
 
+// struct s_stage_parameters {
+// 	uint32_t num_workers;
+// 	uint32_t num_iterations;
+// 	uint32_t set_pin_bool;
+// 	uint32_t num_cores;
+// };
+
+// struct s_exp_parameters {
+// 	uint32_t num_runs;
+// 	uint32_t grid_size;
+// 	uint32_t num_stages;
+
+// 	std::vector<s_stage_parameters> stage_parameters;
+// };
+
 
 
 int main(int argc, char *argv[]) {
 
-	// Read command line arguments
-	num_repeats = atoi(argv[1]);
-	grid_size   = atoi(argv[2]);
-	num_stages  = atoi(argv[3]);
+	// Parse config
+	std::map<std::string, uint32_t> config = parse_config(std::string(argv[1]));
 
-	uint32_t cl_arg_iter = 4;
-
-	for (uint32_t i = 0; i < num_stages; i++) {
-		num_workers.push_back(atoi(argv[cl_arg_iter++]));
-		num_iterations.push_back(atoi(argv[cl_arg_iter++]));
-		set_pin_bool.push_back(atoi(argv[cl_arg_iter++]));
-
-		if (set_pin_bool.back() != 0) {
-			num_cores.push_back(atoi(argv[cl_arg_iter++]));
-
-		} else {
-			num_cores.push_back(0);
-		}
-	}
+	// Read config
+	read_config(config);
 	
 	//  Calculate strip sizes
 	for (uint32_t i = 0; i < num_stages; i++) {
@@ -84,11 +90,11 @@ int main(int argc, char *argv[]) {
     }
 
 	// Print intro
-	print("\nNumber of repeats: ", num_repeats, "\n",
+	print("\nNumber of runs:    ", num_runs, "\n",
 		  "Grid size:         ", grid_size, "\n",
 		  "Number of stages:  ", num_stages, "\n");
 
-	fputs(("Number of repeats: ," + std::to_string(num_repeats) + "\n" +
+	fputs(("Number of runs: ," + std::to_string(num_runs) + "\n" +
            "Grid size: ," + std::to_string(grid_size) + "\n" +
            "Number of stages: ," + std::to_string(num_stages) + "\n\n\n").c_str(), output_stream);
 
@@ -102,7 +108,7 @@ int main(int argc, char *argv[]) {
 			print("Number of cores:      ", num_cores.at(i), "\n");
 		}
 
-		fputs(("\nStage: ," + std::to_string(i) + "\n" +
+		fputs(("\nStage: ," + std::to_string(i + 1) + "\n" +
 		   "Number of workers: ," + std::to_string(num_workers.at(i)) + "\n" +
 		   "Number of iterations: ," + std::to_string(num_iterations.at(i)) + "\n" +
 		   "Set-pinning: ," + booleans.at(set_pin_bool.at(i)) + "\n" +
@@ -128,7 +134,7 @@ int main(int argc, char *argv[]) {
 	pthread_mutex_init(&barrier, NULL);
 	pthread_cond_init(&go, NULL);
 
-	for (uint32_t r = 0; r < num_repeats + 1; r++) {
+	for (uint32_t r = 1; r < num_runs + 1; r++) {
 
 		// Print arguments
 		print("\n");
@@ -162,10 +168,10 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		print("Repeat ", r, "\n",
-			  "Elapsed time: ", end - start, "\n\n\n\n");
+		print("\nRun ", r, "\n",
+			  "Elapsed time: ", end - start, "\n");
 
-		fputs(("\nRepeat: ," + std::to_string(r) + "\n" +
+		fputs(("\nRun: ," + std::to_string(r) + "\n" +
 	           "Elapsed time: ," + std::to_string(end - start) + "\n").c_str(), output_stream);
 	}
 }
@@ -344,48 +350,95 @@ void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
 
 	// Move into run directory
     chdir((root_dir_name + std::to_string(i)).c_str());
+}
 
- //    boost::filesystem::path c_p;
 
- //    if (config_filename != "") {
- //        // Record filepath of the config file before we move so we can copy it later.
- //        c_p = (boost::filesystem::current_path() /= config_filename);
- //    }
 
- //    // Create runs directory if it doesn't exist.
- //    boost::filesystem::path r_p("runs");
- //    create_directory(r_p);
+// Returns a map of key-value pairsfrom the conifuration file
+std::map<std::string, uint32_t> parse_config(std::string filename) {
 
- //    // Move into the runs directory.
- //    boost::filesystem::current_path("runs");
+    std::ifstream input(filename); // Input stream
 
- //    // Create program directory.
- //    boost::filesystem::path p_p(prog_dir_name.c_str());
- //    create_directory(p_p);
+    if (!input.is_open()) {
+    	print("ERROR - Cannot open config file: ", filename);
+    	exit(1);
+    }
 
- //    // Move into the program directory.
- //    boost::filesystem::current_path(prog_dir_name.c_str());
+    std::map<std::string, uint32_t> output; // Output map of key-value pairs
 
- //    // Directory name to start at.
- //    int i = 1;
-    
- //    // Root directory word.
- //    std::string root_dir_name = "run";
+    // While we have input to process;
+    while(input) {
 
- //    // Find what the next run number should be.
- //    while (boost::filesystem::is_directory(root_dir_name + std::to_string(i).c_str())) {
- //        i++;
- //    }
+        std::string key;
+        std::string value;
 
- //    // Create our run directory.
- //    boost::filesystem::path rr_p(root_dir_name + std::to_string(i).c_str());
- //    create_directory(rr_p);
+        std::getline(input, key, ':');    // Read up to the : delimiter, store in key
+        std::getline(input, value, '\n'); // Read up to the newline, store in value
 
- //    // Move into our run directory.
- //    boost::filesystem::current_path(root_dir_name + std::to_string(i).c_str());
+        std::string::size_type p1 = value.find_first_of("\""); // Find the first quote in the value
+        std::string::size_type p2 = value.find_last_of("\"");  // Find the last quote in the value
 
- //    if (config_filename != "") {
- //        // Copy our config file so we know what parameters were used.
- //        copy_file(c_p, boost::filesystem::current_path() /= c_p.filename());
- //    }
+        // Check if the found positions are all valid
+        if(p1 != std::string::npos && p2 != std::string::npos && p2 > p1) {
+
+            value = value.substr(p1 + 1, p2 - p1 - 1); // Take a substring of the part between the quotes
+
+            output[key] = atoi(value.c_str());         // Store result
+        }
+    }
+
+    input.close(); // Close the file stream
+
+    return output; // Return the result
+}
+
+
+
+void check_iterator(std::map<std::string, uint32_t>::iterator it, std::map<std::string, uint32_t>::iterator end) {
+	if (it == end) {
+		print("Malformed config file!");
+		exit(1);
+	}
+}
+
+
+
+// Reads config file, and returns s_exp_parameters
+void read_config(std::map<std::string, uint32_t> config) {
+
+	std::map<std::string, uint32_t>::iterator it = config.find("num_runs");
+	check_iterator(it, config.end());
+	num_runs = it->second;
+
+	it = config.find("grid_size");
+	check_iterator(it, config.end());
+	grid_size = it->second;
+
+	it = config.find("num_stages");
+	check_iterator(it, config.end());
+	num_stages = it->second;
+
+	for (uint32_t i = 0; i < num_stages; i++) {
+
+		it = config.find("num_workers_" + std::to_string(i));
+		check_iterator(it, config.end());
+		num_workers.push_back(it->second);
+
+		it = config.find("num_iterations_" + std::to_string(i));
+		check_iterator(it, config.end());
+		num_iterations.push_back(it->second);
+
+		it = config.find("set_pin_bool_" + std::to_string(i));
+		check_iterator(it, config.end());
+		set_pin_bool.push_back(it->second);
+
+		if (set_pin_bool.back() != 0) {
+			it = config.find("num_cores_" + std::to_string(i));
+			check_iterator(it, config.end());
+			num_cores.push_back(it->second);
+
+		} else {
+			num_cores.push_back(0);
+		}
+	}
 }
