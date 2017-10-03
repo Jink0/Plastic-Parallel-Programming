@@ -11,7 +11,8 @@ printf "0.000%%"
 
 for ((i=1; i<=$NUM_RUNS; i++))
 do 
-	bin/jacobi 10 256 1   $i 5000 1 32 >> /dev/null
+	head -n -1 configs/exp1.1_config.ini > temp.ini ; echo "num_workers_0: \"$i\"" >> temp.ini ; mv temp.ini configs/exp1.1_config.ini
+	bin/jacobi configs/exp1.1_config.ini >> /dev/null
 	printf "\r%.3f%%" "$TOTAL"
 	TOTAL=$(bc -l <<< "$TOTAL + $STEP")
 done
