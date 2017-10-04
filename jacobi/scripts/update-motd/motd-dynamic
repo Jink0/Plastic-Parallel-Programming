@@ -1,0 +1,12 @@
+#!/bin/sh
+echo "                 (_|_)"
+echo " __  ____  ____  ___ _"
+echo " \ \/ /\ \/ /\ \/ / | |"
+echo "  >  <  >  <  >  <| | |"
+echo " /_/\_\/_/\_\/_/\_\_|_|"
+echo
+echo
+echo "Have a lot of fun..."
+echo
+echo $1
+echo
