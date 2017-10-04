@@ -1,0 +1,43 @@
+Number of runs: ,10
+Grid size: ,256
+Number of stages: ,1
+
+
+
+Stage: ,1
+Number of workers: ,6
+Number of iterations: ,5000
+Set-pinning: ,True
+Number of cores: ,32
+
+
+
+Run: ,1
+Elapsed time: ,396
+
+Run: ,2
+Elapsed time: ,372
+
+Run: ,3
+Elapsed time: ,386
+
+Run: ,4
+Elapsed time: ,370
+
+Run: ,5
+Elapsed time: ,378
+
+Run: ,6
+Elapsed time: ,377
+
+Run: ,7
+Elapsed time: ,382
+
+Run: ,8
+Elapsed time: ,387
+
+Run: ,9
+Elapsed time: ,392
+
+Run: ,10
+Elapsed time: ,389

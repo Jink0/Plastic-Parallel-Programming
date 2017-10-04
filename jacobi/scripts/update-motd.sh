@@ -10,11 +10,11 @@ if ! touch /var/run/motd.new 2>/dev/null; then
         exit 1
 fi
  
-if scripts/update-motd/motd-dynamic $1 > /var/run/motd.new; then
-        if mv -f /var/run/motd.new /var/run/motd; then
+if scripts/update-motd/motd-dynamic "$1" > motd.new; then
+        if mv -f motd.new /etc/motd; then
                 echo "MOTD updated successfully, new MOTD:"
                 echo
-                cat /var/run/motd
+                cat /etc/motd
                 exit 0
         else
                 echo "ERROR: could not install new MOTD" 1>&2
