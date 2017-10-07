@@ -12,8 +12,8 @@
 #include <vector>
 
 // For parsing config file
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/ini_parser.hpp>
+// #include <boost/property_tree/ptree.hpp>
+// #include <boost/property_tree/ini_parser.hpp>
 
 /*
  * Mutexed print function (Note - Templated function must be implemented in the header as the compiler
@@ -83,5 +83,7 @@ std::string type_name()
 int force_affinity_set(std::vector<uint32_t> core_ids);
 
 void join_with_threads(std::deque<pthread_t> threads, uint32_t num_threads_to_join);
+
+uint32_t check_affinity_set_size();
 
 #endif // UTILS_HPP

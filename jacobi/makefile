@@ -11,7 +11,7 @@ UTILS_DIR           = utils
 GCC       = g++
 CXXFLAGS  = -Wall -std=c++11 -O3 -DDETAILED_METRICS
 INCLUDES  = -I$(INCLUDE_DIR)/ -I$(UTILS_DIR)/include
-LIB_FLAGS = -lpthread -lboost_system -lboost_filesystem
+LIB_FLAGS = -lpthread
 
 
 

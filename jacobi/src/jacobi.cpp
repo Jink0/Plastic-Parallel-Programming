@@ -24,10 +24,10 @@ void Barrier(uint32_t stage);
 void moveAndCopy(std::string prog_dir_name, std::string config_filename);
 
 // Returns a map of key-value pairsfrom the conifuration file
-std::map<std::string, uint32_t> parse_config(std::string filename);
+std::map<std::string, std::string> parse_config(std::string filename);
 
 // Reads config file, and returns s_exp_parameters
-void read_config(std::map<std::string, uint32_t> config);
+void read_config(std::map<std::string, std::string> config);
 
 
 
@@ -41,18 +41,19 @@ uint32_t num_arrived = 0; // Count of the number who have arrived
 
 uint32_t num_runs, grid_size, num_stages;
 
-std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, num_cores, strip_size;
+std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, strip_size;
+std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
 std::vector<std::vector<double>> max_difference_global;
 std::vector<std::vector<double>> grid1, grid2;
 
-std::vector<std::string> booleans = {"False", "True"};
+std::vector<std::string> options = {"Each worker has all cores", "Each worker has one corresponding core (max workers = num cores)", "Custom"};
 
 // struct s_stage_parameters {
 // 	uint32_t num_workers;
 // 	uint32_t num_iterations;
 // 	uint32_t set_pin_bool;
-// 	uint32_t num_cores;
+// 	uint32_t pinnings;
 // };
 
 // struct s_exp_parameters {
@@ -63,12 +64,12 @@ std::vector<std::string> booleans = {"False", "True"};
 // 	std::vector<s_stage_parameters> stage_parameters;
 // };
 
-
+#include <algorithm>
 
 int main(int argc, char *argv[]) {
 
 	// Parse config
-	std::map<std::string, uint32_t> config = parse_config(std::string(argv[1]));
+	std::map<std::string, std::string> config = parse_config(std::string(argv[1]));
 
 	// Read config
 	read_config(config);
@@ -102,17 +103,17 @@ int main(int argc, char *argv[]) {
 		print("\n\nStage ", i + 1, ":\n\n",
 			  "Number of workers:    ", num_workers.at(i), "\n",
 			  "Number of iterations: ", num_iterations.at(i), "\n",
-			  "Set-pinning:          ", booleans.at(set_pin_bool.at(i)), "\n");
+			  "Set-pinning:          ", options.at(set_pin_bool.at(i)), "\n");
 
-		if (set_pin_bool.at(i) == 1) {
-			print("Number of cores:      ", num_cores.at(i), "\n");
-		}
+		// if (set_pin_bool.at(i) == 1) {
+		// 	print("Number of cores:      ", pinnings.at(i), "\n");
+		// }
 
 		fputs(("\nStage: ," + std::to_string(i + 1) + "\n" +
 		   "Number of workers: ," + std::to_string(num_workers.at(i)) + "\n" +
 		   "Number of iterations: ," + std::to_string(num_iterations.at(i)) + "\n" +
-		   "Set-pinning: ," + booleans.at(set_pin_bool.at(i)) + "\n" +
-		   "Number of cores: ," + std::to_string(num_cores.at(i)) + "\n").c_str(), output_stream);
+		   "Set-pinning: ," + options.at(set_pin_bool.at(i)) + "\n").c_str(), output_stream);
+		   // "Number of cores: ," + std::to_string(pinnings.at(i)) + "\n").c_str(), output_stream);
 	}
 
 	fputs("\n\n", output_stream);
@@ -176,23 +177,39 @@ int main(int argc, char *argv[]) {
 	}
 }
 
-
+#include <sched.h>
+#include <unistd.h>
+#include <errno.h>
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
 void Worker(long long my_id, uint32_t stage) {
 
-	std::vector<uint32_t> core_ids;
+	// std::vector<uint32_t> core_ids;
 
-	if (set_pin_bool.at(stage) != 0) {
-		for (uint32_t i = 0; i < num_cores.at(stage); i++) {
-			core_ids.push_back(i);
-		}
+	// if (set_pin_bool.at(stage) != 0) {
+	// 	for (uint32_t i = 0; i < pinnings.at(stage); i++) {
+	// 		core_ids.push_back(i);
+	// 	}
 
-	} else {
-		core_ids.push_back(my_id);
-	}
+	// } else {
+	// 	core_ids.push_back(my_id);
+	// }
 
-	force_affinity_set(core_ids);
+	// print("\n\n", pinnings.size(),  "\n\n\n");
+
+    
+
+	force_affinity_set(pinnings.at(stage).at(my_id));
+
+
+
+
+
+
+
+
+    // print("\n\n\n\n\nThread ", my_id, " cpu set size: ", check_affinity_set_size(), "\n\n");
+
 
 	// Determine first and last rows of my strip of the grids
 	uint32_t first = my_id * strip_size.at(stage) + 1;
@@ -353,9 +370,11 @@ void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
 }
 
 
+#include <fstream>
+
 
 // Returns a map of key-value pairsfrom the conifuration file
-std::map<std::string, uint32_t> parse_config(std::string filename) {
+std::map<std::string, std::string> parse_config(std::string filename) {
 
     std::ifstream input(filename); // Input stream
 
@@ -364,7 +383,7 @@ std::map<std::string, uint32_t> parse_config(std::string filename) {
     	exit(1);
     }
 
-    std::map<std::string, uint32_t> output; // Output map of key-value pairs
+    std::map<std::string, std::string> output; // Output map of key-value pairs
 
     // While we have input to process;
     while(input) {
@@ -383,7 +402,7 @@ std::map<std::string, uint32_t> parse_config(std::string filename) {
 
             value = value.substr(p1 + 1, p2 - p1 - 1); // Take a substring of the part between the quotes
 
-            output[key] = atoi(value.c_str());         // Store result
+            output[key] = value.c_str();         // Store result
         }
     }
 
@@ -394,7 +413,7 @@ std::map<std::string, uint32_t> parse_config(std::string filename) {
 
 
 
-void check_iterator(std::map<std::string, uint32_t>::iterator it, std::map<std::string, uint32_t>::iterator end) {
+void check_iterator(std::map<std::string, std::string>::iterator it, std::map<std::string, std::string>::iterator end) {
 	if (it == end) {
 		print("Malformed config file!");
 		exit(1);
@@ -402,43 +421,191 @@ void check_iterator(std::map<std::string, uint32_t>::iterator it, std::map<std::
 }
 
 
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iterator>
+
 
 // Reads config file, and returns s_exp_parameters
-void read_config(std::map<std::string, uint32_t> config) {
+void read_config(std::map<std::string, std::string> config) {
 
-	std::map<std::string, uint32_t>::iterator it = config.find("num_runs");
+	std::map<std::string, std::string>::iterator it = config.find("num_runs");
 	check_iterator(it, config.end());
-	num_runs = it->second;
+	num_runs = atoi(it->second.c_str());
 
 	it = config.find("grid_size");
 	check_iterator(it, config.end());
-	grid_size = it->second;
+	grid_size = atoi(it->second.c_str());
 
 	it = config.find("num_stages");
 	check_iterator(it, config.end());
-	num_stages = it->second;
+	num_stages = atoi(it->second.c_str());
 
 	for (uint32_t i = 0; i < num_stages; i++) {
 
 		it = config.find("num_workers_" + std::to_string(i));
 		check_iterator(it, config.end());
-		num_workers.push_back(it->second);
+		num_workers.push_back(atoi(it->second.c_str()));
 
 		it = config.find("num_iterations_" + std::to_string(i));
 		check_iterator(it, config.end());
-		num_iterations.push_back(it->second);
+		num_iterations.push_back(atoi(it->second.c_str()));
 
 		it = config.find("set_pin_bool_" + std::to_string(i));
 		check_iterator(it, config.end());
-		set_pin_bool.push_back(it->second);
+		set_pin_bool.push_back(atoi(it->second.c_str()));
 
-		if (set_pin_bool.back() != 0) {
-			it = config.find("num_cores_" + std::to_string(i));
-			check_iterator(it, config.end());
-			num_cores.push_back(it->second);
+		std::vector<std::vector<uint32_t>> temp(num_workers.back());
 
-		} else {
-			num_cores.push_back(0);
+		switch (set_pin_bool.back()) {
+			case 0: {
+				uint32_t hw_concurrency = std::thread::hardware_concurrency();
+
+				for (uint32_t i = 0; i < num_workers.back(); i++) {
+
+					for (uint32_t j = 0; j < hw_concurrency; j++) {
+						
+						temp.at(i).push_back(j);
+					}
+				}
+
+				pinnings.push_back(temp);
+			}
+
+			case 1: {
+				for (uint32_t i = 0; i < num_workers.back(); i++) {
+						
+					temp.at(i).push_back(i);
+				}
+
+				pinnings.push_back(temp);
+			}
+
+			case 2: {
+				it = config.find("pinnings_" + std::to_string(i));
+				check_iterator(it, config.end());
+
+			 //    std::istringstream iss(it->second);
+				// std::vector<std::string> temp2((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
+
+				// std::vector<int> vect;
+
+			    std::stringstream ss(it->second);
+
+			    std::string token;
+			    uint32_t worker = 0;
+
+			    while (ss >> token) {
+
+			    	uint32_t prev_dot = 0;
+			    	uint32_t prev_double_dot = 0;
+
+			    	std::stringstream ss2(token);
+
+			    	while(ss2.good()) {
+
+					    std::string substr;
+					    getline( ss, substr, ',' );
+					    result.push_back( substr );
+					}
+
+			    	for (uint32_t j = 0; j < token.size(); j++) {
+
+			    		if (token.at(j) == '.') {
+			    			if (prev_dot == 1) {
+			    				prev_dot = 0;
+			    				prev_double_dot = 1;
+
+			    			} else {
+			    				prev_dot = 1;
+			    			}
+
+			    		} else if (prev_dot == 1) {
+			    			uint32_t test = std::stoi(token.at(j));
+			    			temp.at(worker).push_back(test);
+				    		prev_dot = 0;
+
+			    		} else if (prev_double_dot == 1) {
+			    			for (uint32_t k = temp.at(worker).back() + 1; k <= std::stoi(token.at(j)); k++) {
+				    			temp.at(worker).push_back(k);
+				    		}
+
+				    		prev_double_dot = 0;
+			    		} else {
+			    			temp.at(worker).push_back(std::stoi(token.at(j)));
+				    		worker++;
+			    		}
+
+				    	// if (prev_dot == 1) {
+				    	// 	temp.at(worker).push_back(atoi(token.at(j).c_str()));
+				    	// 	prev_dot = 0;
+
+				    	// } else if (prev_double_dot == 1) {
+
+				    		
+
+				    	// 	for (uint32_t i = temp.at(worker).back() + 1; i <= atoi(token.at(j).c_str()); i++) {
+				    	// 		temp.at(worker).push_back(i);
+				    	// 	}
+
+				    	// 	prev_double_dot = 0;
+
+				    	// } else {
+				    	// 	temp.at(worker).push_back(atoi(token.at(j).c_str()));
+				    	// 	worker++;
+				    	// }
+
+				    	// if (ss2.peek() == '.') {
+         //    				ss2.ignore();
+
+         //    				if (ss2.peek() == '.') {
+         //    					ss2.ignore();
+         //    					prev_double_dot = 1;
+
+				    	// 	} else {
+				    	// 		prev_dot = 1;
+				    	// 	}
+				    	// }
+			    	}
+			    	print("\n");
+			    }
+
+
+
+
+
+
+
+			    for (uint32_t j = 0; j < temp.size(); j++) {
+			    	print("Worker ", j, ": ");
+
+			    	for (uint32_t k = 0; k < temp.at(j).size(); k++) {
+			    		print(temp.at(j).at(k), " ");
+			    	}
+
+			    	print("\n");
+			    }
+
+				// if (temp2.size() != num_workers.back()) {
+				// 	print("Malformed config file!");
+				// 	exit(1);
+				// }
+
+				// for (uint32_t i = 0; i < num_workers.back(); i++) {
+
+
+						
+				// 	temp.at(i).push_back(j);
+				// }
+
+				pinnings.push_back(temp);
+			}
 		}
 	}
 }

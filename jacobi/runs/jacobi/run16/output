@@ -5,39 +5,38 @@ Number of stages: ,1
 
 
 Stage: ,1
-Number of workers: ,16
+Number of workers: ,4
 Number of iterations: ,5000
 Set-pinning: ,True
-Number of cores: ,32
 
 
 
 Run: ,1
-Elapsed time: ,873
+Elapsed time: ,110
 
 Run: ,2
-Elapsed time: ,789
+Elapsed time: ,106
 
 Run: ,3
-Elapsed time: ,838
+Elapsed time: ,101
 
 Run: ,4
-Elapsed time: ,896
+Elapsed time: ,102
 
 Run: ,5
-Elapsed time: ,842
+Elapsed time: ,101
 
 Run: ,6
-Elapsed time: ,891
+Elapsed time: ,99
 
 Run: ,7
-Elapsed time: ,852
+Elapsed time: ,101
 
 Run: ,8
-Elapsed time: ,800
+Elapsed time: ,104
 
 Run: ,9
-Elapsed time: ,853
+Elapsed time: ,101
 
 Run: ,10
-Elapsed time: ,820
+Elapsed time: ,98

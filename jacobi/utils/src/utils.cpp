@@ -51,6 +51,27 @@ int force_affinity_set(std::vector<uint32_t> core_ids) {
 }
 
 
+uint32_t check_affinity_set_size() {
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+
+    pthread_t current_thread = pthread_self();
+
+    pthread_getaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset);
+
+    uint32_t count = 0;
+
+    for (int i = 0; i < 32; i++) {
+
+        if (CPU_ISSET(i, &cpuset)) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+
 
 // void join_with_threads_legacy(std::deque<pthread_t> threads, uint32_t num_threads_to_join)
 // {
