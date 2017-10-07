@@ -105,6 +105,18 @@ int main(int argc, char *argv[]) {
 			  "Number of iterations: ", num_iterations.at(i), "\n",
 			  "Set-pinning:          ", options.at(set_pin_bool.at(i)), "\n");
 
+		if (set_pin_bool.at(i) == 2) {
+			for (uint32_t j = 0; j < pinnings.at(i).size(); j++) {
+		    	print("Worker ", j, ": ");
+
+		    	for (uint32_t k = 0; k < pinnings.at(i).at(j).size(); k++) {
+		    		print(pinnings.at(i).at(j).at(k), " ");
+		    	}
+
+		    	print("\n");
+		    }
+		}
+
 		// if (set_pin_bool.at(i) == 1) {
 		// 	print("Number of cores:      ", pinnings.at(i), "\n");
 		// }
@@ -491,11 +503,6 @@ void read_config(std::map<std::string, std::string> config) {
 				it = config.find("pinnings_" + std::to_string(i));
 				check_iterator(it, config.end());
 
-			 //    std::istringstream iss(it->second);
-				// std::vector<std::string> temp2((std::istream_iterator<std::string>(iss)), std::istream_iterator<std::string>());
-
-				// std::vector<int> vect;
-
 			    std::stringstream ss(it->second);
 
 			    std::string token;
@@ -504,105 +511,32 @@ void read_config(std::map<std::string, std::string> config) {
 			    while (ss >> token) {
 
 			    	uint32_t prev_dot = 0;
-			    	uint32_t prev_double_dot = 0;
+			    	uint32_t double_dot = 0;
 
 			    	std::stringstream ss2(token);
 
 			    	while(ss2.good()) {
 
 					    std::string substr;
-					    getline( ss, substr, ',' );
-					    result.push_back( substr );
+					    getline(ss2, substr, '.');
+
+					    if (substr == "") {
+					    	double_dot = 1;
+
+					    } else {
+					    	if (double_dot == 0) {
+					    		temp.at(worker).push_back(std::stoi(substr));
+
+					    	} else {
+					    		for (uint32_t j = temp.at(worker).back() + 1; j <= std::stoi(substr); j++) {
+					    			temp.at(worker).push_back(j);
+					    		}
+					    		double_dot = 0;
+					    	}
+					    }
 					}
-
-			    	for (uint32_t j = 0; j < token.size(); j++) {
-
-			    		if (token.at(j) == '.') {
-			    			if (prev_dot == 1) {
-			    				prev_dot = 0;
-			    				prev_double_dot = 1;
-
-			    			} else {
-			    				prev_dot = 1;
-			    			}
-
-			    		} else if (prev_dot == 1) {
-			    			uint32_t test = std::stoi(token.at(j));
-			    			temp.at(worker).push_back(test);
-				    		prev_dot = 0;
-
-			    		} else if (prev_double_dot == 1) {
-			    			for (uint32_t k = temp.at(worker).back() + 1; k <= std::stoi(token.at(j)); k++) {
-				    			temp.at(worker).push_back(k);
-				    		}
-
-				    		prev_double_dot = 0;
-			    		} else {
-			    			temp.at(worker).push_back(std::stoi(token.at(j)));
-				    		worker++;
-			    		}
-
-				    	// if (prev_dot == 1) {
-				    	// 	temp.at(worker).push_back(atoi(token.at(j).c_str()));
-				    	// 	prev_dot = 0;
-
-				    	// } else if (prev_double_dot == 1) {
-
-				    		
-
-				    	// 	for (uint32_t i = temp.at(worker).back() + 1; i <= atoi(token.at(j).c_str()); i++) {
-				    	// 		temp.at(worker).push_back(i);
-				    	// 	}
-
-				    	// 	prev_double_dot = 0;
-
-				    	// } else {
-				    	// 	temp.at(worker).push_back(atoi(token.at(j).c_str()));
-				    	// 	worker++;
-				    	// }
-
-				    	// if (ss2.peek() == '.') {
-         //    				ss2.ignore();
-
-         //    				if (ss2.peek() == '.') {
-         //    					ss2.ignore();
-         //    					prev_double_dot = 1;
-
-				    	// 	} else {
-				    	// 		prev_dot = 1;
-				    	// 	}
-				    	// }
-			    	}
-			    	print("\n");
+					worker++;
 			    }
-
-
-
-
-
-
-
-			    for (uint32_t j = 0; j < temp.size(); j++) {
-			    	print("Worker ", j, ": ");
-
-			    	for (uint32_t k = 0; k < temp.at(j).size(); k++) {
-			    		print(temp.at(j).at(k), " ");
-			    	}
-
-			    	print("\n");
-			    }
-
-				// if (temp2.size() != num_workers.back()) {
-				// 	print("Malformed config file!");
-				// 	exit(1);
-				// }
-
-				// for (uint32_t i = 0; i < num_workers.back(); i++) {
-
-
-						
-				// 	temp.at(i).push_back(j);
-				// }
 
 				pinnings.push_back(temp);
 			}
