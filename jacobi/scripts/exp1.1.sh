@@ -13,7 +13,7 @@ function ctrl_c() {
 
 
 
-NUM_RUNS=32
+NUM_RUNS=4
 
 
 

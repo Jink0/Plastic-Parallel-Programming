@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 		strip_size.push_back(grid_size / num_workers.at(i));
 	}
 
-	moveAndCopy("jacobi", "");
+	moveAndCopy("jacobi", argv[1]);
 
 	// Attempt to open/create output file
 	FILE *output_stream = fopen((char*) "output", "w");
@@ -94,10 +94,6 @@ int main(int argc, char *argv[]) {
 	print("\nNumber of runs:    ", num_runs, "\n",
 		  "Grid size:         ", grid_size, "\n",
 		  "Number of stages:  ", num_stages, "\n");
-
-	fputs(("Number of runs: ," + std::to_string(num_runs) + "\n" +
-           "Grid size: ," + std::to_string(grid_size) + "\n" +
-           "Number of stages: ," + std::to_string(num_stages) + "\n\n\n").c_str(), output_stream);
 
 	for (uint32_t i = 0; i < num_stages; i++) {
 		print("\n\nStage ", i + 1, ":\n\n",
@@ -116,16 +112,6 @@ int main(int argc, char *argv[]) {
 		    	print("\n");
 		    }
 		}
-
-		// if (set_pin_bool.at(i) == 1) {
-		// 	print("Number of cores:      ", pinnings.at(i), "\n");
-		// }
-
-		fputs(("\nStage: ," + std::to_string(i + 1) + "\n" +
-		   "Number of workers: ," + std::to_string(num_workers.at(i)) + "\n" +
-		   "Number of iterations: ," + std::to_string(num_iterations.at(i)) + "\n" +
-		   "Set-pinning: ," + options.at(set_pin_bool.at(i)) + "\n").c_str(), output_stream);
-		   // "Number of cores: ," + std::to_string(pinnings.at(i)) + "\n").c_str(), output_stream);
 	}
 
 	fputs("\n\n", output_stream);
@@ -343,11 +329,19 @@ std::string get_working_dir() {
 
 
 #include <sys/stat.h>
+#include <fstream>
 
 void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
 
     // Record filepath of the config file before we move so we can copy it later
     std::string working_dir = get_working_dir();
+
+ 	auto pos = working_dir.rfind('/');
+	if (pos != std::string::npos) {
+	    working_dir.erase(pos);
+	}
+
+    std::ifstream  src(working_dir + "/../" + config_filename, std::ios::binary);
 
     // Create runs directory if it doesn't exist
     mkdir("runs", S_IRWXU | S_IRWXG | S_IRWXO);
@@ -379,6 +373,12 @@ void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
 
 	// Move into run directory
     chdir((root_dir_name + std::to_string(i)).c_str());
+
+    print("\n\n\nHere: ", working_dir + "/../runs/jacobi/run" + std::to_string(i) + config_filename, "\n\n\n\n");
+
+    // std::ofstream  dst(working_dir + config_filename, std::ios::binary);
+
+    // dst << src.rdbuf();
 }
 
 
