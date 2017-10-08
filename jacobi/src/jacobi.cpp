@@ -1,43 +1,56 @@
-#define _REENTRANT
-
-#include <pthread.h>
-#include <semaphore.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <sys/times.h>
 #include <limits.h>
-
-#include <iostream>
-#include <vector>
 #include <thread>
-
 #include <map>
-
 #include <sstream>
-
 #include <utils.hpp>
+#include <algorithm>
+#include <sched.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/stat.h>
+#include <fstream>
 
-void Worker(long long my_id, uint32_t stage);
-void InitializeGrids();
-void Barrier(uint32_t stage);
 
-void moveAndCopy(std::string prog_dir_name, std::string config_filename);
+
+// Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
+void worker(long long my_id, uint32_t stage);
+
+// Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
+void initialize_grids();
+
+// Counter barrier
+void barrier(uint32_t stage);
+
+// Returns the currrent working directory
+std::string get_working_dir();
+
+// Creates and moves into relevant working directory. Also copies given config file
+void move_and_copy(std::string prog_dir_name, std::string config_filename);
 
 // Returns a map of key-value pairsfrom the conifuration file
 std::map<std::string, std::string> parse_config(std::string filename);
+
+// Checks that the given iterators are not equal, prints relevant error message
+void check_iterator(std::map<std::string, std::string>::iterator it, std::map<std::string, std::string>::iterator end);
 
 // Reads config file, and returns s_exp_parameters
 void read_config(std::map<std::string, std::string> config);
 
 
 
-
-struct tms buffer;        // Used for timing
+// Used for timing
+struct tms buffer;        
 clock_t start, end;
 
-pthread_mutex_t barrier;  // Mutex semaphore for the barrier
-pthread_cond_t go;        // Condition variable for leaving
-uint32_t num_arrived = 0; // Count of the number who have arrived
+// Mutex semaphore for the barrier
+pthread_mutex_t barrier_mutex;  
+
+// Condition variable for leaving
+pthread_cond_t go;  
+
+// Count of the number who have arrived      
+uint32_t num_arrived = 0; 
 
 uint32_t num_runs, grid_size, num_stages;
 
@@ -49,22 +62,7 @@ std::vector<std::vector<double>> grid1, grid2;
 
 std::vector<std::string> options = {"Each worker has all cores", "Each worker has one corresponding core (max workers = num cores)", "Custom"};
 
-// struct s_stage_parameters {
-// 	uint32_t num_workers;
-// 	uint32_t num_iterations;
-// 	uint32_t set_pin_bool;
-// 	uint32_t pinnings;
-// };
 
-// struct s_exp_parameters {
-// 	uint32_t num_runs;
-// 	uint32_t grid_size;
-// 	uint32_t num_stages;
-
-// 	std::vector<s_stage_parameters> stage_parameters;
-// };
-
-#include <algorithm>
 
 int main(int argc, char *argv[]) {
 
@@ -79,7 +77,7 @@ int main(int argc, char *argv[]) {
 		strip_size.push_back(grid_size / num_workers.at(i));
 	}
 
-	moveAndCopy("jacobi", argv[1]);
+	move_and_copy("jacobi", argv[1]);
 
 	// Attempt to open/create output file
 	FILE *output_stream = fopen((char*) "output", "w");
@@ -90,7 +88,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-	// Print intro
+	// Print parameters
 	print("\nNumber of runs:    ", num_runs, "\n",
 		  "Grid size:         ", grid_size, "\n",
 		  "Number of stages:  ", num_stages, "\n");
@@ -114,15 +112,13 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	fputs("\n\n", output_stream);
-
 	// Calculate the max number of workers we will need
 	uint32_t max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
 
   	// Thread handles
 	std::vector<std::thread> threads(max_num_workers);
 
-	// WORK ON THIS!!!!!
+	// Set global max difference vector size
 	max_difference_global.resize(num_stages);
 
 	for (uint32_t i = 0; i < num_stages; i++) {
@@ -130,15 +126,12 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Initialize mutex and condition variable
-	pthread_mutex_init(&barrier, NULL);
+	pthread_mutex_init(&barrier_mutex, NULL);
 	pthread_cond_init(&go, NULL);
 
 	for (uint32_t r = 1; r < num_runs + 1; r++) {
 
-		// Print arguments
-		print("\n");
-
-		InitializeGrids();
+		initialize_grids();
 
 		// Record start time
 		start = times(&buffer);
@@ -146,7 +139,7 @@ int main(int argc, char *argv[]) {
 		for (uint32_t stage = 0; stage < num_stages; stage++) {
 			// Create workers
 			for (uint32_t i = 0; i < num_workers.at(stage); i++) {
-				threads.at(i) = std::thread(Worker, i, stage);
+				threads.at(i) = std::thread(worker, i, stage);
 			}
 
 			// Join with workers
@@ -175,39 +168,13 @@ int main(int argc, char *argv[]) {
 	}
 }
 
-#include <sched.h>
-#include <unistd.h>
-#include <errno.h>
+
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
-void Worker(long long my_id, uint32_t stage) {
+void worker(long long my_id, uint32_t stage) {
 
-	// std::vector<uint32_t> core_ids;
-
-	// if (set_pin_bool.at(stage) != 0) {
-	// 	for (uint32_t i = 0; i < pinnings.at(stage); i++) {
-	// 		core_ids.push_back(i);
-	// 	}
-
-	// } else {
-	// 	core_ids.push_back(my_id);
-	// }
-
-	// print("\n\n", pinnings.size(),  "\n\n\n");
-
-    
-
+	// Set our affinity
 	force_affinity_set(pinnings.at(stage).at(my_id));
-
-
-
-
-
-
-
-
-    // print("\n\n\n\n\nThread ", my_id, " cpu set size: ", check_affinity_set_size(), "\n\n");
-
 
 	// Determine first and last rows of my strip of the grids
 	uint32_t first = my_id * strip_size.at(stage) + 1;
@@ -222,7 +189,7 @@ void Worker(long long my_id, uint32_t stage) {
 			}
 		}
 
-		Barrier(stage);
+		barrier(stage);
 
 		// Update my points again
 		for (uint32_t i = first; i <= last; i++) {
@@ -231,7 +198,7 @@ void Worker(long long my_id, uint32_t stage) {
 			}
 		}
 
-		Barrier(stage);
+		barrier(stage);
 
 		// Simulate a convergence test.
 		// Compute the maximum difference in my strip and set global variable
@@ -258,7 +225,7 @@ void Worker(long long my_id, uint32_t stage) {
 
 
 // Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
-void InitializeGrids() {
+void initialize_grids() {
 
 	grid1.resize(grid_size + 2);
 	grid2.resize(grid_size + 2);
@@ -292,10 +259,10 @@ void InitializeGrids() {
 
 
 
-// Reusable counter barrier. Not sense reversing?
-void Barrier(uint32_t stage) {
+// Counter barrier
+void barrier(uint32_t stage) {
 
-	pthread_mutex_lock(&barrier);
+	pthread_mutex_lock(&barrier_mutex);
 
   	num_arrived++;
 
@@ -306,54 +273,76 @@ void Barrier(uint32_t stage) {
 
   	} else {
 
-    	pthread_cond_wait(&go, &barrier);
+    	pthread_cond_wait(&go, &barrier_mutex);
 	}
 
-  	pthread_mutex_unlock(&barrier);
+  	pthread_mutex_unlock(&barrier_mutex);
 }
 
 
 
-#include <string>
-#include <limits.h>
-#include <unistd.h>
-
+// Returns the currrent working directory
 std::string get_working_dir() {
 
-  char result[PATH_MAX];
-  ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+    char result[PATH_MAX];
+    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
 
-  return std::string(result, (count > 0) ? count : 0);
+    if (count < 0) {
+    	print("ERROR: Cannot read current working directory with readlink");
+    	exit(1);
+    }
+
+    std::string output = std::string(result);
+
+    // Find last instance of '/'
+	auto pos = output.rfind('/');
+
+	// Erase from there (to remove program name)
+	if (pos != std::string::npos) {
+	    output.erase(pos);
+	}
+
+    return output;
 }
 
 
 
-#include <sys/stat.h>
-#include <fstream>
-
-void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
+// Creates and moves into relevant working directory. Also copies given config file
+void move_and_copy(std::string prog_dir_name, std::string config_filename) {
 
     // Record filepath of the config file before we move so we can copy it later
-    std::string working_dir = get_working_dir();
+    // std::string working_dir = get_working_dir();
 
- 	auto pos = working_dir.rfind('/');
-	if (pos != std::string::npos) {
-	    working_dir.erase(pos);
-	}
+ // 	auto pos = working_dir.rfind('/');
+	// if (pos != std::string::npos) {
+	//     working_dir.erase(pos);
+	// }
 
-    std::ifstream  src(working_dir + "/../" + config_filename, std::ios::binary);
+ //    std::ifstream  src(working_dir + "/../" + config_filename, std::ios::binary);
+
+    int res;
 
     // Create runs directory if it doesn't exist
     mkdir("runs", S_IRWXU | S_IRWXG | S_IRWXO);
 
     // Move into the runs directory
-    chdir("runs");
+    res = chdir("runs");
+
+    if (res != 0) {
+    	print("ERROR: Cannot move into runs directory");
+    	exit(1);
+    }
 
     // Create program directory if it doesn't exist
     mkdir("jacobi", S_IRWXU | S_IRWXG | S_IRWXO);
 
     // Move into the program directory
-    chdir("jacobi");
+    res = chdir("jacobi");
+
+    if (res != 0) {
+    	print("ERROR: Cannot move into jacobi directory");
+    	exit(1);
+    }
 
     // Directory name to start at
     uint32_t i = 1;
@@ -372,9 +361,14 @@ void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
     mkdir((root_dir_name + std::to_string(i)).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 
 	// Move into run directory
-    chdir((root_dir_name + std::to_string(i)).c_str());
+    res = chdir((root_dir_name + std::to_string(i)).c_str());
 
-    print("\n\n\nHere: ", working_dir + "/../runs/jacobi/run" + std::to_string(i) + config_filename, "\n\n\n\n");
+    if (res != 0) {
+    	print("ERROR: Cannot move into run", i, " directory");
+    	exit(1);
+    }
+
+    // print("\n\n\nHere: ", working_dir + "/../runs/jacobi/run" + std::to_string(i) + config_filename, "\n\n\n\n");
 
     // std::ofstream  dst(working_dir + config_filename, std::ios::binary);
 
@@ -382,20 +376,20 @@ void moveAndCopy(std::string prog_dir_name, std::string config_filename) {
 }
 
 
-#include <fstream>
-
 
 // Returns a map of key-value pairsfrom the conifuration file
 std::map<std::string, std::string> parse_config(std::string filename) {
 
-    std::ifstream input(filename); // Input stream
+	// Input stream
+    std::ifstream input(filename); 
 
     if (!input.is_open()) {
     	print("ERROR - Cannot open config file: ", filename);
     	exit(1);
     }
 
-    std::map<std::string, std::string> output; // Output map of key-value pairs
+    // Output map of key-value pairs
+    std::map<std::string, std::string> output; 
 
     // While we have input to process;
     while(input) {
@@ -403,28 +397,39 @@ std::map<std::string, std::string> parse_config(std::string filename) {
         std::string key;
         std::string value;
 
-        std::getline(input, key, ':');    // Read up to the : delimiter, store in key
-        std::getline(input, value, '\n'); // Read up to the newline, store in value
+        // Read up to the : delimiter, store in key
+        std::getline(input, key, ':');    
 
-        std::string::size_type p1 = value.find_first_of("\""); // Find the first quote in the value
-        std::string::size_type p2 = value.find_last_of("\"");  // Find the last quote in the value
+        // Read up to the newline, store in value
+        std::getline(input, value, '\n'); 
+
+        // Find the first quote in the value
+        std::string::size_type p1 = value.find_first_of("\""); 
+
+        // Find the last quote in the value
+        std::string::size_type p2 = value.find_last_of("\"");  
 
         // Check if the found positions are all valid
         if(p1 != std::string::npos && p2 != std::string::npos && p2 > p1) {
 
-            value = value.substr(p1 + 1, p2 - p1 - 1); // Take a substring of the part between the quotes
+        	// Take a substring of the part between the quotes
+            value = value.substr(p1 + 1, p2 - p1 - 1); 
 
-            output[key] = value.c_str();         // Store result
+            // Store result
+            output[key] = value.c_str();         
         }
     }
 
-    input.close(); // Close the file stream
+    // Close the file stream
+    input.close(); 
 
-    return output; // Return the result
+    // Return the result
+    return output; 
 }
 
 
 
+// Checks that the given iterators are not equal, prints relevant error message
 void check_iterator(std::map<std::string, std::string>::iterator it, std::map<std::string, std::string>::iterator end) {
 	if (it == end) {
 		print("Malformed config file!");
@@ -432,16 +437,6 @@ void check_iterator(std::map<std::string, std::string>::iterator it, std::map<st
 	}
 }
 
-
-#include <sstream>
-#include <fstream>
-#include <iostream>
-
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <iterator>
 
 
 // Reads config file, and returns s_exp_parameters
@@ -510,7 +505,6 @@ void read_config(std::map<std::string, std::string> config) {
 
 			    while (ss >> token) {
 
-			    	uint32_t prev_dot = 0;
 			    	uint32_t double_dot = 0;
 
 			    	std::stringstream ss2(token);
@@ -528,7 +522,7 @@ void read_config(std::map<std::string, std::string> config) {
 					    		temp.at(worker).push_back(std::stoi(substr));
 
 					    	} else {
-					    		for (uint32_t j = temp.at(worker).back() + 1; j <= std::stoi(substr); j++) {
+					    		for (uint32_t j = temp.at(worker).back() + 1; j <= std::abs(std::stoi(substr)); j++) {
 					    			temp.at(worker).push_back(j);
 					    		}
 					    		double_dot = 0;
