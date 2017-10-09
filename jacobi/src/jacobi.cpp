@@ -163,8 +163,7 @@ int main(int argc, char *argv[]) {
 		print("\nRun ", r, "\n",
 			  "Elapsed time: ", end - start, "\n");
 
-		fputs(("\nRun: ," + std::to_string(r) + "\n" +
-	           "Elapsed time: ," + std::to_string(end - start) + "\n").c_str(), output_stream);
+		fputs((std::to_string(end - start) + "\n").c_str(), output_stream);
 	}
 }
 
@@ -348,23 +347,23 @@ void move_and_copy(std::string prog_dir_name, std::string config_filename) {
     uint32_t i = 1;
     
     // Root directory word
-    std::string root_dir_name = "run";
+    std::string root_dir_name = "test";
 
     struct stat sb;
 
-    // Find what the next run number should be
+    // Find what the next test number should be
     while (stat((root_dir_name + std::to_string(i)).c_str(), &sb) == 0 && S_ISDIR(sb.st_mode)) {
     	i++;
     }
 
-	// Create run directory
+	// Create test directory
     mkdir((root_dir_name + std::to_string(i)).c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 
-	// Move into run directory
+	// Move into test directory
     res = chdir((root_dir_name + std::to_string(i)).c_str());
 
     if (res != 0) {
-    	print("ERROR: Cannot move into run", i, " directory");
+    	print("ERROR: Cannot move into test", i, " directory");
     	exit(1);
     }
 
