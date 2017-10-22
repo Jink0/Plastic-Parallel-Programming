@@ -14,7 +14,11 @@ function ctrl_c() {
 
 
 POWERS_MIN=10
-POWERS_MAX=15
+POWERS_MAX=11
+
+NUM_WORKERS_MIN=8
+NUM_WORKERS_MAX=32
+NUM_WORKERS_STEP=4
 
 # NUM_RUNS=($POWERS_MAX - $POWERS_MIN + 1) * (((NUM_WORKERS_MAX - NUM_WORKERS_MIN) / NUM_WORKERS_STEP) + 1)
 
@@ -23,28 +27,83 @@ NUM_RUNS=42
 STEP=$(bc -l <<< "100 / $NUM_RUNS")
 TOTAL=$STEP
 
+# Create config file
+
+FILENAME="configs/barrier_investigation.ini"
+
+if [ -e $FILENAME ]; then
+  rm $FILENAME
+fi
+
+echo "num_runs: \"5\"" > $FILENAME
+echo "num_stages: \"1\"" >> $FILENAME
+echo "num_iterations_0: \"5000\"" >> $FILENAME
+echo "set_pin_bool_0: \"0\"" >> $FILENAME
+echo "pinnings_0: \"\"" >> $FILENAME
+echo "grid_size: \"1024\"" >> $FILENAME
+echo "num_workers_0: \"8\"" >> $FILENAME
+
+# Start experiments
+
 printf "0.000%%"
 sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> /dev/null
 
 
 make clean
-make flags="-DDETAILED_METRICS -DMYBARRIER" main
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST" main
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
 do 
-	head -n -1 configs/convergence_test_investigation.ini > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"1\"" >> temp.ini ; mv temp.ini configs/convergence_test_investigation.ini
+	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"1\"" >> temp.ini ; mv temp.ini $FILENAME
 
-	bin/jacobi configs/convergence_test_investigation.ini >> /dev/null
-	printf "\r%.3f%%" "$TOTAL"
-        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
-	TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
+	do
+		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
+		bin/jacobi $FILENAME
+		printf "\r%.3f%%" "$TOTAL"
+	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
+		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+	done
 done
 
 
 make clean
-make flags="-DDETAILED_METRICS -DMYBARRIER -DCONVERGE_TEST" main
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST -DMYBARRIER" main
 
+
+for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
+do 
+	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"1\"" >> temp.ini ; mv temp.ini $FILENAME
+
+	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
+	do
+		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
+		bin/jacobi $FILENAME
+		printf "\r%.3f%%" "$TOTAL"
+	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
+		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+	done
+done
+
+
+make clean
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST -PTHREADBARRIER" main
+
+
+for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
+do 
+	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"1\"" >> temp.ini ; mv temp.ini $FILENAME
+
+	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
+	do
+		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
+		bin/jacobi $FILENAME
+		printf "\r%.3f%%" "$TOTAL"
+	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
+		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+	done
+done
 
 
 sudo scripts/update-motd.sh "" >> /dev/null
