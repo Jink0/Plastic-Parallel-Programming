@@ -10,7 +10,7 @@ UTILS_DIR           = utils
 # -DCOLLATZ
 
 GCC       = g++
-CXXFLAGS  = -Wall -std=c++11 -O3 -DDETAILED_METRICS -DMYBARRIER -DCONVERGE_TEST 
+CXXFLAGS  = -Wall -std=c++11 -O3 $(flags)
 INCLUDES  = -I$(INCLUDE_DIR)/ -I$(UTILS_DIR)/include
 LIB_FLAGS = -lpthread
 
