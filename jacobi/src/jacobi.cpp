@@ -11,6 +11,41 @@
 #include <sys/stat.h>
 #include <fstream>
 
+#ifdef PTHREADBARRIER
+#ifdef MYBARRIER
+// #error Both PTHREADBARRIER and MYBARRIER flags enabled!
+#endif
+#endif
+
+#ifndef PTHREADBARRIER
+#ifndef MYBARRIER
+// #error Neither PTHREADBARRIER or MYBARRIER flags enabled!
+#endif
+#endif
+
+#ifdef PTHREADBARRIER
+#define PTB( x ) x
+#else
+#define PTB( x )
+#endif
+
+#ifdef MYBARRIER
+#define MB( x ) x
+#else
+#define MB( x )
+#endif
+
+#ifdef COLLATZ
+#define CLTZ( x ) x
+#else
+#define CLTZ( x )
+#endif
+
+#ifdef CONVERGE_TEST
+#define CNVG( x ) x
+#else
+#define CNVG( x )
+#endif
 
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
@@ -44,23 +79,25 @@ struct tms buffer;
 clock_t start, end;
 
 // Mutex semaphore for the barrier
-pthread_mutex_t barrier_mutex;  
+pthread_mutex_t barrier_mutex;
+std::vector<pthread_barrier_t> barriers;
 
 // Condition variable for leaving
-pthread_cond_t go;  
+pthread_cond_t go;
 
 // Count of the number who have arrived      
-uint32_t num_arrived = 0; 
+uint32_t num_arrived = 0;
 
 uint32_t num_runs, grid_size, num_stages;
 
 std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, strip_size;
 std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
-std::vector<std::vector<double>> max_difference_global;
+CNVG(std::vector<std::vector<double>> max_difference_global;)
 std::vector<std::vector<double>> grid1, grid2;
 
 std::vector<std::string> options = {"Each worker has all cores", "Each worker has one corresponding core (max workers = num cores)", "Custom"};
+
 
 
 
@@ -112,18 +149,26 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	for (uint32_t i = 0; i < num_stages; i++) {
+		pthread_barrier_t b;
+		pthread_barrier_init(&b, NULL, num_workers.at(i));
+		barriers.push_back(b);
+	}
+
 	// Calculate the max number of workers we will need
 	uint32_t max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
 
   	// Thread handles
 	std::vector<std::thread> threads(max_num_workers);
 
-	// Set global max difference vector size
-	max_difference_global.resize(num_stages);
+	CNVG(
+		// Set global max difference vector size
+		max_difference_global.resize(num_stages);
 
-	for (uint32_t i = 0; i < num_stages; i++) {
-		max_difference_global.at(i).resize(num_workers.at(i));
-	}
+		for (uint32_t i = 0; i < num_stages; i++) {
+			max_difference_global.at(i).resize(num_workers.at(i));
+		}
+		)
 
 	// Initialize mutex and condition variable
 	pthread_mutex_init(&barrier_mutex, NULL);
@@ -151,20 +196,58 @@ int main(int argc, char *argv[]) {
 		// Record end time
 		end = times(&buffer);
 
-		double max_diff = 0.0;
+		CNVG(
+			uint32_t max_diff = 0.0;
 
-		// Find maximum difference
-		for (uint32_t i = 0; i < num_workers.back(); i++) {
-			if (max_diff < max_difference_global.back().at(i)) {
-		  		max_diff = max_difference_global.back().at(i);
+			// Find maximum difference
+			for (uint32_t i = 0; i < num_workers.back(); i++) {
+				if (max_diff < max_difference_global.back().at(i)) {
+			  		max_diff = max_difference_global.back().at(i);
+				}
 			}
-		}
+			)
 
 		print("\nRun ", r, "\n",
 			  "Elapsed time: ", end - start, "\n");
 
 		fputs((std::to_string(end - start) + "\n").c_str(), output_stream);
 	}
+}
+
+
+
+/*
+ * Test user function
+ */
+
+int collatz(int weight, int seed) {
+
+	// Record start time
+	clock_t start = times(&buffer);
+
+    for (int i = 0; i < weight; i++) {
+
+        if (seed < 1) {
+            fprintf(stderr, "Error, cannot start collatz with %d\n", seed);
+
+            return 0;
+        }
+
+        while (seed > 1) {
+            if (seed % 2) {
+                seed = 3 * seed + 1;
+            } else {
+                seed = seed / 2;
+            }
+        }
+    }
+
+    // Record end time
+	clock_t end = times(&buffer);
+
+	print("COLLATZ: " + std::to_string(end - start) + "\n");
+
+    return 1;
 }
 
 
@@ -188,7 +271,10 @@ void worker(long long my_id, uint32_t stage) {
 			}
 		}
 
-		barrier(stage);
+		CLTZ(collatz(10000, 763);)
+
+		MB(barrier(stage);)
+		PTB(pthread_barrier_wait(&barriers.at(stage));)
 
 		// Update my points again
 		for (uint32_t i = first; i <= last; i++) {
@@ -197,27 +283,32 @@ void worker(long long my_id, uint32_t stage) {
 			}
 		}
 
-		barrier(stage);
+		CLTZ(collatz(10000, 763);)
 
-		// Simulate a convergence test.
-		// Compute the maximum difference in my strip and set global variable
-	  	double max_diff = 0.0;
+		MB(barrier(stage);)
+		PTB(pthread_barrier_wait(&barriers.at(stage));)
 
-		for (uint32_t i = first; i <= last; i++) {
-			for (uint32_t j = 1; j <= grid_size; j++) {
-				uint32_t temp = grid1[i][j]-grid2[i][j];
+		CNVG(
+			// Simulate a convergence test.
+			// Compute the maximum difference in my strip and set global variable
+		  	double max_diff = 0.0;
 
-				if (temp < 0) {
-					temp = -temp;
-				}
+			for (uint32_t i = first; i <= last; i++) {
+				for (uint32_t j = 1; j <= grid_size; j++) {
+					uint32_t temp = grid1[i][j]-grid2[i][j];
 
-				if (max_diff < temp) {
-					max_diff = temp;
+					if (temp < 0) {
+						temp = -temp;
+					}
+
+					if (max_diff < temp) {
+						max_diff = temp;
+					}
 				}
 			}
-		}
 
-		max_difference_global[stage][my_id] = max_diff;
+			max_difference_global[stage][my_id] = max_diff;
+			)
 	}
 }
 

@@ -1,18 +1,3 @@
 %!TEX root = ../Report.tex
 
-***Outline what we will cover in each chapter
-Add overview of precisely what was done***
-
-It is recognised that writing correct and efficient parallel programs is hard, (cite \url{http://www.futurechips.org/tips-for-power-coders/parallel-programming.html} or \url{https://parallel.illinois.edu/blog/three-challenges-parallel-programming} or something, \url{https://dl.acm.org/citation.cfm?id=2093943&dl=ACM&coll=DL&CFID=720336161&CFTOKEN=82786616}) as the introduction of parallelism introduces a whole host of new problems, (unreproducible bugs due to race conditions, and difficulty debugging as need to decompose high level instructions into atomic assembly code to understand). The sole purpose of multi-threading is performance, however parallel programs can be slower then their serial counterparts, be it due to dependencies or hardware contention. Overhead must be balanced such that we don't introduce so much more work organizing threads that our performance gains disappear.
-
-Even when we have an ideal parallel program, often hardware is shared between multiple programs and users, leading to resource contention. There may be messages to the effect of "Do not leave applications running on this machine" or "please nice your programs", which may be unseen or ignored.
-
-The aim of this project is to combine parallel programming with three key ides:
-
-\begin{itemize}
-	\item Co-Scheduling
-	\item Plastic Programming
-	\item Skeleton Programming
-\end{itemize}
-
-And investigate the performance ramifications. Combining these ideas results in these problems becoming particularly tricky, with many different challenges involved in incorporating them.
+\section{}

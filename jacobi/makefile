@@ -7,9 +7,10 @@ SRC_DIR             = src
 UTILS_DIR           = utils
 
 # Flags and includes
+# -DCOLLATZ
 
 GCC       = g++
-CXXFLAGS  = -Wall -std=c++11 -O3 -DDETAILED_METRICS
+CXXFLAGS  = -Wall -std=c++11 -O3 -DDETAILED_METRICS -DMYBARRIER -CONVERGE_TEST 
 INCLUDES  = -I$(INCLUDE_DIR)/ -I$(UTILS_DIR)/include
 LIB_FLAGS = -lpthread
 

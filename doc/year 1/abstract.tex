@@ -1,14 +1,8 @@
 %!TEX root = Report.tex
 \begin{abstract}
 
-\setlength{\parskip}{1em}
+This is the first part of an MInf project which will span two years. In this project, we combine the ideas of contention aware scheduling, plastic programming, and skeleton programming, to create a library where incarnations of its skeletons will explicitly work together to share and optimize the use of system resources. 
 
-\noindent Throughout the history of computing, computer programmers and hardware engineers have exploited parallelism, with software and architectural innovation complementing technological improvements to provide increased performance. Architects have exploited bit and instruction parallelism, and now programmers are increasingly exploiting task/data parallelism in their applications.
-
-\noindent Utilizing hardware efficiently is a major research challenge, especially considering that, today, a single program or library needs to deal with multiple different incarnations of the task it is trying to run. These arise from different circumstances, ranging from the hardware it is running on to the task size. Creating a ``one size fits all'' solution has become increasingly difficult, especially for high performance parallel applications. As such, there are solutions to help mitigate this problem (cite petabricks), which utilize this idea of plastic programming, that is, changing the specifics of an implementation depending on the circumstances. However, such solutions are only "plastic" at compile time, and during runtime if circumstances change they cannot adapt. In particular, the most common situation a program may encounter would be the sharing of the computer's resources with other programs. This is again exacerbated for high performance parallel programs, as they typically attempt to use all the resources they can get their virtual hands on.
-
-\noindent It is known that in such a situation with two programs, with careful selection of program parameters, we can obtain a better average runtime for both programs (cite lira paper).
-
-\noindent This paper investigates if we can combine these ideas to create a parallel programming skeleton library where incarnations of its patterns will explicitly work together in this manner, and whether we can obtain any significant difference in performance. We then go on to discuss the ramifications, and how this could be taken further, and possibly used to implement a useful tool for programmers.
+We perform multiple experiments assessing the performance of our library, with the outcome that we can obtain performance improvements over traditional parallel programming. We also discuss how we could be take the project further, with both ideas for the next year of this MInf project, and for work to be done after this project is complete.
 
 \end{abstract}

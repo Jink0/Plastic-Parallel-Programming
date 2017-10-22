@@ -1,0 +1,123 @@
+%!TEX root = ../Report.tex
+
+\newif\iflabela
+\newif\iflabelb
+\newif\iflabelc
+\newif\iflabeld
+\newif\iflabele
+
+
+
+The primary goal of this project is to investigate if we can achieve better performance using the combination of plasticity and contention aware scheduling. Accordingly, we will focus our experiments on evaluating the performance of the system. To this end, we have created a carefully designed set of experiments to assess the system under different conditions, conditions which may be found in future applications. In this chapter we describe our evaluation methodology and the particular experiments we will run. The outcome of each experiment will be discussed in the results chapter in the same order they are presented here.
+
+
+
+\section{Evaluation Methodology}
+
+All experiments were run on an Ubuntu virtual machine, with four cores at 4GHz, 4096MB of memory, and the rest of the system at idle. All programs were compiled at optimization level 3, and every result averaged over 50 repeats.
+
+Multiple different statistics can be collected for each thread:
+
+\begin{enumerate}
+	\item Total runtime
+	\item Time spent doing work
+	\item Time spent in overhead
+	\item Time blocked by main thread
+	\item Number of tasks completed
+\end{enumerate}
+
+In these experiments however, we will focus on total runtime, as we are mostly concerned with the overall performance. The other statistics were mostly used during development. Experiment 1 investigates the impact of the collection of these detailed metrics.
+
+
+
+\section{Programme of Experiments}
+
+In this section we detail each experiment, the thought process behind it, how it will be executed, and the expected results if appropriate. The actual results will be presented in chapter \ref{chapter:results}, where we will compare them with our expectations and discuss their implications.
+
+In each experiment we will vary a different set of parameters. These parameters can be partitioned into three separate classes; application input parameters, resources granted, and skeleton parameters. More parameters can be added, (e.g. different resources granted,) but this is left for future work, as currently we only want a preliminary investigation into these ideas. The set of parameters are:
+
+Application Input Parameters:
+
+\begin{itemize}
+	\item Number of tasks - The number of tasks to be carried out
+	\item Task grain - The complexity of the tasks, measured in the number of repeats of the Collatz function.
+	\item Task grain distribution - If we have range of task grains, this describes how they distributed throughout the input array. Possible values are uniform (evenly distributed throughout,) and biased (The more complex tasks are gathered together in the first 1/N portion of the array, where N is the number of threads. This is the worst case scenario for the static schedule.)
+\end{itemize}
+
+Resources Granted:
+
+\begin{itemize}
+	\item Number of CPU cores - The amount of CPU cores provided in the machine.
+\end{itemize}
+
+Skeleton Parameters:
+
+\begin{itemize}
+	\item Number of threads used - The number of threads our program uses for multi-threading.
+	\item Thread pinning - The configuration of threads pinned to CPU cores. They are either uniformly spread across all CPU cores, or left unpinned (we call this situation ``anarchy''.)
+	\item Schedule - How the tasks are distributed amongst threads. See section \ref{subsection:design_adding_plasticity} for the possible schedules.
+\end{itemize}
+
+Our first experiment will test how much overhead our metrics collection adds. Experiment 2 then establishes the baseline performance of our library, comparing it to see if it is on a par with an OpenMP solution. Next in experiment 3, we investigate the overhead that has been introduced by contention aware scheduling and plasticity. Experiment 4 then shows the importance of choosing the correct schedule, and how our system could deal with a suboptimal schedule using plasticity.
+
+Thus far, experiments 1-4 have all been conducted with a single application utilizing our library at a time. In experiment 5, we investigate a situation with multiple applications using our library. We investigate the performance of the system with many applications competing for resources, with multiple strategies for how to share them.
+
+
+
+\subsection{Experiment 1 - Metrics Collection Overhead}
+
+The aim of our first experiment is to investigate if our method for collecting metrics about the system adds any significant overhead that we must take into account in assessing further experiments. To this end, we compare the runtimes of our system both with and without metrics collection, to see if there is any significant difference. The system is run with no controller application or runtime plasticity, since we only wish to measure the overhead added by our metrics collection. 
+
+The experiment parameters are designed such that it is a worse case scenario, and as a result would produce the most significant difference in runtimes. This worst case scenario would be many small tasks, with multiple threads, since metrics functions are called before and after tasks are completed, and are managed on a per-thread basis.
+
+Since our metrics collection consists of some function calls and updating tallys, we do not expect the performance impact to be significant. 
+
+\input{ex_params/ex1_params}
+
+
+
+\subsection{Experiment 2 - Absolute Performance}
+
+The purpose of this experiment is to gauge the absolute performance of our system compared to other approaches. This should test if our approach has significantly more overhead than other approaches, and also if the underlying implementation is correct such that performance is on a par. To provide these points of comparison, we will test against a purely sequential approach, and another using OpenMP. We will also vary the schedule, again to verify that our implementation is on a par with a current parallel programming method (OpenMP) with different schedules.
+
+Note here that the Static schedule and the Dynamic Chunks schedule with a chunk size of 1 represent opposing ends of an overhead spectrum. With a static schedule, we have the least amount of overhead possible, (good for when the task variance is uniform), and with the Dynamic Chunks schedule and a chunk size of 1, we have the most amount of overhead possible, but since we fetch tasks one at a time, we will have the best task complexity balance across our threads (good for skewed/high variance.)
+
+As for the expected outcome, we would predict that we would be close to a purely sequential implementation in single threaded circumstances, if we use a static schedule, as the only additional overhead would come from managing the one thread. For other schedules, we may see a performance drop, since we would be using a sub-optimal schedule. But, OpenMP would likely see a similar performance drop with a sub-optimal schedule.
+
+The main question we want to answer is how we compare to a current parallel programming approach, OpenMP. Do we scale with thread/CPU core count in a similar fashion? We expect that we may be behind OpenMP in terms of performance, as OpenMP is a large, well established project, and as such may be much more optimized than our implementation. Whilst the outcome of this experiment will no doubt be useful, we are mainly concerned with whether we can improve upon our own performance by adding plasticity and contention aware scheduling, so we need only compare against ourselves in experiment 5.
+
+\input{ex_params/ex2_params}
+
+
+
+\subsection{Experiment 3 - Plasticity And Contention Aware Scheduling Framework Overhead}
+
+This experiment is designed to investigate whether the two main additions to a simple skeleton incur any significant overhead. That is, plasticity and contention aware scheduling. To do this, we will compute the overhead of communicating with the controller (contention aware scheduling) and switching strategies (plasticity), without actually changing any details of the implementation, so that any performance difference will be attributable to the communication and switching overhead. We switch once in each experiment. After the controller receives a registration message, it replies with a message triggering the switch.
+
+We will then run the same experiment with no controller or plasticity, as in experiment 1. The runtimes of both cases will be compared to see the total amount of delay introduced.
+
+Whilst we expect that we will incur some overhead, we do not expect it to be significant, as it will be of constant time and not scale with regards to input size.
+
+\input{ex_params/ex3_params}
+
+
+
+\subsection{Experiment 4 - Schedule Choice Importance}
+
+This experiment is designed to highlight the importance of the choice of schedule, and the benefits plasticity can bring even with just a single application. To do this, we compare the runtimes of different schedules with a biased task grain distribution. We should see the static schedule perform the worst, and the dynamic individual or dynamic chunks schedule perform the best.
+
+For the plasticity portion of this experiment, we will also add cases where we start with a sub-optimal schedule, and then, after 5 seconds, change to a better schedule. This will be done with a uniform schedule, starting with the dynamic individual schedule, and switching to the static schedule.
+
+\input{ex_params/ex4_params}
+
+
+
+\subsection{Experiment 5 - Absolute Multiprogramming Performance}
+
+The purpose of this experiment is to investigate the absolute performance of our library in a situation with multiple applications. We start with the controller and one application running, and then introduce a second application, causing the first to modify its parameters. The second application will then complete its computation, again causing the first to modify its parameters. Finally, the first application will finish, completing the experiment. 
+
+We compare two situations, one simulating a typical multiprogramming system, where we run the programs as they would be without any plasticity or contention aware scheduling. The other situation will be including plasticity and contention aware scheduling.
+
+To get an idea of the performance, we will compare the runtimes of the two programs, with the runtime of the first application representing the total runtime of the entire experiment. We would expect the case with plasticity and contention aware scheduling to fare better, since the overhead is not too large, and we would enforce that the total number of threads is equal to the number of CPU cores. This means that there is less unnecessary thread switching, as the OS switches between all threads.
+
+\input{ex_params/ex5_params}
