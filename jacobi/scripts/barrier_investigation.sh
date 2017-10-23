@@ -60,7 +60,7 @@ do
 	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
-		bin/jacobi $FILENAME
+		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
 	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
@@ -79,7 +79,7 @@ do
 	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
-		bin/jacobi $FILENAME
+		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
 	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
@@ -98,7 +98,7 @@ do
 	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
-		bin/jacobi $FILENAME
+		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
 	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
