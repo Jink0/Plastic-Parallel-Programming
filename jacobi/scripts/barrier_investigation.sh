@@ -48,6 +48,8 @@ echo "num_workers_0: \"8\"" >> $FILENAME
 printf "0.000%%"
 sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> /dev/null
 
+START=$(date +%s.%N)
+
 
 make clean
 make flags="-DDETAILED_METRICS -DCONVERGE_TEST" main
@@ -106,6 +108,9 @@ do
 done
 
 
-sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Barrier tests have completed!"
+END=$(date +%s.%N)
+DIFF=$(echo "$END - $START" | bc)
+
+sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Barrier tests have completed! Time taken: $DIFF seconds"
 
 sudo scripts/update-motd.sh "" >> /dev/null
