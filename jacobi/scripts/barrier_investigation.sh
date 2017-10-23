@@ -88,7 +88,7 @@ done
 
 
 make clean
-make flags="-DDETAILED_METRICS -DCONVERGE_TEST -PTHREADBARRIER" main
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST -DPTHREADBARRIER" main
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -105,5 +105,7 @@ do
 	done
 done
 
+
+sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Barrier tests have completed!"
 
 sudo scripts/update-motd.sh "" >> /dev/null

@@ -87,4 +87,6 @@ do
 done
 
 
+sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Convergence tests have completed!"
+
 sudo scripts/update-motd.sh "" >> /dev/null
