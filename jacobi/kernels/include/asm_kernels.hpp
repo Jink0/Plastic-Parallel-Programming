@@ -1,5 +1,5 @@
-#ifndef INCLUDE_ROCO2_KERNELS_ASM_KERNELS_H
-#define INCLUDE_ROCO2_KERNELS_ASM_KERNELS_H
+#ifndef ASM_KERNELS_HPP
+#define ASM_KERNELS_HPP
 
 #ifdef __cplusplus
 #define EXTERN_C extern "C"
@@ -17,4 +17,4 @@ EXTERN_C uint64_t sqrtsd_kernel(double* buffer, uint64_t elems, uint64_t repeat)
 EXTERN_C uint64_t sqrtps_kernel(float* buffer, uint64_t elems, uint64_t repeat);
 EXTERN_C uint64_t sqrtpd_kernel(double* buffer, uint64_t elems, uint64_t repeat);
 
-#endif // INCLUDE_ROCO2_KERNELS_ASM_KERNELS_H
+#endif // ASM_KERNELS_HPP
