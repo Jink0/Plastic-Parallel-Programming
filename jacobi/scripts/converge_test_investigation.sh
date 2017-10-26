@@ -54,7 +54,7 @@ START=$(date +%s.%N)
 
 
 make clean
-make flags="-DDETAILED_METRICS -DMYBARRIER" main
+make flags="-DDETAILED_METRICS -DPTHREADBARRIER" main
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -73,7 +73,7 @@ done
 
 
 make clean
-make flags="-DDETAILED_METRICS -DMYBARRIER -DCONVERGE_TEST" main
+make flags="-DDETAILED_METRICS -DPTHREADBARRIER -DCONVERGE_TEST" main
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
