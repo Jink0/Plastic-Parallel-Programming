@@ -34,7 +34,7 @@
 void initialize_grids();
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
-void worker(long long my_id, uint32_t stage);
+void worker(uint32_t my_id, uint32_t stage);
 
 // My counter barrier
 MB(void my_barrier(uint32_t stage);)
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
 
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
-void worker(long long my_id, uint32_t stage) {
+void worker(uint32_t my_id, uint32_t stage) {
 
 	// Set our affinity
 	force_affinity_set(pinnings.at(stage).at(my_id));
@@ -210,12 +210,31 @@ void worker(long long my_id, uint32_t stage) {
 		MB(my_barrier(stage);)
 		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
 
-		// addpd(10);
+		std::chrono::milliseconds millis(4);
+
+		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+		addpd(millis, my_id, num_workers.at(stage));
+
+		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+
+		
+
+		std::chrono::duration<double> diff = end - start;
+
+		std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+
+		print(ms.count(), "\n");
+
+		// addpd(1, my_id, num_workers.at(stage));
 		// mulpd(10);
 		// sqrt(1);
 		// compute(1);
 		// sinus(1);
 		// idle(5000);
+		// memory_read(1);
+		// memory_copy(1);
+		// memory_write(1);
 
 		// Update my points again
 		for (uint32_t i = first; i <= last; i++) {
