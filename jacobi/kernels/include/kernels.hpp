@@ -86,6 +86,8 @@ static struct thread_local_memory& thread_local_memory(uint32_t my_id, uint32_t 
     return *tld;
 }
 
+#include "utils.hpp"
+
 template<typename rep, typename period>
 void addpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
@@ -95,8 +97,8 @@ void addpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t
     auto& comp_A = thread_local_memory(my_id, max_num_threads).vec_A;
 
     // should be around 2ms per call of mulpd_kernel
-    // static const std::size_t repeat = 4096 * 1024;
-    static const std::size_t repeat = 1024;
+    static const std::size_t repeat = 4096 * 1024;
+    // static const std::size_t repeat = 1024;
 
     for (std::size_t i = 0; i < 16; ++i) {
         comp_A[i] = 1. + std::numeric_limits<double>::epsilon();
@@ -105,8 +107,13 @@ void addpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t
     uint64_t loop = 0;
 
     do {
+        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
         addpd_kernel(comp_A.data(), repeat);
+        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
         loop++;
+        std::chrono::duration<double> diff = end - start;
+
+        print(diff.count(), "\n");
 
     } while (std::chrono::high_resolution_clock::now() < until);
 }

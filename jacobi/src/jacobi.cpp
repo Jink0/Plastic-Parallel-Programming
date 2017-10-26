@@ -224,7 +224,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 		std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
 
-		print(ms.count(), "\n");
+		// print(ms.count(), "\n");
 
 		// addpd(1, my_id, num_workers.at(stage));
 		// mulpd(10);
