@@ -61,8 +61,8 @@ MB(
 
 
 // Used for timing
-struct tms buffer;        
-clock_t start, end;
+std::chrono::high_resolution_clock::time_point start;
+std::chrono::high_resolution_clock::time_point end;
 
 uint32_t num_runs, grid_size, num_stages;
 
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
 		initialize_grids();
 
 		// Record start time
-		start = times(&buffer);
+		start = std::chrono::high_resolution_clock::now();
 
 		for (uint32_t stage = 0; stage < num_stages; stage++) {
 
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Record end time
-		end = times(&buffer);
+		end = std::chrono::high_resolution_clock::now();
 
 		CNVG(
 			uint32_t max_diff = 0.0;
@@ -176,12 +176,15 @@ int main(int argc, char *argv[]) {
 			}
 		)
 
+		std::chrono::duration<double> diff = end - start;
+		std::chrono::milliseconds millis = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+
 		// Print runtime
 		print("\nRun ", r, "\n",
-			  "Elapsed time: ", end - start, "\n");
+			  "Elapsed time: ", millis.count(), "ms\n");
 
 		// Record runtime
-		fputs((std::to_string(end - start) + "\n").c_str(), output_stream);
+		fputs((std::to_string(millis.count()) + "\n").c_str(), output_stream);
 	}
 }
 
@@ -210,31 +213,17 @@ void worker(uint32_t my_id, uint32_t stage) {
 		MB(my_barrier(stage);)
 		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
 
-		std::chrono::milliseconds millis(4);
+		std::chrono::milliseconds duration(1);
 
-		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-
-		addpd(millis, my_id, num_workers.at(stage));
-
-		std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-
-		
-
-		std::chrono::duration<double> diff = end - start;
-
-		std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
-
-		// print(ms.count(), "\n");
-
-		// addpd(1, my_id, num_workers.at(stage));
-		// mulpd(10);
-		// sqrt(1);
-		// compute(1);
-		// sinus(1);
-		// idle(5000);
-		// memory_read(1);
-		// memory_copy(1);
-		// memory_write(1);
+		addpd(duration, my_id, num_workers.at(stage));
+		// mulpd(duration, my_id, num_workers.at(stage));
+		// sqrt(duration, my_id, num_workers.at(stage));
+		// compute(duration, my_id, num_workers.at(stage));
+		// sinus(duration, my_id, num_workers.at(stage));
+		// idle(duration);
+		// memory_read(duration, my_id, num_workers.at(stage));
+		// memory_copy(duration, my_id, num_workers.at(stage));
+		// memory_write(duration, my_id, num_workers.at(stage));
 
 		// Update my points again
 		for (uint32_t i = first; i <= last; i++) {

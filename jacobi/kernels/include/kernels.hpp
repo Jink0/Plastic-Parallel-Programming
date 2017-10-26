@@ -2,50 +2,46 @@
 #define KERNELS_HPP
 
 #include <stdint.h>
-
-
 #include <vector>
 #include <limits>
-#include <asm_kernels.hpp>
-
 #include <memory>
 #include <chrono>
+#include <cmath>
+#include <thread>
 
-struct thread_local_memory
-{
+#include <asm_kernels.hpp>
+
+
+
+struct thread_local_memory {
     thread_local_memory()
     : vec_A(vec_size), vec_B(vec_size), vec_C(vec_size), vec_F(vec_size),
       mat_A(mat_size * mat_size), mat_B(mat_size * mat_size),
       mat_C(mat_size * mat_size), mem_buffer(mem_size)
       // firestarter_buffer(firestarter_size)
     {
-        for (std::size_t i = 0; i < vec_A.size(); ++i)
-        {
+        for (std::size_t i = 0; i < vec_A.size(); ++i) {
             vec_A[i] = static_cast<double>(i) * 0.3;
             vec_B[i] = static_cast<double>(i) * 0.2;
             vec_C[i] = static_cast<double>(i) * 0.7;
             vec_F[i] = static_cast<float>(i) * 1.42f;
         }
 
-        for (std::size_t i = 0; i < mat_A.size(); i++)
-        {
+        for (std::size_t i = 0; i < mat_A.size(); i++) {
             mat_A[i] = static_cast<double>(i + 1);
             mat_B[i] = static_cast<double>(i + 1);
             mat_C[i] = static_cast<double>(i + 1);
         }
 
-        for (std::size_t i = 0; i < mem_buffer.size(); i++)
-        {
+        for (std::size_t i = 0; i < mem_buffer.size(); i++) {
             mem_buffer[i] = i * 23 + 42;
         }
 
-        // for (std::size_t i = 0; i < firestarter_buffer.size(); ++i)
-        // {
-        //     firestarter_buffer[i] =
-        //         0.25 + static_cast<double>(i % 9267) * 0.24738995982e-4;
+        // for (std::size_t i = 0; i < firestarter_buffer.size(); ++i) {
+        //     firestarter_buffer[i] = 0.25 + static_cast<double>(i % 9267) * 0.24738995982e-4;
         // }
         
-        // log::info() << "Memory allocated and touched.";
+        // std::cout) << "Memory allocated and touched.";
     }
 
     std::vector<double> vec_A;
@@ -63,13 +59,11 @@ struct thread_local_memory
     const static std::size_t vec_size = 1024;
     const static std::size_t mat_size = 512;
 
-    // size of mem_buffer equals 64MB
-    const static std::size_t mem_size =
-        64 * 1024 * 1024 / sizeof(mem_buffer[0]);
+    // Size of mem_buffer equals 64MB
+    const static std::size_t mem_size = 64 * 1024 * 1024 / sizeof(mem_buffer[0]);
 
-    // size of mem_buffer equals 160MB
-    // const static std::size_t firestarter_size =
-    //     160 * 1024 * 1024 / sizeof(firestarter_buffer[0]);
+    // Size of mem_buffer equals 160MB
+    // const static std::size_t firestarter_size = 160 * 1024 * 1024 / sizeof(firestarter_buffer[0]);
 };
 
 static struct thread_local_memory& thread_local_memory(uint32_t my_id, uint32_t max_num_threads)
@@ -86,131 +80,213 @@ static struct thread_local_memory& thread_local_memory(uint32_t my_id, uint32_t 
     return *tld;
 }
 
-#include "utils.hpp"
+
 
 template<typename rep, typename period>
 void addpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
+    // Calculate time limit
     std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
 
-    // std::vector<double> vecta(1024);
+    // Get thread local vector
     auto& comp_A = thread_local_memory(my_id, max_num_threads).vec_A;
 
-    // should be around 2ms per call of mulpd_kernel
-    static const std::size_t repeat = 4096 * 1024;
-    // static const std::size_t repeat = 1024;
+    // Set repeat so we should be around 0.5ms per call of addpd kernel
+    static const std::size_t repeat = 92500;
 
     for (std::size_t i = 0; i < 16; ++i) {
         comp_A[i] = 1. + std::numeric_limits<double>::epsilon();
     }
 
-    uint64_t loop = 0;
+    do {
+        addpd_kernel(comp_A.data(), repeat);
+    
+    } while (std::chrono::high_resolution_clock::now() < until);
+}
+
+template<typename rep, typename period>
+void mulpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
+
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
+
+    // Get thread local vector
+    auto& comp_A = thread_local_memory(my_id, max_num_threads).vec_A;
+
+    // Set repeat so we should be around 0.5ms per call of mulpd kernel
+    static const std::size_t repeat = 92500;
+
+    for (std::size_t i = 0; i < 16; ++i) {
+        comp_A[i] = 1. + std::numeric_limits<double>::epsilon();
+    }
 
     do {
-        std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-        addpd_kernel(comp_A.data(), repeat);
-        std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
-        loop++;
-        std::chrono::duration<double> diff = end - start;
-
-        print(diff.count(), "\n");
+        mulpd_kernel(comp_A.data(), repeat);
 
     } while (std::chrono::high_resolution_clock::now() < until);
 }
 
-// template<typename rep, typename period>
-// uint64_t addpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads);
-// uint64_t mulpd(uint64_t loops);
-// uint64_t sqrt(uint64_t loops);
+template<typename rep, typename period>
+void sqrt(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
-// void compute(uint64_t max_loops);
-// void sinus(uint64_t max_loops);
-// void idle(uint64_t micros);
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
 
-// void matmul(uint64_t loops);
+    static const std::size_t repeat = 256;
+    static const std::size_t type = 2;
 
-// template <std::size_t ChunkSize = 64 * 1024 * 1024>
-// void memory_read(uint64_t max_loops) {
+    // Get thread local vectors
+    auto& comp_A = thread_local_memory(my_id, max_num_threads).vec_A;
+    auto& comp_F = thread_local_memory(my_id, max_num_threads).vec_F;
 
-//     auto& my_mem_buffer = local.mem_buffer;
+    do {
+        switch (type) {
+        case 0:
+            sqrtss_kernel(comp_F.data(), comp_F.size(), repeat);
+            break;
+        case 1:
+            sqrtps_kernel(comp_F.data(), comp_F.size(), repeat);
+            break;
+        case 2:
+            sqrtsd_kernel(comp_A.data(), comp_A.size(), repeat);
+            break;
+        case 3:
+            sqrtpd_kernel(comp_A.data(), comp_A.size(), repeat);
+            break;
+        }
+    } while (std::chrono::high_resolution_clock::now() < until);
+}
 
-//     constexpr std::size_t chunksize = ChunkSize / sizeof(my_mem_buffer[0]);
+template <typename Container>
+void compute_kernel(Container& A, Container& B, Container& C, std::size_t repeat, uint32_t my_id, uint32_t max_num_threads) {
+    
+    double m = C[0];
+    const auto size = thread_local_memory(my_id, max_num_threads).vec_size;
 
-//     static_assert(ChunkSize % sizeof(my_mem_buffer[0]) == 0,
-//                   "Given ChunkSize paramter should be divisible by sizeof(uint64_t)");
+    for (std::size_t i = 0; i < repeat; i++) {
+        for (uint64_t i = 0; i < size; i++) {
+            m += B[i] * A[i];
+        }
+        C[0] = m;
+    }
+}
 
-//     // static_assert(chunksize <= roco2::detail::thread_local_memory::mem_size,
-//     //               "Given ChunkSize parameter is to big.");
+template<typename rep, typename period>
+void compute(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
-//     uint64_t m = 0;
-//     std::size_t loops = 0;
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
 
-//     do
-//     {
-//         for (std::size_t i = 0; i < chunksize; i++)
-//         {
-//             m += my_mem_buffer[i];
-//         }
+    auto& vec_A = thread_local_memory(my_id, max_num_threads).vec_A;
+    auto& vec_B = thread_local_memory(my_id, max_num_threads).vec_B;
+    auto& vec_C = thread_local_memory(my_id, max_num_threads).vec_C;
 
-//         loops++;
-//     } while (loops < max_loops);
+    while (std::chrono::high_resolution_clock::now() <= until) {
+        if (vec_C[0] == 123.12345) {
+            vec_A[0] += 1.0;
+        }
 
-//     // just as a data dependency
-//     volatile int dd = 0;
-//     if (m == 42)
-//         dd++;
-// }
+        compute_kernel(vec_A, vec_B, vec_C, 32, my_id, max_num_threads);
+    }
+}
 
-// template <std::size_t ChunkSize = 64 * 1024 * 1024>
-// void memory_copy(uint64_t max_loops) {
+template<typename rep, typename period>
+void sinus(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
-//     auto& my_mem_buffer = local.mem_buffer;
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
 
-//     constexpr std::size_t chunksize = ChunkSize / sizeof(my_mem_buffer[0]);
+    static const std::size_t sinus_loop = 200000;
 
-//     static_assert(ChunkSize % sizeof(my_mem_buffer[0]) == 0,
-//                   "Given ChunkSize paramter should be divisible by sizeof(uint64_t)");
+    double m = 0.0;
 
-//     // static_assert(chunksize <= roco2::detail::thread_local_memory::mem_size,
-//     //               "Given ChunkSize parameter is to big.");
+    do {
+        for (std::size_t i = 0; i < sinus_loop; i++) {
+            m += sin((double) i);
+        }
 
-//     std::size_t loops = 0;
-//     do
-//     {
-//         // SCOREP_USER_REGION("memory_kernel_loop", SCOREP_USER_REGION_TYPE_FUNCTION)
-//         for (std::size_t i = 0; i < chunksize; i++)
-//         {
-//             my_mem_buffer[i] += my_mem_buffer[i];
-//         }
+    } while (std::chrono::high_resolution_clock::now() < until);
+}
 
-//         loops++;
-//     } while (loops < max_loops);
-// }
+template<typename rep, typename period>
+void idle(std::chrono::duration<rep, period> duration) {
+    std::this_thread::sleep_for(duration);
+}
 
-// template <std::size_t ChunkSize = 64 * 1024 * 1024>
-// void memory_write(uint64_t max_loops) {
+template <std::size_t ChunkSize = 64 * 1024 * 1024, typename rep, typename period>
+void memory_read(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
-//     auto& my_mem_buffer = local.mem_buffer;
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
 
-//     constexpr std::size_t chunksize = ChunkSize / sizeof(my_mem_buffer[0]);
+    auto& my_mem_buffer = thread_local_memory(my_id, max_num_threads).mem_buffer;
 
-//     static_assert(ChunkSize % sizeof(my_mem_buffer[0]) == 0,
-//                   "Given ChunkSize paramter should be divisible by sizeof(uint64_t)");
+    constexpr std::size_t chunksize = ChunkSize / sizeof(my_mem_buffer[0]);
 
-//     // static_assert(chunksize <= roco2::detail::thread_local_memory::mem_size,
-//     //               "Given ChunkSize parameter is to big.");
+    static_assert(ChunkSize % sizeof(my_mem_buffer[0]) == 0,
+                  "Given ChunkSize paramter should be divisible by sizeof(uint64_t)");
 
-//     std::size_t loops = 0;
-//     do
-//     {
-//         // SCOREP_USER_REGION("memory_kernel_loop", SCOREP_USER_REGION_TYPE_FUNCTION)
-//         for (std::size_t i = 0; i < chunksize; i++)
-//         {
-//             my_mem_buffer[i] = loops;
-//         }
+    static_assert(chunksize <= thread_local_memory::mem_size,
+                  "Given ChunkSize parameter is to big.");
 
-//         loops++;
-//     } while (loops < max_loops);
-// }
+    uint64_t m = 0;
+
+    do {
+        for (std::size_t i = 0; i < chunksize; i++) {
+            m += my_mem_buffer[i];
+        }
+    } while (std::chrono::high_resolution_clock::now() < until);
+}
+
+template <std::size_t ChunkSize = 64 * 1024 * 1024, typename rep, typename period>
+void memory_copy(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
+
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
+
+    auto& my_mem_buffer = thread_local_memory(my_id, max_num_threads).mem_buffer;
+
+    constexpr std::size_t chunksize = ChunkSize / sizeof(my_mem_buffer[0]);
+
+    static_assert(ChunkSize % sizeof(my_mem_buffer[0]) == 0,
+                  "Given ChunkSize paramter should be divisible by sizeof(uint64_t)");
+
+    static_assert(chunksize <= thread_local_memory::mem_size,
+                  "Given ChunkSize parameter is to big.");
+
+    do {
+        for (std::size_t i = 0; i < chunksize; i++) {
+            my_mem_buffer[i] += my_mem_buffer[i];
+        }
+
+    } while (std::chrono::high_resolution_clock::now() < until);
+}
+
+template <std::size_t ChunkSize = 64 * 1024 * 1024, typename rep, typename period>
+void memory_write(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
+
+    // Calculate time limit
+    std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
+
+    auto& my_mem_buffer = thread_local_memory(my_id, max_num_threads).mem_buffer;
+
+    constexpr std::size_t chunksize = ChunkSize / sizeof(my_mem_buffer[0]);
+
+    static_assert(ChunkSize % sizeof(my_mem_buffer[0]) == 0,
+                  "Given ChunkSize paramter should be divisible by sizeof(uint64_t)");
+
+    static_assert(chunksize <= thread_local_memory::mem_size,
+                  "Given ChunkSize parameter is to big.");
+
+    do {
+        for (std::size_t i = 0; i < chunksize; i++) {
+            my_mem_buffer[i] = i;
+        }
+
+    } while (std::chrono::high_resolution_clock::now() < until);
+}
+
+// void matmul(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads);
+// void firestarter(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads);
 
 #endif // KERNELS_HPP
