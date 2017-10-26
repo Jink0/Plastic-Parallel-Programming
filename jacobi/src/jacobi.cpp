@@ -215,7 +215,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 		std::chrono::milliseconds duration(1);
 
-		addpd(duration, my_id, num_workers.at(stage));
+		// addpd(duration, my_id, num_workers.at(stage));
 		// mulpd(duration, my_id, num_workers.at(stage));
 		// sqrt(duration, my_id, num_workers.at(stage));
 		// compute(duration, my_id, num_workers.at(stage));

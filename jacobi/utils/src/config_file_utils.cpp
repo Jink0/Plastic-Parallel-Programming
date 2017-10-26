@@ -3,27 +3,20 @@
 
 
 // Returns the currrent working directory
-std::string get_working_dir() {
+std::string get_current_working_dir() {
 
-    char result[PATH_MAX];
-    ssize_t count = readlink("/proc/self/exe", result, PATH_MAX);
+	char buff[FILENAME_MAX];
 
-    if (count < 0) {
-    	print("ERROR: Cannot read current working directory with readlink");
+	char *ptr = getcwd(buff, FILENAME_MAX);
+
+	if (ptr == NULL) {
+		print("ERROR: Cannot get current working directory");
     	exit(1);
-    }
-
-    std::string output = std::string(result);
-
-    // Find last instance of '/'
-	auto pos = output.rfind('/');
-
-	// Erase from there (to remove program name)
-	if (pos != std::string::npos) {
-	    output.erase(pos);
 	}
 
-    return output;
+	std::string current_working_dir(buff);
+
+	return current_working_dir;
 }
 
 
@@ -31,15 +24,10 @@ std::string get_working_dir() {
 // Creates and moves into relevant working directory. Also copies given config file
 void move_and_copy(std::string prog_dir_name, std::string config_filename) {
 
-    // Record filepath of the config file before we move so we can copy it later
-    // std::string working_dir = get_working_dir();
+    // Open the config file before we move so we can copy it later
+    std::ifstream src(get_current_working_dir() + "/" + config_filename, std::ios::binary);
 
- // 	auto pos = working_dir.rfind('/');
-	// if (pos != std::string::npos) {
-	//     working_dir.erase(pos);
-	// }
-
- //    std::ifstream  src(working_dir + "/../" + config_filename, std::ios::binary);
+    // print("\nConfig file found at:\n", get_current_working_dir() + "/" + config_filename, "\n");
 
     int res;
 
@@ -89,11 +77,20 @@ void move_and_copy(std::string prog_dir_name, std::string config_filename) {
     	exit(1);
     }
 
-    // print("\n\n\nHere: ", working_dir + "/../runs/jacobi/run" + std::to_string(i) + config_filename, "\n\n\n\n");
+    // Create new config path
+    std::string new_config_path = get_current_working_dir() + "/" + config_filename.substr(config_filename.find_last_of("/\\") + 1);
 
-    // std::ofstream  dst(working_dir + config_filename, std::ios::binary);
+    // print("\nCopying config file to: \n", new_config_path, "\n");
 
-    // dst << src.rdbuf();
+    // Open new config file
+    std::ofstream dst(new_config_path, std::ios::binary);
+
+    // Copy data
+    dst << src.rdbuf();
+
+    // Close filestreams
+    src.close();
+    dst.close();
 }
 
 

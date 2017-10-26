@@ -20,7 +20,7 @@ extern std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
 
 // Returns the currrent working directory
-std::string get_working_dir();
+std::string get_current_working_dir();
 
 // Creates and moves into relevant working directory. Also copies given config file
 void move_and_copy(std::string prog_dir_name, std::string config_filename);
