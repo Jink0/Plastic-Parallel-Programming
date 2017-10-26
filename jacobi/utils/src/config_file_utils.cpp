@@ -1,5 +1,12 @@
 #include "config_file_utils.hpp"
 
+#include <algorithm>
+
+#define NUM_KERNELS 9
+
+std::string kernel_names[NUM_KERNELS] = {"addpd", "mulpd", "sqrt", "compute", "sinus", "idle", "memory_read", "memory_copy", "memory_write"};
+// enum kernels_enum {addpd = 0, mulpd = 1, sqrt = 2, compute = 3, sinus = 4, idle = 5, memory_read = 6, memory_copy = 7, memory_write = 8};
+
 
 
 // Returns the currrent working directory
@@ -253,6 +260,38 @@ void read_config(std::map<std::string, std::string> config) {
 				pinnings.push_back(temp);
 			}
 		}
+
+		it = config.find("kernels_" + std::to_string(i));
+		check_iterator(it, config.end());
+
+		std::stringstream ss(it->second);
+
+	    std::string token;
+
+	    std::vector<uint32_t> temp2;
+
+	    while (ss >> token) {
+	    	temp2.push_back(std::distance(kernel_names, std::find(kernel_names, kernel_names + NUM_KERNELS, token)));
+	    }
+
+	    kernels.push_back(temp2);
+	    temp2.clear();
+
+		it = config.find("kernel_durations_" + std::to_string(i));
+		check_iterator(it, config.end());
+
+		std::stringstream ss2(it->second);
+
+		while (ss2 >> token) {
+	    	temp2.push_back(std::stoi(token));
+	    }
+
+	    kernel_durations.push_back(temp2);
+
+	    if (kernels.back().size() != kernel_durations.back().size()) {
+	    	print("Malformed config file!");
+			exit(1);
+	    }
 	}
 }
 

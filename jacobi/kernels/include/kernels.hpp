@@ -25,8 +25,8 @@ void addpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t
     // Get thread local vector
     auto& comp_A = thread_local_memory(my_id, max_num_threads).vec_A;
 
-    // Set repeat so we should be around 0.5ms per call of addpd kernel
-    static const std::size_t repeat = 92500;
+    // Set repeat so we should be around 0.5 microseconds per call of addpd kernel
+    static const std::size_t repeat = 100;
 
     for (std::size_t i = 0; i < 16; ++i) {
         comp_A[i] = 1. + std::numeric_limits<double>::epsilon();
@@ -49,8 +49,8 @@ void mulpd(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t
     // Get thread local vector
     auto& comp_A = thread_local_memory(my_id, max_num_threads).vec_A;
 
-    // Set repeat so we should be around 0.5ms per call of mulpd kernel
-    static const std::size_t repeat = 92500;
+    // Set repeat so we should be around 0.5 microseconds per call of mulpd kernel
+    static const std::size_t repeat = 100;
 
     for (std::size_t i = 0; i < 16; ++i) {
         comp_A[i] = 1. + std::numeric_limits<double>::epsilon();
@@ -157,6 +157,11 @@ void sinus(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t
 template<typename rep, typename period>
 void idle(std::chrono::duration<rep, period> duration) {
     std::this_thread::sleep_for(duration);
+}
+
+template<typename rep, typename period>
+void idle(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
+    idle(duration);
 }
 
 

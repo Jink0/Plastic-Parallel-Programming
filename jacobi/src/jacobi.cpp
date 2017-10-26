@@ -36,6 +36,8 @@ void initialize_grids();
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
 void worker(uint32_t my_id, uint32_t stage);
 
+void execute_kernel(uint32_t stage, uint32_t id);
+
 // My counter barrier
 MB(void my_barrier(uint32_t stage);)
 
@@ -64,13 +66,16 @@ MB(
 std::chrono::high_resolution_clock::time_point start;
 std::chrono::high_resolution_clock::time_point end;
 
+// Experiment parameters
 uint32_t num_runs, grid_size, num_stages;
 
+// Stage parameters
 std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, strip_size;
-
-std::vector<std::vector<double>> grid1, grid2;
-
+std::vector<std::vector<uint32_t>> kernels, kernel_durations;
 std::vector<std::vector<std::vector<uint32_t>>> pinnings;
+
+// Experiment data
+std::vector<std::vector<double>> grid1, grid2;
 
 
 
@@ -206,6 +211,9 @@ void worker(uint32_t my_id, uint32_t stage) {
 		for (uint32_t i = first; i <= last; i++) {
 			for (uint32_t j = 1; j <= grid_size; j++) {
 				grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;
+
+				// Execute kernel functions
+				execute_kernel(stage, my_id);
 			}
 		}
 
@@ -213,22 +221,13 @@ void worker(uint32_t my_id, uint32_t stage) {
 		MB(my_barrier(stage);)
 		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
 
-		std::chrono::milliseconds duration(1);
-
-		// addpd(duration, my_id, num_workers.at(stage));
-		// mulpd(duration, my_id, num_workers.at(stage));
-		// sqrt(duration, my_id, num_workers.at(stage));
-		// compute(duration, my_id, num_workers.at(stage));
-		// sinus(duration, my_id, num_workers.at(stage));
-		// idle(duration);
-		// memory_read(duration, my_id, num_workers.at(stage));
-		// memory_copy(duration, my_id, num_workers.at(stage));
-		// memory_write(duration, my_id, num_workers.at(stage));
-
 		// Update my points again
 		for (uint32_t i = first; i <= last; i++) {
 			for (uint32_t j = 1; j <= grid_size; j++) {
 				grid1[i][j] = (grid2[i - 1][j] + grid2[i + 1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;
+
+				// Execute kernel functions
+				execute_kernel(stage, my_id);
 			}
 		}
 
@@ -256,6 +255,54 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 			max_difference_global[stage][my_id] = max_diff;
 		)
+	}
+}
+
+
+
+void execute_kernel(uint32_t stage, uint32_t id) {
+	// Execute kernel functions
+	for (uint32_t i = 0; i < kernels.at(stage).size(); i++) {
+
+		std::chrono::microseconds duration(kernel_durations.at(stage).at(i));
+
+		switch(kernels.at(stage).at(i)) {
+			case 0:
+				addpd(duration, id, num_workers.at(stage));
+				break;
+
+			case 1:
+				mulpd(duration, id, num_workers.at(stage));
+				break;
+
+			case 2:
+				sqrt(duration, id, num_workers.at(stage));
+				break;
+
+			case 3:
+				compute(duration, id, num_workers.at(stage));
+				break;
+
+			case 4:
+				sinus(duration, id, num_workers.at(stage));
+				break;
+
+			case 5:
+				idle(duration);
+				break;
+
+			case 6:
+				memory_read(duration, id, num_workers.at(stage));
+				break;
+
+			case 7:
+				memory_copy(duration, id, num_workers.at(stage));
+				break;
+
+			case 8:
+				memory_write(duration, id, num_workers.at(stage));
+				break;
+		}
 	}
 }
 

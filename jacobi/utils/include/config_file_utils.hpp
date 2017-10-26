@@ -15,6 +15,7 @@
 
 extern uint32_t num_runs, grid_size, num_stages;
 extern std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, strip_size;
+extern std::vector<std::vector<uint32_t>> kernels, kernel_durations;
 extern std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
 
