@@ -22,6 +22,12 @@
 #define PTB( x )
 #endif
 
+#ifdef EXECUTE_KERNELS
+#define EXCK( x ) x
+#else
+#define EXCK( x )
+#endif
+
 #ifdef CONVERGE_TEST
 #define CNVG( x ) x
 #else
@@ -39,26 +45,21 @@ void worker(uint32_t my_id, uint32_t stage);
 void execute_kernel(uint32_t stage, uint32_t id);
 
 // My counter barrier
-MB(void my_barrier(uint32_t stage);)
+void my_barrier(uint32_t stage);
 
 
 
+// Set of pthread barriers (one for each stage)
+std::vector<pthread_barrier_t> pthread_barriers;
 
-PTB(
-	// Set of pthread barriers (one for each stage)
-	std::vector<pthread_barrier_t> pthread_barriers;
-)
+// Mutex semaphore for my barrier
+pthread_mutex_t my_barrier_mutex;
 
-MB(
-	// Mutex semaphore for my barrier
-	pthread_mutex_t my_barrier_mutex;
+// Condition variable for leaving my barrier
+pthread_cond_t go;
 
-	// Condition variable for leaving my barrier
-	pthread_cond_t go;
-
-	// Count of the number who have arrived at my barrier   
-	uint32_t num_arrived = 0;
-)
+// Count of the number who have arrived at my barrier   
+uint32_t num_arrived = 0;
 
 
 
@@ -77,12 +78,8 @@ std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 // Experiment data
 std::vector<std::vector<double>> grid1, grid2;
 
-
-
-CNVG(
-	// Used for convergence test
-	std::vector<std::vector<double>> max_difference_global;
-)
+// Used for convergence test
+std::vector<std::vector<double>> max_difference_global;
 
 
 
@@ -109,8 +106,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-	
-
 	//  Calculate strip sizes
 	for (uint32_t i = 0; i < num_stages; i++) {
 		strip_size.push_back(grid_size / num_workers.at(i));
@@ -122,30 +117,23 @@ int main(int argc, char *argv[]) {
   	// Create thread handles
 	std::vector<std::thread> threads(max_num_workers);
 
-	CNVG(
-		// Set global max difference vector size
-		max_difference_global.resize(num_stages);
+	// Set global max difference vector size
+	max_difference_global.resize(num_stages);
 
-		for (uint32_t i = 0; i < num_stages; i++) {
-			max_difference_global.at(i).resize(num_workers.at(i));
-		}
-	)
+	for (uint32_t i = 0; i < num_stages; i++) {
+		max_difference_global.at(i).resize(num_workers.at(i));
+	}
 
-	PTB(
-		// Initialize pthread barriers
-		for (uint32_t i = 0; i < num_stages; i++) {
-			pthread_barrier_t b;
-			pthread_barrier_init(&b, NULL, num_workers.at(i));
-			pthread_barriers.push_back(b);
-		}
-	)
+	// Initialize pthread barriers
+	for (uint32_t i = 0; i < num_stages; i++) {
+		pthread_barrier_t b;
+		pthread_barrier_init(&b, NULL, num_workers.at(i));
+		pthread_barriers.push_back(b);
+	}
 
-	
-	MB(
-		// Initialize mutex and condition variable for my barrier
-		pthread_mutex_init(&my_barrier_mutex, NULL);
-		pthread_cond_init(&go, NULL);
-	)
+	// Initialize mutex and condition variable for my barrier
+	pthread_mutex_init(&my_barrier_mutex, NULL);
+	pthread_cond_init(&go, NULL);
 
 	for (uint32_t r = 1; r < num_runs + 1; r++) {
 
@@ -213,7 +201,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 				grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;
 
 				// Execute kernel functions
-				execute_kernel(stage, my_id);
+				EXCK(execute_kernel(stage, my_id);)
 			}
 		}
 
@@ -227,7 +215,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 				grid1[i][j] = (grid2[i - 1][j] + grid2[i + 1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;
 
 				// Execute kernel functions
-				execute_kernel(stage, my_id);
+				EXCK(execute_kernel(stage, my_id);)
 			}
 		}
 
@@ -344,7 +332,7 @@ void initialize_grids() {
 
 
 // Counter barrier
-MB(void my_barrier(uint32_t stage) {
+void my_barrier(uint32_t stage) {
 
 	pthread_mutex_lock(&my_barrier_mutex);
 
@@ -361,4 +349,4 @@ MB(void my_barrier(uint32_t stage) {
 	}
 
   	pthread_mutex_unlock(&my_barrier_mutex);
-})
+}
