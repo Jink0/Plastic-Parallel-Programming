@@ -3,27 +3,29 @@
 #include <stdint.h>
 #include <assert.h>
 
-uint64_t mulpd_kernel(double *buffer, uint64_t repeat)
-{
-    unsigned long long passes,addr;
-    unsigned long long a,b,c,d;
-    uint64_t ret=0;
+uint64_t mulpd_kernel(double *buffer, uint64_t repeat) {
 
-    passes=repeat/32; // 32 128-Bit accesses in inner loop
+    unsigned long long passes, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
 
-    addr=(unsigned long long) buffer;
+    passes = repeat / 32; // 32 128-Bit accesses in inner loop
+
+    addr = (unsigned long long) buffer;
 
     if (!passes) return ret;
+
     /*
      * Input:  RAX: addr (pointer to the buffer)
      *         RBX: passes (number of iterations)
      *         RCX: length (total number of accesses)
      */
+
     __asm__ __volatile__(
         "mov %%rax,%%r9;"   // addr
         "mov %%rbx,%%r10;"  // passes
 
-        //initialize registers
+        // Initialize registers
         "movaps 0(%%r9), %%xmm0;"
         "movaps 16(%%r9), %%xmm1;"
         "movaps 32(%%r9), %%xmm2;"
@@ -85,34 +87,36 @@ uint64_t mulpd_kernel(double *buffer, uint64_t repeat)
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes)
         : "%r9", "%r10", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-
     );
-    ret=passes;
+
+    ret = passes;
 
     return ret;
 }
 
-uint64_t addpd_kernel(double *buffer, uint64_t repeat)
-{
-    unsigned long long passes,addr;
-    unsigned long long a,b,c,d;
-    uint64_t ret=0;
+uint64_t addpd_kernel(double *buffer, uint64_t repeat) {
 
-    passes=repeat/32; // 32 128-Bit accesses in inner loop
+    unsigned long long passes, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
 
-    addr=(unsigned long long) buffer;
+    passes = repeat / 32; // 32 128-Bit accesses in inner loop
+
+    addr = (unsigned long long) buffer;
 
     if (!passes) return ret;
+
     /*
      * Input:  RAX: addr (pointer to the buffer)
      *         RBX: passes (number of iterations)
      *         RCX: length (total number of accesses)
      */
+
     __asm__ __volatile__(
         "mov %%rax,%%r9;"   // addr
         "mov %%rbx,%%r10;"  // passes
 
-        //initialize registers
+        // Initialize registers
         "movaps 0(%%r9), %%xmm0;"
         "movaps 16(%%r9), %%xmm1;"
         "movaps 32(%%r9), %%xmm2;"
@@ -174,42 +178,46 @@ uint64_t addpd_kernel(double *buffer, uint64_t repeat)
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes)
         : "%r9", "%r10", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-
     );
-    ret=passes;
+
+    ret = passes;
 
     return ret;
 }
 
-uint64_t sqrtss_kernel(float *buffer, uint64_t elems, uint64_t repeat)
-{
-    unsigned long long passes,length,addr;
-    unsigned long long a,b,c,d;
-    uint64_t ret=0;
+uint64_t sqrtss_kernel(float *buffer, uint64_t elems, uint64_t repeat) {
+
+    unsigned long long passes, length, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
+
     #ifdef REGONLY
-    assert(elems >= 256/sizeof(*buffer));
+    assert(elems >= 256 / sizeof(*buffer));
     #endif
 
-    passes=elems/64; // 32 128-Bit accesses in inner loop
-    length=passes*32*repeat;
-    addr=(unsigned long long) buffer;
+    addr   = (unsigned long long) buffer;
+    passes = elems / 64;
+    length = passes * 32 * repeat;
+    
 
     if (!passes) return ret;
+
     /*
      * Input:  RAX: addr (pointer to the buffer)
      *         RBX: passes (number of iterations)
      *         RCX: length (total number of accesses)
      */
+
     __asm__ __volatile__(
         "mfence;"
         "mov %%rax,%%r9;"   // addr
         "mov %%rbx,%%r10;"  // passes
         "mov %%rcx,%%r15;"  // length
-        "mov %%r9,%%r14;"   // store addr
-        "mov %%r10,%%r8;"   // store passes
-        "mov %%r15,%%r13;"  // store length
+        "mov %%r9,%%r14;"   // Store addr
+        "mov %%r10,%%r8;"   // Store passes
+        "mov %%r15,%%r13;"  // Store length
 
-        //initialize registers
+        // Initialize registers
         "movaps 0(%%r9), %%xmm0;"
         #ifdef REGONLY
         "movaps 0(%%r9), %%xmm8;"
@@ -301,53 +309,56 @@ uint64_t sqrtss_kernel(float *buffer, uint64_t elems, uint64_t repeat)
         #endif
         "add $512,%%r9;"
         "sub $1,%%r10;"
-        "jnz _skip_reset_sqrt_ss;" // reset buffer if the end is reached
-        "mov %%r14,%%r9;"   //restore addr
-        "mov %%r8,%%r10;"   //restore passes
+        "jnz _skip_reset_sqrt_ss;" // Reset buffer if the end is reached
+        "mov %%r14,%%r9;"          // Restore addr
+        "mov %%r8,%%r10;"          // Restore passes
         "_skip_reset_sqrt_ss:"
         "sub $32,%%r15;"
         "jnz _work_loop_sqrt_ss;"
 
-        "mov %%r13,%%rcx;" //restore length
+        "mov %%r13,%%rcx;" // Restore length
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes), "c" (length)
         : "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-
     );
-    ret=c;
+
+    ret = c;
 
     return ret;
 }
 
-uint64_t sqrtsd_kernel(double *buffer, uint64_t elems, uint64_t repeat)
-{
-    unsigned long long passes,length,addr;
-    unsigned long long a,b,c,d;
-    uint64_t ret=0;
+uint64_t sqrtsd_kernel(double *buffer, uint64_t elems, uint64_t repeat) {
+
+    unsigned long long passes, length, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
+
     #ifdef REGONLY
-    assert(elems >= 256/sizeof(*buffer));
+    assert(elems >= 256 / sizeof(*buffer));
     #endif
 
-    passes=elems/64; // 32 128-Bit accesses in inner loop
-    length=passes*32*repeat;
-    addr=(unsigned long long) buffer;
-
+    addr   = (unsigned long long) buffer;
+    passes = elems / 64;
+    length = passes * 32 * repeat;
+    
     if (!passes) return ret;
+
     /*
      * Input:  RAX: addr (pointer to the buffer)
      *         RBX: passes (number of iterations)
      *         RCX: length (total number of accesses)
      */
+
     __asm__ __volatile__(
         "mfence;"
         "mov %%rax,%%r9;"   // addr
         "mov %%rbx,%%r10;"  // passes
         "mov %%rcx,%%r15;"  // length
-        "mov %%r9,%%r14;"   // store addr
-        "mov %%r10,%%r8;"   // store passes
-        "mov %%r15,%%r13;"  // store length
+        "mov %%r9,%%r14;"   // Store addr
+        "mov %%r10,%%r8;"   // Store passes
+        "mov %%r15,%%r13;"  // Store length
 
-        //initialize registers
+        // Initialize registers
         "movapd 0(%%r9), %%xmm0;"
         #ifdef REGONLY
         "movapd 0(%%r9), %%xmm8;"
@@ -439,53 +450,56 @@ uint64_t sqrtsd_kernel(double *buffer, uint64_t elems, uint64_t repeat)
         #endif
         "add $512,%%r9;"
         "sub $1,%%r10;"
-        "jnz _skip_reset_sqrt_sd;" // reset buffer if the end is reached
-        "mov %%r14,%%r9;"   //restore addr
-        "mov %%r8,%%r10;"   //restore passes
+        "jnz _skip_reset_sqrt_sd;" // Reset buffer if the end is reached
+        "mov %%r14,%%r9;"          // Restore addr
+        "mov %%r8,%%r10;"          // Restore passes
         "_skip_reset_sqrt_sd:"
         "sub $32,%%r15;"
         "jnz _work_loop_sqrt_sd;"
 
-        "mov %%r13,%%rcx;" //restore length
+        "mov %%r13,%%rcx;" // Restore length
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes), "c" (length)
         : "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-
     );
-    ret=c;
+
+    ret = c;
 
     return ret;
 }
 
-uint64_t sqrtps_kernel(float *buffer, uint64_t elems, uint64_t repeat)
-{
-    unsigned long long passes,length,addr;
-    unsigned long long a,b,c,d;
-    uint64_t ret=0;
+uint64_t sqrtps_kernel(float *buffer, uint64_t elems, uint64_t repeat) {
+
+    unsigned long long passes, length, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
+
     #ifdef REGONLY
-    assert(elems >= 256/sizeof(*buffer));
+    assert(elems >= 256 / sizeof(*buffer));
     #endif
 
-    passes=elems/64; // 32 128-Bit accesses in inner loop
-    length=passes*32*repeat;
-    addr=(unsigned long long) buffer;
+    addr   = (unsigned long long) buffer;
+    passes = elems / 64;
+    length = passes * 32 * repeat;
 
     if (!passes) return ret;
+
     /*
      * Input:  RAX: addr (pointer to the buffer)
      *         RBX: passes (number of iterations)
      *         RCX: length (total number of accesses)
      */
+
     __asm__ __volatile__(
         "mfence;"
         "mov %%rax,%%r9;"   // addr
         "mov %%rbx,%%r10;"  // passes
         "mov %%rcx,%%r15;"  // length
-        "mov %%r9,%%r14;"   // store addr
-        "mov %%r10,%%r8;"   // store passes
-        "mov %%r15,%%r13;"  // store length
+        "mov %%r9,%%r14;"   // Store addr
+        "mov %%r10,%%r8;"   // Store passes
+        "mov %%r15,%%r13;"  // Store length
 
-        //initialize registers
+        // Initialize registers
         "movaps 0(%%r9), %%xmm0;"
         #ifdef REGONLY
         "movaps 0(%%r9), %%xmm8;"
@@ -577,53 +591,57 @@ uint64_t sqrtps_kernel(float *buffer, uint64_t elems, uint64_t repeat)
         #endif
         "add $512,%%r9;"
         "sub $1,%%r10;"
-        "jnz _skip_reset_sqrt_ps;" // reset buffer if the end is reached
-        "mov %%r14,%%r9;"   //restore addr
-        "mov %%r8,%%r10;"   //restore passes
+        "jnz _skip_reset_sqrt_ps;" // Reset buffer if the end is reached
+        "mov %%r14,%%r9;"          // Restore addr
+        "mov %%r8,%%r10;"          // Restore passes
         "_skip_reset_sqrt_ps:"
         "sub $32,%%r15;"
         "jnz _work_loop_sqrt_ps;"
 
-        "mov %%r13,%%rcx;" //restore length
+        "mov %%r13,%%rcx;" // Restore length
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes), "c" (length)
         : "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
 
     );
-    ret=4*c;
+
+    ret = 4 * c;
 
     return ret;
 }
 
-uint64_t sqrtpd_kernel(double *buffer, uint64_t elems, uint64_t repeat)
-{
-    unsigned long long passes,length,addr;
-    unsigned long long a,b,c,d;
-    uint64_t ret=0;
+uint64_t sqrtpd_kernel(double *buffer, uint64_t elems, uint64_t repeat) {
+
+    unsigned long long passes, length, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
+
     #ifdef REGONLY
-    assert(elems >= 256/sizeof(*buffer));
+    assert(elems >= 256 / sizeof(*buffer));
     #endif
 
-    passes=elems/64; // 32 128-Bit accesses in inner loop
-    length=passes*32*repeat;
-    addr=(unsigned long long) buffer;
-
+    addr   = (unsigned long long) buffer;
+    passes = elems / 64;
+    length = passes * 32 * repeat;
+    
     if (!passes) return ret;
+
     /*
      * Input:  RAX: addr (pointer to the buffer)
      *         RBX: passes (number of iterations)
      *         RCX: length (total number of accesses)
      */
+
     __asm__ __volatile__(
         "mfence;"
         "mov %%rax,%%r9;"   // addr
         "mov %%rbx,%%r10;"  // passes
         "mov %%rcx,%%r15;"  // length
-        "mov %%r9,%%r14;"   // store addr
-        "mov %%r10,%%r8;"   // store passes
-        "mov %%r15,%%r13;"  // store length
+        "mov %%r9,%%r14;"   // Store addr
+        "mov %%r10,%%r8;"   // Store passes
+        "mov %%r15,%%r13;"  // Store length
 
-        //initialize registers
+        // Initialize registers
         "movaps 0(%%r9), %%xmm0;"
         #ifdef REGONLY
         "movapd 0(%%r9), %%xmm8;"
@@ -715,20 +733,19 @@ uint64_t sqrtpd_kernel(double *buffer, uint64_t elems, uint64_t repeat)
         #endif
         "add $512,%%r9;"
         "sub $1,%%r10;"
-        "jnz _skip_reset_sqrt_pd;" // reset buffer if the end is reached
-        "mov %%r14,%%r9;"   //restore addr
-        "mov %%r8,%%r10;"   //restore passes
+        "jnz _skip_reset_sqrt_pd;" // Reset buffer if the end is reached
+        "mov %%r14,%%r9;"          // Restore addr
+        "mov %%r8,%%r10;"          // Restore passes
         "_skip_reset_sqrt_pd:"
         "sub $32,%%r15;"
         "jnz _work_loop_sqrt_pd;"
 
-        "mov %%r13,%%rcx;" //restore length
+        "mov %%r13,%%rcx;" // Restore length
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes), "c" (length)
         : "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-
     );
-    ret=2*c;
+    ret = 2 * c;
 
     return ret;
 }
