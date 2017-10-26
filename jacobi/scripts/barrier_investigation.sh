@@ -40,6 +40,8 @@ echo "num_stages: \"1\"" >> $FILENAME
 echo "num_iterations_0: \"5000\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
 echo "pinnings_0: \"\"" >> $FILENAME
+echo "kernels_0: \"\"" >> $FILENAME
+echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "grid_size: \"1024\"" >> $FILENAME
 echo "num_workers_0: \"8\"" >> $FILENAME
 
