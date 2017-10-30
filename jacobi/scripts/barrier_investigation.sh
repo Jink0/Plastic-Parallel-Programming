@@ -53,8 +53,8 @@ sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins 
 START=$(date +%s.%N)
 
 
-make clean
-make flags="-DDETAILED_METRICS -DCONVERGE_TEST" main
+make clean > /dev/null
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -72,8 +72,8 @@ do
 done
 
 
-make clean
-make flags="-DDETAILED_METRICS -DCONVERGE_TEST -DMYBARRIER" main
+make clean > /dev/null
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST -DMYBARRIER" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -91,8 +91,8 @@ do
 done
 
 
-make clean
-make flags="-DDETAILED_METRICS -DCONVERGE_TEST -DPTHREADBARRIER" main
+make clean > /dev/null
+make flags="-DDETAILED_METRICS -DCONVERGE_TEST -DPTHREADBARRIER" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -115,4 +115,4 @@ DIFF=$(echo "$END - $START" | bc)
 
 sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Barrier tests have completed! Time taken: $DIFF seconds"
 
-sudo scripts/update-motd.sh "" >> /dev/null
+sudo scripts/update-motd.sh "" > /dev/null

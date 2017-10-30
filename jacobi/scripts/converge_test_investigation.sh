@@ -53,8 +53,8 @@ sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins 
 START=$(date +%s.%N)
 
 
-make clean
-make flags="-DDETAILED_METRICS -DPTHREADBARRIER" main
+make clean > /dev/null
+make flags="-DDETAILED_METRICS -DPTHREADBARRIER" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -64,7 +64,7 @@ do
 	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
-		bin/jacobi $FILENAME
+		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
 	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
@@ -72,8 +72,8 @@ do
 done
 
 
-make clean
-make flags="-DDETAILED_METRICS -DPTHREADBARRIER -DCONVERGE_TEST" main
+make clean > /dev/null
+make flags="-DDETAILED_METRICS -DPTHREADBARRIER -DCONVERGE_TEST" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -83,7 +83,7 @@ do
 	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
-		bin/jacobi $FILENAME >> /dev/null
+		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
 	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
@@ -96,4 +96,4 @@ DIFF=$(echo "$END - $START" | bc)
 
 sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Convergence tests have completed! Time taken: $DIFF seconds"
 
-sudo scripts/update-motd.sh "" >> /dev/null
+sudo scripts/update-motd.sh "" > /dev/null
