@@ -2,10 +2,11 @@
 
 #include <algorithm>
 
-#define NUM_KERNELS 9
 
-std::string kernel_names[NUM_KERNELS] = {"addpd", "mulpd", "sqrt", "compute", "sinus", "idle", "memory_read", "memory_copy", "memory_write"};
-// enum kernels_enum {addpd = 0, mulpd = 1, sqrt = 2, compute = 3, sinus = 4, idle = 5, memory_read = 6, memory_copy = 7, memory_write = 8};
+
+#define NUM_KERNELS 12
+
+std::string kernel_names[NUM_KERNELS] = {"none", "addpd", "mulpd", "sqrt", "compute", "sinus", "idle", "memory_read", "memory_copy", "memory_write", "shared_mem_read_small", "shared_mem_read_large"};
 
 
 
@@ -271,7 +272,14 @@ void read_config(std::map<std::string, std::string> config) {
 	    std::vector<uint32_t> temp2;
 
 	    while (ss >> token) {
-	    	temp2.push_back(std::distance(kernel_names, std::find(kernel_names, kernel_names + NUM_KERNELS, token)));
+	    	uint32_t kernel = std::distance(kernel_names, std::find(kernel_names, kernel_names + NUM_KERNELS, token));
+
+	    	if (kernel == NUM_KERNELS) {
+	    		print("Malformed config file!");
+				exit(1);
+	    	}
+
+	    	temp2.push_back(kernel);
 	    }
 
 	    kernels.push_back(temp2);
@@ -287,11 +295,59 @@ void read_config(std::map<std::string, std::string> config) {
 	    }
 
 	    kernel_durations.push_back(temp2);
+	    temp2.clear();
 
-	    if (kernels.back().size() != kernel_durations.back().size()) {
+		it = config.find("kernel_repeats_" + std::to_string(i));
+		check_iterator(it, config.end());
+
+		std::stringstream ss3(it->second);
+
+		while (ss3 >> token) {
+	    	temp2.push_back(std::stoi(token));
+	    }
+
+	    kernel_repeats.push_back(temp2);
+
+	    if (kernels.back().size() != kernel_durations.back().size() && kernels.back().size() != kernel_repeats.back().size()) {
 	    	print("Malformed config file!");
 			exit(1);
 	    }
+
+	    if (kernel_durations.back().size() > 0 && kernel_repeats.back().size() > 0) {
+	    	print("Malformed config file!");
+			exit(1);
+	    }
+
+	    if (i == 0) {
+	    	if (kernel_durations.back().size() > 0) {
+	    		use_set_num_repeats = 0;
+
+	    	} else {
+	    		use_set_num_repeats = 1;
+	    	}
+
+	    } else {
+	    	if (kernel_durations.back().size() > 0) {
+	    		if (use_set_num_repeats != 0) {
+	    			print("Malformed config file!");
+					exit(1);
+	    		}
+
+	    	} else {
+	    		if (use_set_num_repeats != 1) {
+	    			print("Malformed config file!");
+					exit(1);
+	    		}
+	    	}
+	    }
+	}
+
+	for (uint32_t i = 0; i < num_stages; i++) {
+		if (grid_size % num_workers.at(i) != 0) {
+			print("Malformed config file!");
+			print("Number of workers shoud cleanly divide gridsize\nGrid Size: ", grid_size, "\nStage: ", i, "\nNumber of Workers: ", num_workers.at(i), "\n\n");
+			exit(1);
+		}
 	}
 }
 
@@ -324,5 +380,31 @@ void print_params() {
 		    	print("\n");
 		    }
 		}
+
+		print("Kernels:              ");
+
+		for (uint32_t j = 0; j < kernels.at(i).size(); j++) {
+			print(kernel_names[kernels.at(i).at(j)], j != kernels.at(i).size() - 1 ? ", " : "");
+
+		}
+
+		if (use_set_num_repeats == 0) {
+			print("\nKernel durations:     ");
+
+			for (uint32_t j = 0; j < kernel_durations.at(i).size(); j++) {
+				print(kernel_durations.at(i).at(j), j != kernel_durations.at(i).size() - 1 ? ", " : "");
+
+			}
+			
+		} else {
+			print("\nKernel repeats:       ");
+
+			for (uint32_t j = 0; j < kernel_repeats.at(i).size(); j++) {
+				print(kernel_repeats.at(i).at(j), j != kernel_repeats.at(i).size() - 1 ? ", " : "");
+
+			}
+		}
+
+		print("\n\n\n");
 	}
 }

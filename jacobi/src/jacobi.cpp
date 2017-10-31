@@ -22,6 +22,18 @@
 #define PTB( x )
 #endif
 
+#ifdef BASIC_KERNEL_SMALL
+#define BSCS( x ) x
+#else
+#define BSCS( x )
+#endif
+
+#ifdef BASIC_KERNEL_LARGE
+#define BSCL( x ) x
+#else
+#define BSCL( x )
+#endif
+
 #ifdef EXECUTE_KERNELS
 #define EXCK( x ) x
 #else
@@ -42,7 +54,7 @@ void initialize_grids();
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
 void worker(uint32_t my_id, uint32_t stage);
 
-void execute_kernel(uint32_t stage, uint32_t id);
+void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j);
 
 // My counter barrier
 void my_barrier(uint32_t stage);
@@ -68,11 +80,11 @@ std::chrono::high_resolution_clock::time_point start;
 std::chrono::high_resolution_clock::time_point end;
 
 // Experiment parameters
-uint32_t num_runs, grid_size, num_stages;
+uint32_t num_runs, grid_size, num_stages, use_set_num_repeats;
 
 // Stage parameters
 std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, strip_size;
-std::vector<std::vector<uint32_t>> kernels, kernel_durations;
+std::vector<std::vector<uint32_t>> kernels, kernel_durations, kernel_repeats;
 std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
 // Experiment data
@@ -190,18 +202,28 @@ void worker(uint32_t my_id, uint32_t stage) {
 	force_affinity_set(pinnings.at(stage).at(my_id));
 
 	// Determine first and last rows of my strip of the grids
-	uint32_t first = my_id * strip_size.at(stage) + 1;
-	uint32_t last = first + strip_size.at(stage) - 1;
+	uint32_t first = my_id * strip_size.at(stage) + 2;
+	uint32_t last = first + strip_size.at(stage);
 
-	for (uint32_t iter = 1; iter <= num_iterations.at(stage); iter++) {
+	for (uint32_t iter = 0; iter < num_iterations.at(stage); iter++) {
 
 		// Update my points
-		for (uint32_t i = first; i <= last; i++) {
-			for (uint32_t j = 1; j <= grid_size; j++) {
-				grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;
+		for (uint32_t i = first; i < last; i++) {
+			for (uint32_t j = 2; j < grid_size + 2; j++) {
+				BSCS(grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;)
+
+				BSCL(
+					grid2[i][j] =  0;
+					grid2[i][j] += (grid1[i - 2][j + 2] + grid1[i - 1][j + 2] + grid1[i][j + 2] + grid1[i + 1][j + 2] + grid1[i + 2][j + 2]);
+					grid2[i][j] += (grid1[i - 2][j + 1] + grid1[i - 1][j + 1] + grid1[i][j + 1] + grid1[i + 1][j + 1] + grid1[i + 2][j + 1]);
+					grid2[i][j] += (grid1[i - 2][j] + grid1[i - 1][j] + grid1[i + 1][j] + grid1[i + 2][j]);
+					grid2[i][j] += (grid1[i - 2][j - 1] + grid1[i - 1][j - 1] + grid1[i][j - 1] + grid1[i + 1][j - 1] + grid1[i + 2][j - 1]);
+					grid2[i][j] += (grid1[i - 2][j - 2] + grid1[i - 1][j - 2] + grid1[i][j - 2] + grid1[i + 1][j - 2] + grid1[i + 2][j - 2]);
+					grid2[i][j] =  grid2[i][j] / 24;
+					)
 
 				// Execute kernel functions
-				EXCK(execute_kernel(stage, my_id);)
+				EXCK(execute_kernels(stage, my_id, i, j);)
 			}
 		}
 
@@ -210,12 +232,22 @@ void worker(uint32_t my_id, uint32_t stage) {
 		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
 
 		// Update my points again
-		for (uint32_t i = first; i <= last; i++) {
-			for (uint32_t j = 1; j <= grid_size; j++) {
-				grid1[i][j] = (grid2[i - 1][j] + grid2[i + 1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;
+		for (uint32_t i = first; i < last; i++) {
+			for (uint32_t j = 2; j < grid_size + 2; j++) {
+				BSCS(grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;)
+
+				BSCL(
+					grid2[i][j] =  0;
+					grid2[i][j] += (grid1[i - 2][j + 2] + grid1[i - 1][j + 2] + grid1[i][j + 2] + grid1[i + 1][j + 2] + grid1[i + 2][j + 2]);
+					grid2[i][j] += (grid1[i - 2][j + 1] + grid1[i - 1][j + 1] + grid1[i][j + 1] + grid1[i + 1][j + 1] + grid1[i + 2][j + 1]);
+					grid2[i][j] += (grid1[i - 2][j] + grid1[i - 1][j] + grid1[i + 1][j] + grid1[i + 2][j]);
+					grid2[i][j] += (grid1[i - 2][j - 1] + grid1[i - 1][j - 1] + grid1[i][j - 1] + grid1[i + 1][j - 1] + grid1[i + 2][j - 1]);
+					grid2[i][j] += (grid1[i - 2][j - 2] + grid1[i - 1][j - 2] + grid1[i][j - 2] + grid1[i + 1][j - 2] + grid1[i + 2][j - 2]);
+					grid2[i][j] =  grid2[i][j] / 24;
+					)
 
 				// Execute kernel functions
-				EXCK(execute_kernel(stage, my_id);)
+				EXCK(execute_kernels(stage, my_id, i, j);)
 			}
 		}
 
@@ -227,9 +259,9 @@ void worker(uint32_t my_id, uint32_t stage) {
 			// Simulate a convergence test. Compute the maximum difference in my strip and set global variable
 		  	double max_diff = 0.0;
 
-			for (uint32_t i = first; i <= last; i++) {
-				for (uint32_t j = 1; j <= grid_size; j++) {
-					uint32_t temp = grid1[i][j]-grid2[i][j];
+			for (uint32_t i = first; i < last; i++) {
+				for (uint32_t j = 2; j < grid_size + 2; j++) {
+					uint32_t temp = grid1[i][j] - grid2[i][j];
 
 					if (temp < 0) {
 						temp = -temp;
@@ -248,48 +280,115 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 
 
-void execute_kernel(uint32_t stage, uint32_t id) {
+enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11};
+
+void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 	// Execute kernel functions
-	for (uint32_t i = 0; i < kernels.at(stage).size(); i++) {
+	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
-		std::chrono::microseconds duration(kernel_durations.at(stage).at(i));
+		if (use_set_num_repeats == 0) {
 
-		switch(kernels.at(stage).at(i)) {
-			case 0:
-				addpd(duration, id, num_workers.at(stage));
-				break;
+			std::chrono::microseconds duration(kernel_durations.at(stage).at(k));
 
-			case 1:
-				mulpd(duration, id, num_workers.at(stage));
-				break;
+			switch(kernels.at(stage).at(k)) {
+				case e_none:
+					break;
 
-			case 2:
-				sqrt(duration, id, num_workers.at(stage));
-				break;
+				case e_addpd:
+					addpd(duration, id, num_workers.at(stage));
+					break;
 
-			case 3:
-				compute(duration, id, num_workers.at(stage));
-				break;
+				case e_mulpd:
+					mulpd(duration, id, num_workers.at(stage));
+					break;
 
-			case 4:
-				sinus(duration, id, num_workers.at(stage));
-				break;
+				case e_sqrt:
+					sqrt(duration, id, num_workers.at(stage));
+					break;
 
-			case 5:
-				idle(duration);
-				break;
+				case e_compute:
+					compute(duration, id, num_workers.at(stage));
+					break;
 
-			case 6:
-				memory_read(duration, id, num_workers.at(stage));
-				break;
+				case e_sinus:
+					sinus(duration, id, num_workers.at(stage));
+					break;
 
-			case 7:
-				memory_copy(duration, id, num_workers.at(stage));
-				break;
+				case e_idle:
+					idle(duration);
+					break;
 
-			case 8:
-				memory_write(duration, id, num_workers.at(stage));
-				break;
+				case e_memory_read:
+					memory_read(duration, id, num_workers.at(stage));
+					break;
+
+				case e_memory_copy:
+					memory_copy(duration, id, num_workers.at(stage));
+					break;
+
+				case e_memory_write:
+					memory_write(duration, id, num_workers.at(stage));
+					break;
+
+				case e_shared_mem_read_small:
+					shared_memory_read_small(duration, i, j);
+					break;
+
+				case e_shared_mem_read_large:
+					shared_memory_read_large(duration, i, j);
+					break;
+			}
+
+		} else {
+			switch(kernels.at(stage).at(k)) {
+				case e_none:
+					break;
+
+				case e_addpd:
+					addpd(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_mulpd:
+					mulpd(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_sqrt:
+					sqrt(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_compute:
+					compute(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_sinus:
+					sinus(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_idle:
+					print("Cannot use idle with a set number of repeats!");
+					exit(1);
+					break;
+
+				case e_memory_read:
+					memory_read(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_memory_copy:
+					memory_copy(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_memory_write:
+					memory_write(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					break;
+
+				case e_shared_mem_read_small:
+					shared_memory_read_small(kernel_repeats.at(stage).at(k), i, j);
+					break;
+
+				case e_shared_mem_read_large:
+					shared_memory_read_large(kernel_repeats.at(stage).at(k), i, j);
+					break;
+			}
 		}
 	}
 }
@@ -299,29 +398,29 @@ void execute_kernel(uint32_t stage, uint32_t id) {
 // Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
 void initialize_grids() {
 
-	grid1.resize(grid_size + 2);
-	grid2.resize(grid_size + 2);
+	grid1.resize(grid_size + 4);
+	grid2.resize(grid_size + 4);
  
  	// Set all points to 0.0
-	for (uint32_t i = 0; i <= grid_size + 1; i++) {
-		grid1[i].resize(grid_size + 2);
-		grid2[i].resize(grid_size + 2);
+	for (uint32_t i = 0; i < grid_size + 4; i++) {
+		grid1[i].resize(grid_size + 4);
+		grid2[i].resize(grid_size + 4);
 
-		for (uint32_t j = 0; j <= grid_size + 1; j++) {
+		for (uint32_t j = 0; j < grid_size + 4; j++) {
 		    grid1[i][j] = 0.0;
 		    grid2[i][j] = 0.0;
 		}
 	}
 
 	// Set edges to 1.0
-	for (uint32_t i = 0; i <= grid_size + 1; i++) {
+	for (uint32_t i = 0; i < grid_size + 2; i++) {
 		grid1[i][0] = 1.0;
 	    grid1[i][grid_size + 1] = 1.0;
 	    grid2[i][0] = 1.0;
 	    grid2[i][grid_size + 1] = 1.0;
 	}
 
-  	for (uint32_t j = 0; j <= grid_size + 1; j++) {
+  	for (uint32_t j = 0; j < grid_size + 2; j++) {
 	    grid1[0][j] = 1.0;
 	    grid2[0][j] = 1.0;
 	    grid1[grid_size + 1][j] = 1.0;
