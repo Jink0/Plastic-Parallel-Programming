@@ -16,13 +16,13 @@ function ctrl_c() {
 POWERS_MIN=10
 POWERS_MAX=15
 
-NUM_WORKERS_MIN=8
+NUM_WORKERS_MIN=4
 NUM_WORKERS_MAX=32
 NUM_WORKERS_STEP=4
 
 # NUM_RUNS=($POWERS_MAX - $POWERS_MIN + 1) * (((NUM_WORKERS_MAX - NUM_WORKERS_MIN) / NUM_WORKERS_STEP) + 1)
 
-NUM_RUNS=84
+NUM_RUNS=96
 
 STEP=$(bc -l <<< "100 / $NUM_RUNS")
 TOTAL=$STEP
@@ -35,12 +35,13 @@ if [ -e $FILENAME ]; then
   rm $FILENAME
 fi
 
-echo "num_runs: \"5\"" > $FILENAME
+echo "num_runs: \"10\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
 echo "num_iterations_0: \"10\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
 echo "pinnings_0: \"\"" >> $FILENAME
 echo "kernels_0: \"\"" >> $FILENAME
+echo "kernel_repeats_0: \"\"" >> $FILENAME 
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "grid_size: \"1024\"" >> $FILENAME
 echo "num_workers_0: \"8\"" >> $FILENAME
@@ -54,7 +55,7 @@ START=$(date +%s.%N)
 
 
 make clean > /dev/null
-make flags="-DDETAILED_METRICS -DPTHREADBARRIER" main > /dev/null
+make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -73,7 +74,7 @@ done
 
 
 make clean > /dev/null
-make flags="-DDETAILED_METRICS -DPTHREADBARRIER -DCONVERGE_TEST" main > /dev/null
+make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DCONVERGE_TEST" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))

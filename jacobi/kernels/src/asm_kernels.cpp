@@ -3,97 +3,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-uint64_t mulpd_kernel(double *buffer, uint64_t repeat) {
-
-    unsigned long long passes, addr;
-    unsigned long long a, b, c, d;
-    uint64_t ret = 0;
-
-    passes = repeat / 32; // 32 128-Bit accesses in inner loop
-
-    addr = (unsigned long long) buffer;
-
-    if (!passes) return ret;
-
-    /*
-     * Input:  RAX: addr (pointer to the buffer)
-     *         RBX: passes (number of iterations)
-     *         RCX: length (total number of accesses)
-     */
-
-    __asm__ __volatile__(
-        "mov %%rax,%%r9;"   // addr
-        "mov %%rbx,%%r10;"  // passes
-
-        // Initialize registers
-        "movaps 0(%%r9), %%xmm0;"
-        "movaps 16(%%r9), %%xmm1;"
-        "movaps 32(%%r9), %%xmm2;"
-        "movaps 48(%%r9), %%xmm3;"
-        "movaps 64(%%r9), %%xmm4;"
-        "movaps 80(%%r9), %%xmm5;"
-        "movaps 96(%%r9), %%xmm6;"
-        "movaps 112(%%r9), %%xmm7;"
-        "movapd 0(%%r9), %%xmm8;"
-        "movapd 16(%%r9), %%xmm9;"
-        "movapd 32(%%r9), %%xmm10;"
-        "movapd 48(%%r9), %%xmm11;"
-        "movapd 64(%%r9), %%xmm12;"
-        "movapd 80(%%r9), %%xmm13;"
-        "movapd 96(%%r9), %%xmm14;"
-        "movapd 112(%%r9), %%xmm15;"
-
-        ".align 64;"
-        "_work_loop_mul_pd:"
-        "mulpd %%xmm8, %%xmm0;"
-        "mulpd %%xmm9, %%xmm1;"
-        "mulpd %%xmm10, %%xmm2;"
-        "mulpd %%xmm11, %%xmm3;"
-        "mulpd %%xmm12, %%xmm4;"
-        "mulpd %%xmm13, %%xmm5;"
-        "mulpd %%xmm14, %%xmm6;"
-        "mulpd %%xmm15, %%xmm7;"
-
-        "mulpd %%xmm8, %%xmm0;"
-        "mulpd %%xmm9, %%xmm1;"
-        "mulpd %%xmm10, %%xmm2;"
-        "mulpd %%xmm11, %%xmm3;"
-        "mulpd %%xmm12, %%xmm4;"
-        "mulpd %%xmm13, %%xmm5;"
-        "mulpd %%xmm14, %%xmm6;"
-        "mulpd %%xmm15, %%xmm7;"
-
-        "mulpd %%xmm8, %%xmm0;"
-        "mulpd %%xmm9, %%xmm1;"
-        "mulpd %%xmm10, %%xmm2;"
-        "mulpd %%xmm11, %%xmm3;"
-        "mulpd %%xmm12, %%xmm4;"
-        "mulpd %%xmm13, %%xmm5;"
-        "mulpd %%xmm14, %%xmm6;"
-        "mulpd %%xmm15, %%xmm7;"
-
-        "mulpd %%xmm8, %%xmm0;"
-        "mulpd %%xmm9, %%xmm1;"
-        "mulpd %%xmm10, %%xmm2;"
-        "mulpd %%xmm11, %%xmm3;"
-        "mulpd %%xmm12, %%xmm4;"
-        "mulpd %%xmm13, %%xmm5;"
-        "mulpd %%xmm14, %%xmm6;"
-        "mulpd %%xmm15, %%xmm7;"
-
-        "sub $1,%%r10;"
-        "jnz _work_loop_mul_pd;"
-
-        : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
-        : "a"(addr), "b" (passes)
-        : "%r9", "%r10", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
-    );
-
-    ret = passes;
-
-    return ret;
-}
-
 uint64_t addpd_kernel(double *buffer, uint64_t repeat) {
 
     unsigned long long passes, addr;
@@ -174,6 +83,97 @@ uint64_t addpd_kernel(double *buffer, uint64_t repeat) {
 
         "sub $1,%%r10;"
         "jnz _work_loop_add_pd;"
+
+        : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
+        : "a"(addr), "b" (passes)
+        : "%r9", "%r10", "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7", "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"
+    );
+
+    ret = passes;
+
+    return ret;
+}
+
+uint64_t mulpd_kernel(double *buffer, uint64_t repeat) {
+
+    unsigned long long passes, addr;
+    unsigned long long a, b, c, d;
+    uint64_t ret = 0;
+
+    passes = repeat / 32; // 32 128-Bit accesses in inner loop
+
+    addr = (unsigned long long) buffer;
+
+    if (!passes) return ret;
+
+    /*
+     * Input:  RAX: addr (pointer to the buffer)
+     *         RBX: passes (number of iterations)
+     *         RCX: length (total number of accesses)
+     */
+
+    __asm__ __volatile__(
+        "mov %%rax,%%r9;"   // addr
+        "mov %%rbx,%%r10;"  // passes
+
+        // Initialize registers
+        "movaps 0(%%r9), %%xmm0;"
+        "movaps 16(%%r9), %%xmm1;"
+        "movaps 32(%%r9), %%xmm2;"
+        "movaps 48(%%r9), %%xmm3;"
+        "movaps 64(%%r9), %%xmm4;"
+        "movaps 80(%%r9), %%xmm5;"
+        "movaps 96(%%r9), %%xmm6;"
+        "movaps 112(%%r9), %%xmm7;"
+        "movapd 0(%%r9), %%xmm8;"
+        "movapd 16(%%r9), %%xmm9;"
+        "movapd 32(%%r9), %%xmm10;"
+        "movapd 48(%%r9), %%xmm11;"
+        "movapd 64(%%r9), %%xmm12;"
+        "movapd 80(%%r9), %%xmm13;"
+        "movapd 96(%%r9), %%xmm14;"
+        "movapd 112(%%r9), %%xmm15;"
+
+        ".align 64;"
+        "_work_loop_mul_pd:"
+        "mulpd %%xmm8, %%xmm0;"
+        "mulpd %%xmm9, %%xmm1;"
+        "mulpd %%xmm10, %%xmm2;"
+        "mulpd %%xmm11, %%xmm3;"
+        "mulpd %%xmm12, %%xmm4;"
+        "mulpd %%xmm13, %%xmm5;"
+        "mulpd %%xmm14, %%xmm6;"
+        "mulpd %%xmm15, %%xmm7;"
+
+        "mulpd %%xmm8, %%xmm0;"
+        "mulpd %%xmm9, %%xmm1;"
+        "mulpd %%xmm10, %%xmm2;"
+        "mulpd %%xmm11, %%xmm3;"
+        "mulpd %%xmm12, %%xmm4;"
+        "mulpd %%xmm13, %%xmm5;"
+        "mulpd %%xmm14, %%xmm6;"
+        "mulpd %%xmm15, %%xmm7;"
+
+        "mulpd %%xmm8, %%xmm0;"
+        "mulpd %%xmm9, %%xmm1;"
+        "mulpd %%xmm10, %%xmm2;"
+        "mulpd %%xmm11, %%xmm3;"
+        "mulpd %%xmm12, %%xmm4;"
+        "mulpd %%xmm13, %%xmm5;"
+        "mulpd %%xmm14, %%xmm6;"
+        "mulpd %%xmm15, %%xmm7;"
+
+        "mulpd %%xmm8, %%xmm0;"
+        "mulpd %%xmm9, %%xmm1;"
+        "mulpd %%xmm10, %%xmm2;"
+        "mulpd %%xmm11, %%xmm3;"
+        "mulpd %%xmm12, %%xmm4;"
+        "mulpd %%xmm13, %%xmm5;"
+        "mulpd %%xmm14, %%xmm6;"
+        "mulpd %%xmm15, %%xmm7;"
+
+        "sub $1,%%r10;"
+        "jnz _work_loop_mul_pd;"
 
         : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
         : "a"(addr), "b" (passes)
