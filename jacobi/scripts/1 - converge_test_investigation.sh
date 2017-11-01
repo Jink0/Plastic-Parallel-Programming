@@ -44,7 +44,7 @@ echo "kernels_0: \"\"" >> $FILENAME
 echo "kernel_repeats_0: \"\"" >> $FILENAME 
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "grid_size: \"1024\"" >> $FILENAME
-echo "num_workers_0: \"8\"" >> $FILENAME
+echo "num_workers_0: \"4\"" >> $FILENAME
 
 # Start experiments
 
@@ -60,9 +60,9 @@ make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL" main > /dev/null
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
 do 
-	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"1\"" >> temp.ini ; mv temp.ini $FILENAME
+	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"4\"" >> temp.ini ; mv temp.ini $FILENAME
 
-	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
+	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=$NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
 		bin/jacobi $FILENAME > /dev/null
@@ -79,9 +79,9 @@ make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DCONVERGE_TEST" main > /dev/n
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
 do 
-	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"1\"" >> temp.ini ; mv temp.ini $FILENAME
+	head -n -2 $FILENAME > temp.ini ; echo "grid_size: \"$((2**$i))\"" >> temp.ini ; echo "num_workers_0: \"4\"" >> temp.ini ; mv temp.ini $FILENAME
 
-	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=NUM_WORKERS_STEP))
+	for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=$NUM_WORKERS_STEP))
 	do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
 		bin/jacobi $FILENAME > /dev/null
