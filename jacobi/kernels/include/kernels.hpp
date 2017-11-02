@@ -203,7 +203,7 @@ void compute(uint32_t repeats, uint32_t my_id, uint32_t max_num_threads) {
             vec_A[0] += 1.0;
         }
 
-        compute_kernel(vec_A, vec_B, vec_C, 32, my_id, max_num_threads);
+        compute_kernel(vec_A, vec_B, vec_C, 1, my_id, max_num_threads);
     }
 }
 
