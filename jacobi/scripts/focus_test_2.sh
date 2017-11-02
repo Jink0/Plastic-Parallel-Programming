@@ -13,7 +13,7 @@ function ctrl_c() {
 
 
 
-POWERS_MIN=8
+POWERS_MIN=5
 POWERS_MAX=11
 
 NUM_WORKERS_MIN=8
@@ -37,19 +37,16 @@ fi
 
 echo "num_runs: \"1\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
-echo "num_iterations_0: \"500\"" >> $FILENAME
+echo "num_iterations_0: \"5000\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
 echo "pinnings_0: \"\"" >> $FILENAME
 echo "kernels_0: \"addpd\"" >> $FILENAME
-echo "kernel_repeats_0: \"1000\"" >> $FILENAME 
+echo "kernel_repeats_0: \"500\"" >> $FILENAME 
 echo "kernel_durations_0: \"\"" >> $FILENAME
-echo "grid_size: \"256\"" >> $FILENAME
+echo "grid_size: \"32\"" >> $FILENAME
 echo "num_workers_0: \"8\"" >> $FILENAME
 
 # Start experiments
-
-make clean > /dev/null
-make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DCONVERGE_TEST" main > /dev/null
 
 printf "0.000%%"
 sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> /dev/null
@@ -63,7 +60,7 @@ make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGE_T
 
 head -n -5 $FILENAME > temp.ini
 echo "kernels_0: \"mulpd\"" >> temp.ini
-echo "kernel_repeats_0: \"700\"" >> temp.ini 
+echo "kernel_repeats_0: \"500\"" >> temp.ini 
 echo "kernel_durations_0: \"\"" >> temp.ini
 echo "grid_size: \"256\"" >> temp.ini
 echo "num_workers_0: \"8\"" >> temp.ini
@@ -136,6 +133,6 @@ done
 END=$(date +%s.%N)
 DIFF=$(echo "$END - $START" | bc)
 
-sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Convergence tests have completed! Time taken: $DIFF seconds"
+sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Focustest 2 completed! Time taken: $DIFF seconds"
 
 sudo scripts/update-motd.sh "" > /dev/null
