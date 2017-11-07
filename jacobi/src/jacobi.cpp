@@ -111,7 +111,10 @@ int main(int argc, char *argv[]) {
 	// Read config
 	read_config(config);
 
-	MLPD(rep_pass = atoi(argv[2]);)
+	MLPD(
+		rep_pass = atoi(argv[2]);
+		print("NUM MULPD REPEATS: ", rep_pass, "\n");
+		)
 
 	// Move into relevant folder and copy the config file
 	move_and_copy("jacobi", argv[1]);
