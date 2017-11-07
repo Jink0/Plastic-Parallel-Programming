@@ -22,6 +22,12 @@
 #define PTB( x )
 #endif
 
+#ifdef MULPD
+#define MLPD( x ) x
+#else
+#define MLPD( x )
+#endif
+
 #ifdef BASIC_KERNEL_SMALL
 #define BSCS( x ) x
 #else
@@ -93,6 +99,8 @@ std::vector<std::vector<double>> grid1, grid2;
 // Used for convergence test
 std::vector<std::vector<double>> max_difference_global;
 
+uint64_t rep_pass;
+
 
 
 int main(int argc, char *argv[]) {
@@ -102,6 +110,8 @@ int main(int argc, char *argv[]) {
 
 	// Read config
 	read_config(config);
+
+	MLPD(rep_pass = atoi(argv[2]);)
 
 	// Move into relevant folder and copy the config file
 	move_and_copy("jacobi", argv[1]);
@@ -205,6 +215,16 @@ void worker(uint32_t my_id, uint32_t stage) {
 	uint32_t first = my_id * strip_size.at(stage) + 2;
 	uint32_t last = first + strip_size.at(stage);
 
+	MLPD(
+		std::vector<double> vec_A(16);
+
+		for (std::size_t i = 0; i < 16; ++i) {
+		    vec_A[i] = 1. + std::numeric_limits<double>::epsilon();
+		}
+
+    	uint64_t repeats = rep_pass;
+    	)
+
 	for (uint32_t iter = 0; iter < num_iterations.at(stage); iter++) {
 
 		// Update my points
@@ -222,29 +242,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 					grid2[i][j] =  grid2[i][j] / 24;
 					)
 
-				// Execute kernel functions
-				EXCK(execute_kernels(stage, my_id, i, j);)
-			}
-		}
-
-		// Barriers
-		MB(my_barrier(stage);)
-		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
-
-		// Update my points again
-		for (uint32_t i = first; i < last; i++) {
-			for (uint32_t j = 2; j < grid_size + 2; j++) {
-				BSCS(grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;)
-
-				BSCL(
-					grid2[i][j] =  0;
-					grid2[i][j] += (grid1[i - 2][j + 2] + grid1[i - 1][j + 2] + grid1[i][j + 2] + grid1[i + 1][j + 2] + grid1[i + 2][j + 2]);
-					grid2[i][j] += (grid1[i - 2][j + 1] + grid1[i - 1][j + 1] + grid1[i][j + 1] + grid1[i + 1][j + 1] + grid1[i + 2][j + 1]);
-					grid2[i][j] += (grid1[i - 2][j] + grid1[i - 1][j] + grid1[i + 1][j] + grid1[i + 2][j]);
-					grid2[i][j] += (grid1[i - 2][j - 1] + grid1[i - 1][j - 1] + grid1[i][j - 1] + grid1[i + 1][j - 1] + grid1[i + 2][j - 1]);
-					grid2[i][j] += (grid1[i - 2][j - 2] + grid1[i - 1][j - 2] + grid1[i][j - 2] + grid1[i + 1][j - 2] + grid1[i + 2][j - 2]);
-					grid2[i][j] =  grid2[i][j] / 24;
-					)
+				MLPD(mulpd_kernel(vec_A.data(), repeats);)
 
 				// Execute kernel functions
 				EXCK(execute_kernels(stage, my_id, i, j);)
@@ -274,7 +272,54 @@ void worker(uint32_t my_id, uint32_t stage) {
 			}
 
 			max_difference_global[stage][my_id] = max_diff;
-		)
+			)
+
+		// Update my points again
+		for (uint32_t i = first; i < last; i++) {
+			for (uint32_t j = 2; j < grid_size + 2; j++) {
+				BSCS(grid1[i][j] = (grid2[i - 1][j] + grid2[i + 1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;)
+
+				BSCL(
+					grid1[i][j] =  0;
+					grid1[i][j] += (grid2[i - 2][j + 2] + grid2[i - 1][j + 2] + grid2[i][j + 2] + grid2[i + 1][j + 2] + grid2[i + 2][j + 2]);
+					grid1[i][j] += (grid2[i - 2][j + 1] + grid2[i - 1][j + 1] + grid2[i][j + 1] + grid2[i + 1][j + 1] + grid2[i + 2][j + 1]);
+					grid1[i][j] += (grid2[i - 2][j] + grid2[i - 1][j] + grid2[i + 1][j] + grid2[i + 2][j]);
+					grid1[i][j] += (grid2[i - 2][j - 1] + grid2[i - 1][j - 1] + grid2[i][j - 1] + grid2[i + 1][j - 1] + grid2[i + 2][j - 1]);
+					grid1[i][j] += (grid2[i - 2][j - 2] + grid2[i - 1][j - 2] + grid2[i][j - 2] + grid2[i + 1][j - 2] + grid2[i + 2][j - 2]);
+					grid1[i][j] =  grid1[i][j] / 24;
+					)
+
+				MLPD(mulpd_kernel(vec_A.data(), repeats);)
+
+				// Execute kernel functions
+				EXCK(execute_kernels(stage, my_id, i, j);)
+			}
+		}
+
+		// Barriers
+		MB(my_barrier(stage);)
+		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
+
+		CNVG(
+			// Simulate a convergence test. Compute the maximum difference in my strip and set global variable
+		  	max_diff = 0.0;
+
+			for (uint32_t i = first; i < last; i++) {
+				for (uint32_t j = 2; j < grid_size + 2; j++) {
+					uint32_t temp = grid1[i][j] - grid2[i][j];
+
+					if (temp < 0) {
+						temp = -temp;
+					}
+
+					if (max_diff < temp) {
+						max_diff = temp;
+					}
+				}
+			}
+
+			max_difference_global[stage][my_id] = max_diff;
+			)
 	}
 }
 
