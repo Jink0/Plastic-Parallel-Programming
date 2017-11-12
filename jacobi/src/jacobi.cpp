@@ -238,8 +238,6 @@ void worker(uint32_t my_id, uint32_t stage) {
 	uint32_t first = row_allocations.at(stage).at(my_id);
 	uint32_t last = row_allocations.at(stage).at(my_id + 1);
 
-	print("Worker ", my_id, " First: ", first, "Last", last, "\n");
-
 	MLPD(
 		std::vector<double> vec_A(16);
 
