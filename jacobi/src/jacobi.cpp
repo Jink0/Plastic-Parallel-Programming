@@ -89,8 +89,8 @@ std::chrono::high_resolution_clock::time_point end;
 uint32_t num_runs, grid_size, num_stages, use_set_num_repeats;
 
 // Stage parameters
-std::vector<uint32_t> num_workers, num_iterations, set_pin_bool, strip_size;
-std::vector<std::vector<uint32_t>> kernels, kernel_durations, kernel_repeats;
+std::vector<uint32_t> num_workers, num_iterations, set_pin_bool;
+std::vector<std::vector<uint32_t>> kernels, kernel_durations, kernel_repeats, row_allocations;
 std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
 // Experiment data
@@ -131,9 +131,25 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-	//  Calculate strip sizes
+	//  Calculate row allocations
 	for (uint32_t i = 0; i < num_stages; i++) {
-		strip_size.push_back(grid_size / num_workers.at(i));
+		uint32_t quotient  = grid_size / num_workers.at(i);
+		uint32_t remainder = grid_size % num_workers.at(i);
+
+		std::vector<uint32_t> temp(num_workers.at(i) + 1, quotient);
+
+		temp.at(0) = 2;
+
+		for (uint32_t j = 1; j < num_workers.at(i) + 1; j++) {
+			if (remainder != 0) {
+				temp.at(j) += 1;
+				remainder  -= 1;
+			}
+
+			temp.at(j) += temp.at(j-1);
+		}
+
+		row_allocations.push_back(temp);
 	}
 
 	// Calculate the max number of workers we will need
@@ -215,8 +231,8 @@ void worker(uint32_t my_id, uint32_t stage) {
 	force_affinity_set(pinnings.at(stage).at(my_id));
 
 	// Determine first and last rows of my strip of the grids
-	uint32_t first = my_id * strip_size.at(stage) + 2;
-	uint32_t last = first + strip_size.at(stage);
+	uint32_t first = row_allocations.at(stage).at(my_id);
+	uint32_t last = row_allocations.at(stage).at(my_id + 1);
 
 	MLPD(
 		std::vector<double> vec_A(16);
