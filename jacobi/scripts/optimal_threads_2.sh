@@ -26,7 +26,7 @@ TOTAL=$STEP
 
 # Create config file
 
-FILENAME="configs/optimal_threads_1.ini"
+FILENAME="configs/optimal_threads_2.ini"
 
 if [ -e $FILENAME ]; then
   rm $FILENAME
@@ -75,6 +75,6 @@ done
 END=$(date +%s.%N)
 DIFF=$(echo "$END - $START" | bc)
 
-sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Optimal threads 1 completed! Time taken: $DIFF seconds"
+sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Optimal threads 2 completed! Time taken: $DIFF seconds"
 
 sudo scripts/update-motd.sh "" > /dev/null
