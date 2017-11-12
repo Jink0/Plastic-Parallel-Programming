@@ -341,14 +341,6 @@ void read_config(std::map<std::string, std::string> config) {
 	    	}
 	    }
 	}
-
-	for (uint32_t i = 0; i < num_stages; i++) {
-		if (grid_size % num_workers.at(i) != 0) {
-			print("Malformed config file!");
-			print("Number of workers shoud cleanly divide gridsize\nGrid Size: ", grid_size, "\nStage: ", i, "\nNumber of Workers: ", num_workers.at(i), "\n\n");
-			exit(1);
-		}
-	}
 }
 
 
