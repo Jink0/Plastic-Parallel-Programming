@@ -34,7 +34,7 @@ fi
 
 echo "num_runs: \"1\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
-echo "num_iterations_0: \"100\"" >> $FILENAME
+echo "num_iterations_0: \"10000\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
 echo "pinnings_0: \"\"" >> $FILENAME
 echo "kernels_0: \"mulpd\"" >> $FILENAME

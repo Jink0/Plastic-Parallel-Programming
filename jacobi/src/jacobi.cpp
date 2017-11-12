@@ -149,10 +149,6 @@ int main(int argc, char *argv[]) {
 			temp.at(j) += temp.at(j-1);
 		}
 
-		for (uint64_t i = 0; i < temp.size(); i++) {
-			print(temp.at(i), "\n");
-		}
-
 		row_allocations.push_back(temp);
 	}
 
