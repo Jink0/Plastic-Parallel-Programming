@@ -22,10 +22,28 @@
 #define PTB( x )
 #endif
 
-#ifdef MULPD
-#define MLPD( x ) x
+// #ifdef MULPD
+// #define MLPD( x ) x
+// #else
+// #define MLPD( x )
+// #endif
+
+// #ifdef MEMREAD
+// #define MEM_READ( x ) x
+// #else
+// #define MEM_READ( x )
+// #endif
+
+// #ifdef MEMCOPY
+// #define MEM_COPY( x ) x
+// #else
+// #define MEM_COPY( x )
+// #endif
+
+#ifdef RANDOMIZE
+#define RAND( x ) x
 #else
-#define MLPD( x )
+#define RAND( x )
 #endif
 
 #ifdef BASIC_KERNEL_SMALL
@@ -99,7 +117,8 @@ std::vector<std::vector<double>> grid1, grid2;
 // Used for convergence test
 std::vector<std::vector<double>> max_difference_global;
 
-uint64_t rep_pass;
+// uint64_t repeats;
+uint32_t max_num_workers;
 
 
 
@@ -111,10 +130,11 @@ int main(int argc, char *argv[]) {
 	// Read config
 	read_config(config);
 
-	MLPD(
-		rep_pass = atoi(argv[2]);
-		print("NUM MULPD REPEATS: ", rep_pass, "\n");
-		)
+	// repeats = atoi(argv[2]);
+
+	// MLPD(
+	// 	print("NUM MULPD REPEATS: ", repeats, "\n");
+	// 	)
 
 	// Move into relevant folder and copy the config file
 	move_and_copy("jacobi", argv[1]);
@@ -152,8 +172,10 @@ int main(int argc, char *argv[]) {
 		row_allocations.push_back(temp);
 	}
 
+	srand(65423588);
+
 	// Calculate the max number of workers we will need
-	uint32_t max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
+	max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
 
   	// Create thread handles
 	std::vector<std::thread> threads(max_num_workers);
@@ -234,15 +256,13 @@ void worker(uint32_t my_id, uint32_t stage) {
 	uint32_t first = row_allocations.at(stage).at(my_id);
 	uint32_t last = row_allocations.at(stage).at(my_id + 1);
 
-	MLPD(
-		std::vector<double> vec_A(16);
+	// MLPD(
+	// 	std::vector<double> vec_A(16);
 
-		for (std::size_t i = 0; i < 16; ++i) {
-		    vec_A[i] = 1. + std::numeric_limits<double>::epsilon();
-		}
-
-    	uint64_t repeats = rep_pass;
-    	)
+	// 	for (std::size_t i = 0; i < 16; ++i) {
+	// 	    vec_A[i] = 1. + std::numeric_limits<double>::epsilon();
+	// 	}
+ //    	)
 
 	for (uint32_t iter = 0; iter < num_iterations.at(stage); iter++) {
 
@@ -261,7 +281,9 @@ void worker(uint32_t my_id, uint32_t stage) {
 					grid2[i][j] =  grid2[i][j] / 24;
 					)
 
-				MLPD(mulpd_kernel(vec_A.data(), repeats);)
+				// MLPD(mulpd_kernel(vec_A.data(), local_repeats);)
+				// MEM_READ(memory_read(local_repeats, my_id, max_num_workers);)
+				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
 
 				// Execute kernel functions
 				EXCK(execute_kernels(stage, my_id, i, j);)
@@ -308,7 +330,9 @@ void worker(uint32_t my_id, uint32_t stage) {
 					grid1[i][j] =  grid1[i][j] / 24;
 					)
 
-				MLPD(mulpd_kernel(vec_A.data(), repeats);)
+				// MLPD(mulpd_kernel(vec_A.data(), local_repeats);)
+				// MEM_READ(memory_read(local_repeats, my_id, max_num_workers);)
+				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
 
 				// Execute kernel functions
 				EXCK(execute_kernels(stage, my_id, i, j);)
@@ -404,28 +428,33 @@ void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 			}
 
 		} else {
+
+			uint64_t local_repeats = kernel_repeats.at(stage).at(k);
+
+			RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
+				
 			switch(kernels.at(stage).at(k)) {
 				case e_none:
 					break;
 
 				case e_addpd:
-					addpd(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					addpd(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_mulpd:
-					mulpd(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					mulpd(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_sqrt:
-					sqrt(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					sqrt(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_compute:
-					compute(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					compute(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_sinus:
-					sinus(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					sinus(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_idle:
@@ -434,23 +463,23 @@ void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 					break;
 
 				case e_memory_read:
-					memory_read(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					memory_read(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_memory_copy:
-					memory_copy(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					memory_copy(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_memory_write:
-					memory_write(kernel_repeats.at(stage).at(k), id, num_workers.at(stage));
+					memory_write(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_shared_mem_read_small:
-					shared_memory_read_small(kernel_repeats.at(stage).at(k), i, j);
+					shared_memory_read_small(local_repeats, i, j);
 					break;
 
 				case e_shared_mem_read_large:
-					shared_memory_read_large(kernel_repeats.at(stage).at(k), i, j);
+					shared_memory_read_large(local_repeats, i, j);
 					break;
 			}
 		}
