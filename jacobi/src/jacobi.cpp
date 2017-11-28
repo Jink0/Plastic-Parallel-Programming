@@ -8,6 +8,8 @@
 #include <config_file_utils.hpp>
 #include <kernels.hpp>
 
+#include <loads.hpp>
+
 
 
 #ifdef MYBARRIER
@@ -119,6 +121,13 @@ std::vector<std::vector<double>> max_difference_global;
 
 // uint64_t repeats;
 uint32_t max_num_workers;
+
+long long do_vm_bytes = 1024 * 1024 * 10;
+long long do_vm_stride = 4096;
+long long do_vm_hang = -1;
+int do_vm_keep = 0;
+
+long long do_hdd_bytes = 1024;
 
 
 
@@ -245,6 +254,8 @@ int main(int argc, char *argv[]) {
 }
 
 
+enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11, e_cpu = 12, e_io = 13, e_vm = 14, e_hdd = 15};
+
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
 void worker(uint32_t my_id, uint32_t stage) {
@@ -286,7 +297,33 @@ void worker(uint32_t my_id, uint32_t stage) {
 				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
 
 				// Execute kernel functions
-				EXCK(execute_kernels(stage, my_id, i, j);)
+				// EXCK(execute_kernels(stage, my_id, i, j);)
+				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
+
+					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
+					RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
+
+					switch(kernels.at(stage).at(k)) {
+						case e_cpu:
+							hogcpu(local_repeats);
+							break;
+
+						case e_io:
+							hogio(local_repeats);
+							break;
+
+						case e_vm:
+							hogvm(local_repeats, do_vm_bytes, do_vm_stride, do_vm_hang, do_vm_keep);
+							break;
+
+						case e_hdd:
+							hoghdd(local_repeats, do_hdd_bytes);
+							break;
+
+						default:
+							exit(1);
+					}
+				}
 			}
 		}
 
@@ -335,7 +372,33 @@ void worker(uint32_t my_id, uint32_t stage) {
 				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
 
 				// Execute kernel functions
-				EXCK(execute_kernels(stage, my_id, i, j);)
+				// EXCK(execute_kernels(stage, my_id, i, j);)
+				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
+
+					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
+					RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
+
+					switch(kernels.at(stage).at(k)) {
+						case e_cpu:
+							hogcpu(local_repeats);
+							break;
+
+						case e_io:
+							hogio(local_repeats);
+							break;
+
+						case e_vm:
+							hogvm(local_repeats, do_vm_bytes, do_vm_stride, do_vm_hang, do_vm_keep);
+							break;
+
+						case e_hdd:
+							hoghdd(local_repeats, do_hdd_bytes);
+							break;
+
+						default:
+							exit(1);
+					}
+				}
 			}
 		}
 
@@ -368,7 +431,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 
 
-enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11};
+// enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11};
 
 void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 	// Execute kernel functions
@@ -432,7 +495,7 @@ void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 			uint64_t local_repeats = kernel_repeats.at(stage).at(k);
 
 			RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
-				
+
 			switch(kernels.at(stage).at(k)) {
 				case e_none:
 					break;

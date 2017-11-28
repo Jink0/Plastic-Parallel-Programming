@@ -4,9 +4,9 @@
 
 
 
-#define NUM_KERNELS 12
+#define NUM_KERNELS 16
 
-std::string kernel_names[NUM_KERNELS] = {"none", "addpd", "mulpd", "sqrt", "compute", "sinus", "idle", "memory_read", "memory_copy", "memory_write", "shared_mem_read_small", "shared_mem_read_large"};
+std::string kernel_names[NUM_KERNELS] = {"none", "addpd", "mulpd", "sqrt", "compute", "sinus", "idle", "memory_read", "memory_copy", "memory_write", "shared_mem_read_small", "shared_mem_read_large", "cpu", "io", "vm", "hdd"};
 
 
 

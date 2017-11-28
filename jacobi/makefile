@@ -14,7 +14,7 @@ LIB_FLAGS = -lpthread
 
 
 
-_JAC_OBJ = jacobi.o utils.o config_file_utils.o asm_kernels.o
+_JAC_OBJ = jacobi.o utils.o config_file_utils.o asm_kernels.o loads.o
 JAC_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_JAC_OBJ))
 
 
@@ -23,6 +23,9 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(GCC) -c -o $@ $< $(INCLUDES) $(CXXFLAGS)
 
 $(BUILD_DIR)/%.o: $(UTILS_DIR)/src/%.cpp
+	$(GCC) -c -o $@ $< $(INCLUDES) $(CXXFLAGS)
+
+$(BUILD_DIR)/%.o: $(UTILS_DIR)/src/%.c
 	$(GCC) -c -o $@ $< $(INCLUDES) $(CXXFLAGS)
 
 $(BUILD_DIR)/%.o: $(KERNELS_DIR)/src/%.cpp

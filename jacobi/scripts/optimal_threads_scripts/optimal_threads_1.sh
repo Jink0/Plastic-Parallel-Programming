@@ -14,14 +14,14 @@ function ctrl_c() {
 
 
 NUM_WORKERS_MIN=2
-NUM_WORKERS_MAX=64
+NUM_WORKERS_MAX=24
 NUM_WORKERS_STEP=2
 
 NUM_CORES_MIN=2
-NUM_CORES_MAX=64
+NUM_CORES_MAX=24
 NUM_CORES_STEP=2
 
-NUM_RUNS=1024
+NUM_RUNS=144
 
 STEP=$( bc -l <<< "100 / $NUM_RUNS" )
 TOTAL=$STEP
@@ -36,9 +36,9 @@ fi
 
 echo "num_runs: \"1\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
-echo "num_iterations_0: \"10000\"" >> $FILENAME
+echo "num_iterations_0: \"10\"" >> $FILENAME
 echo "set_pin_bool_0: \"2\"" >> $FILENAME
-echo "kernels_0: \"mulpd\"" >> $FILENAME
+echo "kernels_0: \"cpu\"" >> $FILENAME
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "kernel_repeats_0: \"1000\"" >> $FILENAME 
 echo "grid_size: \"128\"" >> $FILENAME
