@@ -61,7 +61,7 @@ int hogvm (long long local_repeats, long long bytes, long long stride, long long
   char c;
   int do_malloc = 1;
 
-  for (long long i = 0; i < local_repeats; i++) {
+  for (i = 0; i < local_repeats; i++) {
       if (do_malloc) {
           dbg (stdout, "allocating %lli bytes ...\n", bytes);
 
@@ -157,7 +157,7 @@ hoghdd (long long local_repeats, long long bytes) {
               return 1;
             }
         }
-        
+
       if (write (fd, "\n", 1) == -1) {
           err (stderr, "write failed: %s\n", strerror (errno));
           return 1;

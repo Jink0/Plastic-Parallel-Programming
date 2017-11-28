@@ -42,7 +42,7 @@ echo "kernels_0: \"cpu\"" >> $FILENAME
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "kernel_repeats_0: \"1000\"" >> $FILENAME 
 echo "grid_size: \"128\"" >> $FILENAME
-echo "pinnings_0: \"1..2 1..2\"" >> $FILENAME
+echo "pinnings_0: \"0..1 0..1\"" >> $FILENAME
 echo "num_workers_0: \"2\"" >> $FILENAME
 
 
@@ -57,7 +57,7 @@ START=$(date +%s.%N)
 
 
 make clean > /dev/null
-make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGE_TEST" main > /dev/null
+make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DCONVERGE_TEST" main > /dev/null
 
 
 
@@ -67,7 +67,7 @@ do
     for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=$NUM_WORKERS_STEP))
     do
 
-        STRING="1..$i "
+        STRING="0..$(($i-1)) "
 
         FULL_STRING=$STRING
 
