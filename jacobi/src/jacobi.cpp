@@ -66,6 +66,12 @@
 #define EXCK( x )
 #endif
 
+#ifdef EXCK_NEW
+#define EXCKNEW( x ) x
+#else
+#define EXCKNEW( x )
+#endif
+
 #ifdef CONVERGE_TEST
 #define CNVG( x ) x
 #else
@@ -298,6 +304,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 				// Execute kernel functions
 				// EXCK(execute_kernels(stage, my_id, i, j);)
+				EXCKNEW(
 				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
 					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
@@ -324,6 +331,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 							exit(1);
 					}
 				}
+				)
 			}
 		}
 
@@ -373,6 +381,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 				// Execute kernel functions
 				// EXCK(execute_kernels(stage, my_id, i, j);)
+				EXCKNEW(
 				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
 					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
@@ -399,6 +408,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 							exit(1);
 					}
 				}
+				)
 			}
 		}
 
