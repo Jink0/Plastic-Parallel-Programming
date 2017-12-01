@@ -1,5 +1,10 @@
 #include <utils.hpp>
 
+#define _GNU_SOURCE
+#include <sched.h>   //cpu_set_t , CPU_SET
+#include <pthread.h> //pthread_t
+#include <stdio.h>
+
 // #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
