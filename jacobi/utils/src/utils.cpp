@@ -1,6 +1,9 @@
 #include <utils.hpp>
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <sched.h>   //cpu_set_t , CPU_SET
 #include <pthread.h> //pthread_t
 #include <stdio.h>

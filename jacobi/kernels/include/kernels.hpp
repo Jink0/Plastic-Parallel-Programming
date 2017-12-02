@@ -97,7 +97,7 @@ void mulpd(uint32_t repeats, uint32_t my_id, uint32_t max_num_threads) {
 
 
 template<typename rep, typename period>
-void sqrt(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
+void sqroot(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t max_num_threads) {
 
     // Calculate time limit
     std::chrono::high_resolution_clock::time_point until = std::chrono::high_resolution_clock::now() + duration;
@@ -129,7 +129,7 @@ void sqrt(std::chrono::duration<rep, period> duration, uint32_t my_id, uint32_t 
 
 
 
-void sqrt(uint32_t repeats, uint32_t my_id, uint32_t max_num_threads) {
+void sqroot(uint32_t repeats, uint32_t my_id, uint32_t max_num_threads) {
 
     static const std::size_t type = 2;
 

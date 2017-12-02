@@ -14,7 +14,7 @@
 static int global_debug = 2;
 
 /* Name of this program */
-static char *global_progname = "load gen";
+static char const *global_progname = "load gen";
 
 /* Implemention of runtime-selectable severity message printing.  */
 #define dbg(OUT, STR, ARGS...) if (global_debug >= 3) \
@@ -41,7 +41,9 @@ static char *global_progname = "load gen";
 
 int hogcpu(long long local_repeats) {
   for (long long i = 0; i < local_repeats; i++) {
-    sqrt (rand ());
+    sin(rand());
+    sqrt(rand());
+
   }
 
   return 0;
@@ -49,7 +51,7 @@ int hogcpu(long long local_repeats) {
 
 int hogio (long long local_repeats) {
   for (long long i = 0; i < local_repeats; i++) {
-    sync ();
+    sync();
   }
 
   return 0;

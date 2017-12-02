@@ -303,7 +303,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
 
 				// Execute kernel functions
-				// EXCK(execute_kernels(stage, my_id, i, j);)
+				EXCK(execute_kernels(stage, my_id, i, j);)
 				EXCKNEW(
 				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
@@ -380,7 +380,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
 
 				// Execute kernel functions
-				// EXCK(execute_kernels(stage, my_id, i, j);)
+				EXCK(execute_kernels(stage, my_id, i, j);)
 				EXCKNEW(
 				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
@@ -464,7 +464,7 @@ void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 					break;
 
 				case e_sqrt:
-					sqrt(duration, id, num_workers.at(stage));
+					sqroot(duration, id, num_workers.at(stage));
 					break;
 
 				case e_compute:
@@ -519,7 +519,7 @@ void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
 					break;
 
 				case e_sqrt:
-					sqrt(local_repeats, id, num_workers.at(stage));
+					sqroot(local_repeats, id, num_workers.at(stage));
 					break;
 
 				case e_compute:
