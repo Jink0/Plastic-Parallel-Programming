@@ -8,74 +8,55 @@
 #include <config_file_utils.hpp>
 #include <kernels.hpp>
 
-#include <loads.hpp>
 
 
-
-#ifdef MYBARRIER
+#ifdef MY_BARRIER
 #define MB( x ) x
+#pragma message "MY_BARRIER ACTIVE"
 #else
 #define MB( x )
 #endif
 
-#ifdef PTHREADBARRIER
+#ifdef PTHREAD_BARRIER
 #define PTB( x ) x
+#pragma message "PTHREAD_BARRIER ACTIVE"
 #else
 #define PTB( x )
 #endif
 
-// #ifdef MULPD
-// #define MLPD( x ) x
-// #else
-// #define MLPD( x )
-// #endif
-
-// #ifdef MEMREAD
-// #define MEM_READ( x ) x
-// #else
-// #define MEM_READ( x )
-// #endif
-
-// #ifdef MEMCOPY
-// #define MEM_COPY( x ) x
-// #else
-// #define MEM_COPY( x )
-// #endif
-
-#ifdef RANDOMIZE
-#define RAND( x ) x
-#else
-#define RAND( x )
-#endif
-
 #ifdef BASIC_KERNEL_SMALL
-#define BSCS( x ) x
+#define BKS( x ) x
+#pragma message "BASIC_KERNEL_SMALL ACTIVE"
 #else
-#define BSCS( x )
+#define BKS( x )
 #endif
 
 #ifdef BASIC_KERNEL_LARGE
-#define BSCL( x ) x
+#define BKL( x ) x
+#pragma message "BASIC_KERNEL_LARGE ACTIVE"
 #else
-#define BSCL( x )
+#define BKL( x )
+#endif
+
+#ifdef RANDOMIZE_LOAD
+#define RND( x ) x
+#pragma message "RANDOMIZE_LOAD ACTIVE"
+#else
+#define RND( x )
 #endif
 
 #ifdef EXECUTE_KERNELS
-#define EXCK( x ) x
+#define EXK( x ) x
+#pragma message "EXECUTE_KERNELS ACTIVE"
 #else
-#define EXCK( x )
+#define EXK( x )
 #endif
 
-#ifdef EXCK_NEW
-#define EXCKNEW( x ) x
+#ifdef CONVERGENCE_TEST
+#define CVG( x ) x
+#pragma message "CONVERGE_TEST ACTIVE"
 #else
-#define EXCKNEW( x )
-#endif
-
-#ifdef CONVERGE_TEST
-#define CNVG( x ) x
-#else
-#define CNVG( x )
+#define CVG( x )
 #endif
 
 
@@ -88,8 +69,19 @@ void worker(uint32_t my_id, uint32_t stage);
 
 void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j);
 
-// My counter barrier
-void my_barrier(uint32_t stage);
+// Counter barrier
+inline void my_barrier(uint32_t stage);
+
+enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11, e_cpu = 12, e_io = 13, e_vm = 14, e_hdd = 15};
+
+inline void basic_kernel_small(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j);
+
+inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j);
+
+inline void execute_kernels(uint32_t stage);
+
+// Simulate a convergence test. Compute the maximum difference in my strip and set global variable.
+inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint32_t id);
 
 
 
@@ -128,12 +120,14 @@ std::vector<std::vector<double>> max_difference_global;
 // uint64_t repeats;
 uint32_t max_num_workers;
 
-long long do_vm_bytes = 1024 * 1024;
-long long do_vm_stride = 4096;
-long long do_vm_hang = -1;
-int do_vm_keep = 1;
+static long long const do_vm_bytes = 1024 * 1024;
+static long long const do_vm_stride = 4096;
+static long long const do_vm_hang = -1;
+static int const do_vm_keep = 1;
 
-long long do_hdd_bytes = 1024;
+static long long const do_hdd_bytes = 1024;
+
+// static uint32_t const border_size = 2;
 
 
 
@@ -144,12 +138,6 @@ int main(int argc, char *argv[]) {
 
 	// Read config
 	read_config(config);
-
-	// repeats = atoi(argv[2]);
-
-	// MLPD(
-	// 	print("NUM MULPD REPEATS: ", repeats, "\n");
-	// 	)
 
 	// Move into relevant folder and copy the config file
 	move_and_copy("jacobi", argv[1]);
@@ -166,7 +154,9 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-	//  Calculate row allocations
+
+
+	// Calculate row allocations
 	for (uint32_t i = 0; i < num_stages; i++) {
 		uint32_t quotient  = grid_size / num_workers.at(i);
 		uint32_t remainder = grid_size % num_workers.at(i);
@@ -187,7 +177,15 @@ int main(int argc, char *argv[]) {
 		row_allocations.push_back(temp);
 	}
 
-	srand(65423588);
+	// Set global max difference vector size
+	max_difference_global.resize(num_stages);
+
+	// Set per stage global max difference vector sizes
+	for (uint32_t i = 0; i < num_stages; i++) {
+		max_difference_global.at(i).resize(num_workers.at(i));
+	}
+
+
 
 	// Calculate the max number of workers we will need
 	max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
@@ -195,12 +193,9 @@ int main(int argc, char *argv[]) {
   	// Create thread handles
 	std::vector<std::thread> threads(max_num_workers);
 
-	// Set global max difference vector size
-	max_difference_global.resize(num_stages);
-
-	for (uint32_t i = 0; i < num_stages; i++) {
-		max_difference_global.at(i).resize(num_workers.at(i));
-	}
+	// Initialize mutex and condition variable for my barrier
+	pthread_mutex_init(&my_barrier_mutex, NULL);
+	pthread_cond_init(&go, NULL);
 
 	// Initialize pthread barriers
 	for (uint32_t i = 0; i < num_stages; i++) {
@@ -209,9 +204,10 @@ int main(int argc, char *argv[]) {
 		pthread_barriers.push_back(b);
 	}
 
-	// Initialize mutex and condition variable for my barrier
-	pthread_mutex_init(&my_barrier_mutex, NULL);
-	pthread_cond_init(&go, NULL);
+
+
+	// Initialize runtimes sum for computing average
+	uint32_t runtimes_sum = 0;
 
 	for (uint32_t r = 1; r < num_runs + 1; r++) {
 
@@ -233,34 +229,25 @@ int main(int argc, char *argv[]) {
 			}
 		}
 
-		// Record end time
-		end = std::chrono::high_resolution_clock::now();
+		// Calculate time taken
+		std::chrono::duration<double> diff = std::chrono::high_resolution_clock::now() - start;
 
-		CNVG(
-			uint32_t max_diff = 0.0;
-
-			// Find maximum difference
-			for (uint32_t i = 0; i < num_workers.back(); i++) {
-				if (max_diff < max_difference_global.back().at(i)) {
-			  		max_diff = max_difference_global.back().at(i);
-				}
-			}
-		)
-
-		std::chrono::duration<double> diff = end - start;
+		// Cast to millis
 		std::chrono::milliseconds millis = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
 
 		// Print runtime
-		print("\nRun ", r, "\n",
-			  "Elapsed time: ", millis.count(), "ms\n");
+		print("\nRun ", r, "\nElapsed time: ", millis.count(), "ms\n");
 
 		// Record runtime
 		fputs((std::to_string(millis.count()) + "\n").c_str(), output_stream);
+
+		runtimes_sum += millis.count();
 	}
+
+	// Print average runtime
+	print("\nAverage elapsed time over ", num_runs, " runs: ", runtimes_sum / num_runs, "ms\n");
 }
 
-
-enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11, e_cpu = 12, e_io = 13, e_vm = 14, e_hdd = 15};
 
 
 // Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
@@ -273,65 +260,21 @@ void worker(uint32_t my_id, uint32_t stage) {
 	uint32_t first = row_allocations.at(stage).at(my_id);
 	uint32_t last = row_allocations.at(stage).at(my_id + 1);
 
-	// MLPD(
-	// 	std::vector<double> vec_A(16);
-
-	// 	for (std::size_t i = 0; i < 16; ++i) {
-	// 	    vec_A[i] = 1. + std::numeric_limits<double>::epsilon();
-	// 	}
- //    	)
+	// Create grid pointers
+	std::vector<std::vector<double>>* src_grid = &grid1;
+	std::vector<std::vector<double>>* tgt_grid = &grid2;
 
 	for (uint32_t iter = 0; iter < num_iterations.at(stage); iter++) {
 
 		// Update my points
 		for (uint32_t i = first; i < last; i++) {
 			for (uint32_t j = 2; j < grid_size + 2; j++) {
-				BSCS(grid2[i][j] = (grid1[i - 1][j] + grid1[i + 1][j] + grid1[i][j - 1] + grid1[i][j + 1]) * 0.25;)
 
-				BSCL(
-					grid2[i][j] =  0;
-					grid2[i][j] += (grid1[i - 2][j + 2] + grid1[i - 1][j + 2] + grid1[i][j + 2] + grid1[i + 1][j + 2] + grid1[i + 2][j + 2]);
-					grid2[i][j] += (grid1[i - 2][j + 1] + grid1[i - 1][j + 1] + grid1[i][j + 1] + grid1[i + 1][j + 1] + grid1[i + 2][j + 1]);
-					grid2[i][j] += (grid1[i - 2][j] + grid1[i - 1][j] + grid1[i + 1][j] + grid1[i + 2][j]);
-					grid2[i][j] += (grid1[i - 2][j - 1] + grid1[i - 1][j - 1] + grid1[i][j - 1] + grid1[i + 1][j - 1] + grid1[i + 2][j - 1]);
-					grid2[i][j] += (grid1[i - 2][j - 2] + grid1[i - 1][j - 2] + grid1[i][j - 2] + grid1[i + 1][j - 2] + grid1[i + 2][j - 2]);
-					grid2[i][j] =  grid2[i][j] / 24;
-					)
+				BKS(basic_kernel_small(*(src_grid), *(tgt_grid), i, j);)
 
-				// MLPD(mulpd_kernel(vec_A.data(), local_repeats);)
-				// MEM_READ(memory_read(local_repeats, my_id, max_num_workers);)
-				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
+				BKL(basic_kernel_large(*(src_grid), *(tgt_grid), i, j);)
 
-				// Execute kernel functions
-				EXCK(execute_kernels(stage, my_id, i, j);)
-				EXCKNEW(
-				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
-
-					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
-					RAND(local_repeats = local_repeats * rand_uint(1, 3);)
-
-					switch(kernels.at(stage).at(k)) {
-						case e_cpu:
-							hogcpu(local_repeats);
-							break;
-
-						case e_io:
-							hogio(local_repeats);
-							break;
-
-						case e_vm:
-							hogvm(local_repeats, do_vm_bytes, do_vm_stride, do_vm_hang, do_vm_keep);
-							break;
-
-						case e_hdd:
-							hoghdd(local_repeats, do_hdd_bytes);
-							break;
-
-						default:
-							exit(1);
-					}
-				}
-				)
+				EXK(execute_kernels(stage);)
 			}
 		}
 
@@ -339,223 +282,13 @@ void worker(uint32_t my_id, uint32_t stage) {
 		MB(my_barrier(stage);)
 		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
 
-		CNVG(
-			// Simulate a convergence test. Compute the maximum difference in my strip and set global variable
-		  	double max_diff = 0.0;
+  		// Simulate convergence test
+		CVG(convergence_test(first, last, stage, my_id);)
 
-			for (uint32_t i = first; i < last; i++) {
-				for (uint32_t j = 2; j < grid_size + 2; j++) {
-					uint32_t temp = grid1[i][j] - grid2[i][j];
-
-					if (temp < 0) {
-						temp = -temp;
-					}
-
-					if (max_diff < temp) {
-						max_diff = temp;
-					}
-				}
-			}
-
-			max_difference_global[stage][my_id] = max_diff;
-			)
-
-		// Update my points again
-		for (uint32_t i = first; i < last; i++) {
-			for (uint32_t j = 2; j < grid_size + 2; j++) {
-				BSCS(grid1[i][j] = (grid2[i - 1][j] + grid2[i + 1][j] + grid2[i][j - 1] + grid2[i][j + 1]) * 0.25;)
-
-				BSCL(
-					grid1[i][j] =  0;
-					grid1[i][j] += (grid2[i - 2][j + 2] + grid2[i - 1][j + 2] + grid2[i][j + 2] + grid2[i + 1][j + 2] + grid2[i + 2][j + 2]);
-					grid1[i][j] += (grid2[i - 2][j + 1] + grid2[i - 1][j + 1] + grid2[i][j + 1] + grid2[i + 1][j + 1] + grid2[i + 2][j + 1]);
-					grid1[i][j] += (grid2[i - 2][j] + grid2[i - 1][j] + grid2[i + 1][j] + grid2[i + 2][j]);
-					grid1[i][j] += (grid2[i - 2][j - 1] + grid2[i - 1][j - 1] + grid2[i][j - 1] + grid2[i + 1][j - 1] + grid2[i + 2][j - 1]);
-					grid1[i][j] += (grid2[i - 2][j - 2] + grid2[i - 1][j - 2] + grid2[i][j - 2] + grid2[i + 1][j - 2] + grid2[i + 2][j - 2]);
-					grid1[i][j] =  grid1[i][j] / 24;
-					)
-
-				// MLPD(mulpd_kernel(vec_A.data(), local_repeats);)
-				// MEM_READ(memory_read(local_repeats, my_id, max_num_workers);)
-				// MEM_COPY(memory_copy(local_repeats, my_id, max_num_workers);)
-
-				// Execute kernel functions
-				EXCK(execute_kernels(stage, my_id, i, j);)
-				EXCKNEW(
-				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
-
-					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
-					RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
-
-					switch(kernels.at(stage).at(k)) {
-						case e_cpu:
-							hogcpu(local_repeats);
-							break;
-
-						case e_io:
-							hogio(local_repeats);
-							break;
-
-						case e_vm:
-							hogvm(local_repeats, do_vm_bytes, do_vm_stride, do_vm_hang, do_vm_keep);
-							break;
-
-						case e_hdd:
-							hoghdd(local_repeats, do_hdd_bytes);
-							break;
-
-						default:
-							exit(1);
-					}
-				}
-				)
-			}
-		}
-
-		// Barriers
-		MB(my_barrier(stage);)
-		PTB(pthread_barrier_wait(&pthread_barriers.at(stage));)
-
-		CNVG(
-			// Simulate a convergence test. Compute the maximum difference in my strip and set global variable
-		  	max_diff = 0.0;
-
-			for (uint32_t i = first; i < last; i++) {
-				for (uint32_t j = 2; j < grid_size + 2; j++) {
-					uint32_t temp = grid1[i][j] - grid2[i][j];
-
-					if (temp < 0) {
-						temp = -temp;
-					}
-
-					if (max_diff < temp) {
-						max_diff = temp;
-					}
-				}
-			}
-
-			max_difference_global[stage][my_id] = max_diff;
-			)
-	}
-}
-
-
-
-// enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11};
-
-void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j) {
-	// Execute kernel functions
-	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
-
-		if (use_set_num_repeats == 0) {
-
-			std::chrono::microseconds duration(kernel_durations.at(stage).at(k));
-
-			switch(kernels.at(stage).at(k)) {
-				case e_none:
-					break;
-
-				case e_addpd:
-					addpd(duration, id, num_workers.at(stage));
-					break;
-
-				case e_mulpd:
-					mulpd(duration, id, num_workers.at(stage));
-					break;
-
-				case e_sqrt:
-					sqroot(duration, id, num_workers.at(stage));
-					break;
-
-				case e_compute:
-					compute(duration, id, num_workers.at(stage));
-					break;
-
-				case e_sinus:
-					sinus(duration, id, num_workers.at(stage));
-					break;
-
-				case e_idle:
-					idle(duration);
-					break;
-
-				case e_memory_read:
-					memory_read(duration, id, num_workers.at(stage));
-					break;
-
-				case e_memory_copy:
-					memory_copy(duration, id, num_workers.at(stage));
-					break;
-
-				case e_memory_write:
-					memory_write(duration, id, num_workers.at(stage));
-					break;
-
-				case e_shared_mem_read_small:
-					shared_memory_read_small(duration, i, j);
-					break;
-
-				case e_shared_mem_read_large:
-					shared_memory_read_large(duration, i, j);
-					break;
-			}
-
-		} else {
-
-			uint64_t local_repeats = kernel_repeats.at(stage).at(k);
-
-			RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
-
-			switch(kernels.at(stage).at(k)) {
-				case e_none:
-					break;
-
-				case e_addpd:
-					addpd(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_mulpd:
-					mulpd(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_sqrt:
-					sqroot(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_compute:
-					compute(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_sinus:
-					sinus(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_idle:
-					print("Cannot use idle with a set number of repeats!");
-					exit(1);
-					break;
-
-				case e_memory_read:
-					memory_read(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_memory_copy:
-					memory_copy(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_memory_write:
-					memory_write(local_repeats, id, num_workers.at(stage));
-					break;
-
-				case e_shared_mem_read_small:
-					shared_memory_read_small(local_repeats, i, j);
-					break;
-
-				case e_shared_mem_read_large:
-					shared_memory_read_large(local_repeats, i, j);
-					break;
-			}
-		}
+		// Flip grid pointers
+		std::vector<std::vector<double>>* temp = src_grid;
+		src_grid = tgt_grid;
+		tgt_grid = temp;
 	}
 }
 
@@ -594,10 +327,8 @@ void initialize_grids() {
   	}
 }
 
-
-
 // Counter barrier
-void my_barrier(uint32_t stage) {
+inline void my_barrier(uint32_t stage) {
 
 	pthread_mutex_lock(&my_barrier_mutex);
 
@@ -614,4 +345,76 @@ void my_barrier(uint32_t stage) {
 	}
 
   	pthread_mutex_unlock(&my_barrier_mutex);
+}
+
+inline void basic_kernel_small(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j) {
+
+	tgt_grid[i][j] = (src_grid[i - 1][j] + src_grid[i + 1][j] + src_grid[i][j - 1] + src_grid[i][j + 1]) * 0.25;
+}
+
+inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j) {
+
+	tgt_grid[i][j]  = (src_grid[i - 2][j + 2] + src_grid[i - 1][j + 2] + src_grid[i][j + 2] + src_grid[i + 1][j + 2] + src_grid[i + 2][j + 2]);
+	tgt_grid[i][j] += (src_grid[i - 2][j + 1] + src_grid[i - 1][j + 1] + src_grid[i][j + 1] + src_grid[i + 1][j + 1] + src_grid[i + 2][j + 1]);
+	tgt_grid[i][j] += (src_grid[i - 2][j]     + src_grid[i - 1][j]                          + src_grid[i + 1][j]     + src_grid[i + 2][j]);
+	tgt_grid[i][j] += (src_grid[i - 2][j - 1] + src_grid[i - 1][j - 1] + src_grid[i][j - 1] + src_grid[i + 1][j - 1] + src_grid[i + 2][j - 1]);
+	tgt_grid[i][j] += (src_grid[i - 2][j - 2] + src_grid[i - 1][j - 2] + src_grid[i][j - 2] + src_grid[i + 1][j - 2] + src_grid[i + 2][j - 2]);
+
+	tgt_grid[i][j] = tgt_grid[i][j] / 24;
+}
+
+inline void execute_kernels(uint32_t stage) {
+
+	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
+
+		uint64_t local_repeats = kernel_repeats.at(stage).at(k);
+		RND(local_repeats = local_repeats * ((rand() % 3) + 1);)
+
+		switch(kernels.at(stage).at(k)) {
+			case e_none:
+				break;
+
+			case e_cpu:
+				hogcpu(local_repeats);
+				break;
+
+			case e_io:
+				hogio(local_repeats);
+				break;
+
+			case e_vm:
+				hogvm(local_repeats, do_vm_bytes, do_vm_stride, do_vm_hang, do_vm_keep);
+				break;
+
+			case e_hdd:
+				hoghdd(local_repeats, do_hdd_bytes);
+				break;
+
+			default:
+				print("Invalid kernel found: ", kernels.at(stage).at(k));
+				exit(1);
+		}
+	}
+}
+
+// Simulate a convergence test. Compute the maximum difference in my strip and set global variable.
+inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint32_t id) {
+
+  	double max_diff = 0.0;
+
+	for (uint32_t i = first; i < last; i++) {
+		for (uint32_t j = 2; j < grid_size + 2; j++) {
+			uint32_t temp = grid1[i][j] - grid2[i][j];
+
+			if (temp < 0) {
+				temp = -temp;
+			}
+
+			if (max_diff < temp) {
+				max_diff = temp;
+			}
+		}
+	}
+
+	max_difference_global[stage][id] = max_diff;
 }

@@ -14,7 +14,7 @@ LIB_FLAGS = -lpthread
 
 
 
-_JAC_OBJ = jacobi.o utils.o config_file_utils.o asm_kernels.o loads.o
+_JAC_OBJ = jacobi.o utils.o config_file_utils.o kernels.o
 JAC_OBJ  = $(patsubst %,$(BUILD_DIR)/%,$(_JAC_OBJ))
 
 
