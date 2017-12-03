@@ -128,10 +128,10 @@ std::vector<std::vector<double>> max_difference_global;
 // uint64_t repeats;
 uint32_t max_num_workers;
 
-long long do_vm_bytes = 1024 * 1024 * 10;
+long long do_vm_bytes = 1024 * 1024;
 long long do_vm_stride = 4096;
 long long do_vm_hang = -1;
-int do_vm_keep = 0;
+int do_vm_keep = 1;
 
 long long do_hdd_bytes = 1024;
 
@@ -308,7 +308,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 				for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
 					uint64_t local_repeats = kernel_repeats.at(stage).at(k);
-					RAND(local_repeats = local_repeats * ((rand() % 3) + 1);)
+					RAND(local_repeats = local_repeats * rand_uint(1, 3);)
 
 					switch(kernels.at(stage).at(k)) {
 						case e_cpu:

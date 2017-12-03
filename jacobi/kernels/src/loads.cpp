@@ -40,10 +40,12 @@ static char const *global_progname = "load gen";
 
 
 int hogcpu(long long local_repeats) {
-  for (long long i = 0; i < local_repeats; i++) {
-    sin(rand());
-    sqrt(rand());
 
+  volatile double temp;
+  // double* volatile ptr = 0;
+
+  for (long long i = 0; i < local_repeats; i++) {
+    temp = sqrt(i);
   }
 
   return 0;
@@ -109,6 +111,10 @@ int hogvm (long long local_repeats, long long bytes, long long stride, long long
   return 0;
 }
 
+
+#include "utils.hpp"
+
+
 int
 hoghdd (long long local_repeats, long long bytes) {
   long long i, j;
@@ -119,7 +125,7 @@ hoghdd (long long local_repeats, long long bytes) {
   /* Initialize buffer with some random ASCII data.  */
   dbg (stdout, "seeding %d byte buffer with random data\n", chunk);
   for (i = 0; i < chunk - 1; i++) {
-      j = rand ();
+      j = rand_uint(0, RAND_MAX);
       j = (j < 0) ? -j : j;
       j %= 95;
       j += 32;

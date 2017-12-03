@@ -120,3 +120,24 @@ uint32_t check_affinity_set_size() {
 //         print("[Main] Joined with thread ", i, "\n");
 //     }
 // }
+
+#if defined (__GCC__)
+    #define thread_local __thread
+#endif
+
+#include <random>
+#include <time.h>
+#include <thread>
+
+// Thread safe version of rand()
+uint32_t rand_uint(const uint32_t& min, const uint32_t& max) {
+    static thread_local std::mt19937* gen = nullptr;
+
+    if (!gen) {
+        gen = new std::mt19937(clock() + std::hash<std::thread::id>()(std::this_thread::get_id()));
+    }
+
+    std::uniform_int_distribution<uint32_t> dist(min, max);
+
+    return dist(*gen);
+}

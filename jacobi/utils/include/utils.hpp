@@ -86,4 +86,7 @@ void join_with_threads(std::deque<pthread_t> threads, uint32_t num_threads_to_jo
 
 uint32_t check_affinity_set_size();
 
+// Thread safe version of rand()
+uint32_t rand_uint(const uint32_t& min, const uint32_t& max);
+
 #endif // UTILS_HPP
