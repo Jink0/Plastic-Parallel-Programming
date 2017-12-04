@@ -176,7 +176,13 @@ done
 END=$(date +%s.%N)
 DIFF=$(echo "$END - $START" | bc)
 
-sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Optimal threads 1 completed! Time taken: $DIFF seconds"
+if [ "$MACHINE" = "spa" ] ; then
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: optimal threads 1 completed! Time taken: $DIFF seconds"
+fi
+
+if [ "$MACHINE" = "XXXII" ] ; then
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: optimal threads 1 completed! Time taken: $DIFF seconds"
+fi
 
 if [ "$UPDATE_MOTD" = true ] ; then
     sudo scripts/update-motd.sh >> $LOG_FILENAME
