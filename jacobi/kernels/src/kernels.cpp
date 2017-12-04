@@ -1,22 +1,20 @@
-#include <ctype.h>
-#include <errno.h>
-#include <libgen.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <time.h>
-#include <unistd.h>
-#include <sys/wait.h>
+#include "kernels.hpp"
 
-/* By default, print all messages of severity info and above.  */
+#include <math.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "general_utils.hpp"
+
+
+
+// By default, print all messages of severity info and above
 static int global_debug = 2;
 
-/* Name of this program */
-static char const *global_progname = "load gen";
+// Name of this program
+static char const *global_progname = "kernels ";
 
-/* Implemention of runtime-selectable severity message printing.  */
+// Implementation of runtime-selectable severity message printing
 #define dbg(OUT, STR, ARGS...) if (global_debug >= 3) \
 	fprintf (stdout, "%s: dbug: [%lli] ", \
 		global_progname, (long long)getpid()), \
@@ -39,143 +37,164 @@ static char const *global_progname = "load gen";
 
 
 
-volatile int hogcpu(long long local_repeats) {
+// Generates cpu load, repeats for given amount
+volatile int hogcpu(long long repeats) {
 
-  // volatile double temp;
-  // double* volatile ptr = 0;
+	for (long long i = 0; i < repeats; i++) {
+		sqrt(i);
+	}
 
-  for (long long i = 0; i < local_repeats; i++) {
-    sqrt(i);
-  }
-
-  return 0;
+	return 0;
 }
 
-int hogio (long long local_repeats) {
-  for (long long i = 0; i < local_repeats; i++) {
-    sync();
-  }
 
-  return 0;
+
+// Generates io load, repeats for given amount
+int hogio(long long repeats) {
+
+	for (long long i = 0; i < repeats; i++) {
+		sync();
+	}
+
+	return 0;
 }
 
-int hogvm (long long local_repeats, long long bytes, long long stride, long long hang, int keep) {
-  long long i;
+
+
+// Generates vm load by allocating memory, touching certain bytes, and optionally hanging. Repeats for given amount
+int hogvm(long long repeats) {
+
   char *ptr = 0;
-  char c;
   int do_malloc = 1;
 
-  for (i = 0; i < local_repeats; i++) {
-      if (do_malloc) {
-          dbg (stdout, "allocating %lli bytes ...\n", bytes);
+	for (long long i = 0; i < repeats; i++) {
+		if (do_malloc) {
+			dbg(stdout, "allocating %lli bytes ...\n", vm_bytes);
 
-          if (!(ptr = (char *) malloc (bytes * sizeof (char)))) {
-              err (stderr, "hogvm malloc failed: %s\n", strerror (errno));
+			if (!(ptr = (char *) malloc (vm_bytes * sizeof (char)))) {
+				err (stderr, "hogvm malloc failed: %s\n", strerror (errno));
 
-              return 1;
-            }
+				return 1;
+			}
 
-          if (keep)
-            do_malloc = 0;
-        }
+			if (vm_keep) {
+				do_malloc = 0;
+			}
+		}
 
-      dbg (stdout, "touching bytes in strides of %lli bytes ...\n", stride);
-      for (i = 0; i < bytes; i += stride)
-        ptr[i] = 'Z';           /* Ensure that COW happens.  */
+		dbg(stdout, "touching bytes in strides of %lli bytes ...\n", vm_stride);
 
-      if (hang == 0) {
-          dbg (stdout, "sleeping forever with allocated memory\n");
-          while (1)
-            sleep (1024);
-        
-        } else if (hang > 0) {
-          dbg (stdout, "sleeping for %llis with allocated memory\n", hang);
-          sleep (hang);
-        }
+		for (long long i = 0; i < vm_bytes; i += vm_stride) {
+			ptr[i] = 'Z'; // Ensure that COW happens
+		}
 
-      for (i = 0; i < bytes; i += stride) {
-          c = ptr[i];
+		if (vm_hang == 0) {
+			dbg(stdout, "sleeping forever with allocated memory\n");
 
-          if (c != 'Z') {
-              err (stderr, "memory corruption at: %p\n", ptr + i);
-              return 1;
-            }
-        }
+			while (1) {
+				sleep (1024);
+			}
+		
+		} else if (vm_hang > 0) {
+			dbg(stdout, "sleeping for %llis with allocated memory\n", vm_hang);
 
-      if (do_malloc) {
-          free (ptr);
-          dbg (stdout, "freed %lli bytes\n", bytes);
-        }
-    }
+			sleep (vm_hang);
+		}
 
-  return 0;
+		for (long long i = 0; i < vm_bytes; i += vm_stride) {
+			char c = ptr[i];
+
+			if (c != 'Z') {
+				err (stderr, "memory corruption at: %p\n", ptr + i);
+
+				return 1;
+			}
+		}
+
+		if (do_malloc) {
+			free (ptr);
+
+			dbg(stdout, "freed %lli bytes\n", vm_bytes);
+		}
+	}
+
+	return 0;
 }
 
 
-#include "utils.hpp"
 
+// Generates hdd load by writing random data to the hdd, repeats for given amount
+int hoghdd(long long repeats) {
 
-int
-hoghdd (long long local_repeats, long long bytes) {
-  long long i, j;
-  int fd;
-  int chunk = (1024 * 1024) - 1;        /* Minimize slow writing.  */
-  char buff[chunk];
+	long long j;
+	int fd;
+	int chunk = (1024 * 1024) - 1; // Minimize slow writing
+	char buff[chunk];
 
-  /* Initialize buffer with some random ASCII data.  */
-  dbg (stdout, "seeding %d byte buffer with random data\n", chunk);
-  for (i = 0; i < chunk - 1; i++) {
-      j = rand_uint(0, RAND_MAX);
-      j = (j < 0) ? -j : j;
-      j %= 95;
-      j += 32;
-      buff[i] = j;
-    }
+	dbg(stdout, "seeding %d byte buffer with random data\n", chunk);
 
-  buff[i] = '\n';
+	// Initialize buffer with some random ASCII data
+	for (long long i = 0; i < chunk - 1; i++) {
+		j = rand_long_long(0, RAND_MAX);
+		j = (j < 0) ? -j : j;
+		j %= 95;
+		j += 32;
+		buff[i] = j;
+	}
 
-  for (long long i = 0; i < local_repeats; i++) {
-      char name[] = "./load.XXXXXX";
+	buff[chunk - 1] = '\n';
 
-      if ((fd = mkstemp (name)) == -1) {
-          err (stderr, "mkstemp failed: %s\n", strerror (errno));
-          return 1;
-        }
+	for (long long i = 0; i < repeats; i++) {
+		char name[] = "./load.XXXXXX";
 
-      dbg (stdout, "opened %s for writing %lli bytes\n", name, bytes);
+		if ((fd = mkstemp (name)) == -1) {
+			err (stderr, "mkstemp failed: %s\n", strerror (errno));
 
-      dbg (stdout, "unlinking %s\n", name);
-      if (unlink (name) == -1) {
-          err (stderr, "unlink of %s failed: %s\n", name, strerror (errno));
-          return 1;
-        }
+			return 1;
+		}
 
-      dbg (stdout, "fast writing to %s\n", name);
-      for (j = 0; bytes == 0 || j + chunk < bytes; j += chunk) {
-          if (write (fd, buff, chunk) == -1) {
-              err (stderr, "write failed: %s\n", strerror (errno));
-              return 1;
-            }
-        }
+		dbg(stdout, "opened %s for writing %lli bytes\n", name, hdd_bytes);
 
-      dbg (stdout, "slow writing to %s\n", name);
-      for (; bytes == 0 || j < bytes - 1; j++) {
-          if (write (fd, &buff[j % chunk], 1) == -1) {
-              err (stderr, "write failed: %s\n", strerror (errno));
-              return 1;
-            }
-        }
+		dbg(stdout, "unlinking %s\n", name);
 
-      if (write (fd, "\n", 1) == -1) {
-          err (stderr, "write failed: %s\n", strerror (errno));
-          return 1;
-        }
+		if (unlink (name) == -1) {
+			err (stderr, "unlink of %s failed: %s\n", name, strerror (errno));
 
-      ++j;
+			return 1;
+		}
 
-      dbg (stdout, "closing %s after %lli bytes\n", name, j);
-      close (fd);
-    }
+		dbg(stdout, "fast writing to %s\n", name);
 
-  return 0;
+		for (long long j = 0; hdd_bytes == 0 || j + chunk < hdd_bytes; j += chunk) {
+			if (write (fd, buff, chunk) == -1) {
+				err (stderr, "write failed: %s\n", strerror (errno));
+
+				return 1;
+			}
+		}
+
+		dbg(stdout, "slow writing to %s\n", name);
+
+		for (; hdd_bytes == 0 || j < hdd_bytes - 1; j++) {
+			if (write (fd, &buff[j % chunk], 1) == -1) {
+				err (stderr, "write failed: %s\n", strerror (errno));
+
+				return 1;
+			}
+		}
+
+		if (write (fd, "\n", 1) == -1) {
+			err (stderr, "write failed: %s\n", strerror (errno));
+
+			return 1;
+		}
+
+		++j;
+
+		dbg(stdout, "closing %s after %lli bytes\n", name, j);
+
+		close (fd);
+	}
+
+	return 0;
 }

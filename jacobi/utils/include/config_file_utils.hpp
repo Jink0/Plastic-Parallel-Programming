@@ -7,9 +7,10 @@
 #include <sstream>
 #include <limits.h>
 #include <unistd.h>
-#include <utils.hpp>
 #include <sys/stat.h>
 #include <thread>
+
+#include <general_utils.hpp>
 
 
 
@@ -20,13 +21,13 @@ extern std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 
 
 
-// Returns the currrent working directory
+// Returns the current working directory
 std::string get_current_working_dir();
 
 // Creates and moves into relevant working directory. Also copies given config file
 void move_and_copy(std::string prog_dir_name, std::string config_filename);
 
-// Returns a map of key-value pairsfrom the conifuration file
+// Returns a map of key-value pairs from the configuration file
 std::map<std::string, std::string> parse_config(std::string filename);
 
 // Checks that the given iterators are not equal, prints relevant error message

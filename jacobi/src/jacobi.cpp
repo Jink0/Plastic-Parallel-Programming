@@ -4,7 +4,7 @@
 #include <sys/times.h>
 #include <algorithm>
 
-#include <utils.hpp>
+#include <general_utils.hpp>
 #include <config_file_utils.hpp>
 #include <kernels.hpp>
 
@@ -61,26 +61,25 @@
 
 
 
+// Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other
+void worker(uint32_t my_id, uint32_t stage);
+
 // Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
 void initialize_grids();
 
-// Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
-void worker(uint32_t my_id, uint32_t stage);
-
-void execute_kernels(uint32_t stage, uint32_t id, uint32_t i, uint32_t j);
-
-// Counter barrier
+// My implementation of a counter barrier
 inline void my_barrier(uint32_t stage);
 
-enum kernels_enum {e_none = 0, e_addpd = 1, e_mulpd = 2, e_sqrt = 3, e_compute = 4, e_sinus = 5, e_idle = 6, e_memory_read = 7, e_memory_copy = 8, e_memory_write = 9, e_shared_mem_read_small = 10, e_shared_mem_read_large = 11, e_cpu = 12, e_io = 13, e_vm = 14, e_hdd = 15};
-
+// Performs the jacobi kernel. Computes the average of the given point's four neighbors in the source grid and stores it in the target grid
 inline void basic_kernel_small(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j);
 
+// Performs a larger version of the jacobi kernel. Computes average of the given point's 5x5 neighborhood in the source grid and stores it in the target grid
 inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j);
 
+// Executes the relevant kernels set by the experiment parameters
 inline void execute_kernels(uint32_t stage);
 
-// Simulate a convergence test. Compute the maximum difference in my strip and set global variable.
+// Simulate a convergence test. Computes the maximum difference in given strip and sets the global_max_difference variable
 inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint32_t id);
 
 
@@ -99,10 +98,6 @@ uint32_t num_arrived = 0;
 
 
 
-// Used for timing
-std::chrono::high_resolution_clock::time_point start;
-std::chrono::high_resolution_clock::time_point end;
-
 // Experiment parameters
 uint32_t num_runs, grid_size, num_stages, use_set_num_repeats;
 
@@ -115,19 +110,12 @@ std::vector<std::vector<std::vector<uint32_t>>> pinnings;
 std::vector<std::vector<double>> grid1, grid2;
 
 // Used for convergence test
-std::vector<std::vector<double>> max_difference_global;
+std::vector<std::vector<double>> global_max_difference;
 
-// uint64_t repeats;
-uint32_t max_num_workers;
 
-static long long const do_vm_bytes = 1024 * 1024;
-static long long const do_vm_stride = 4096;
-static long long const do_vm_hang = -1;
-static int const do_vm_keep = 1;
 
-static long long const do_hdd_bytes = 1024;
-
-// static uint32_t const border_size = 2;
+// Border size of our grids
+static uint32_t const border_size = 2;
 
 
 
@@ -163,7 +151,7 @@ int main(int argc, char *argv[]) {
 
 		std::vector<uint32_t> temp(num_workers.at(i) + 1, quotient);
 
-		temp.at(0) = 2;
+		temp.at(0) = border_size;
 
 		for (uint32_t j = 1; j < num_workers.at(i) + 1; j++) {
 			if (remainder != 0) {
@@ -178,17 +166,17 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Set global max difference vector size
-	max_difference_global.resize(num_stages);
+	global_max_difference.resize(num_stages);
 
 	// Set per stage global max difference vector sizes
 	for (uint32_t i = 0; i < num_stages; i++) {
-		max_difference_global.at(i).resize(num_workers.at(i));
+		global_max_difference.at(i).resize(num_workers.at(i));
 	}
 
 
 
 	// Calculate the max number of workers we will need
-	max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
+	uint32_t max_num_workers = *max_element(std::begin(num_workers), std::end(num_workers));
 
   	// Create thread handles
 	std::vector<std::thread> threads(max_num_workers);
@@ -206,15 +194,15 @@ int main(int argc, char *argv[]) {
 
 
 
-	// Initialize runtimes sum for computing average
-	uint32_t runtimes_sum = 0;
+	// Initialize run times sum for computing average
+	uint32_t run_times_sum = 0;
 
 	for (uint32_t r = 1; r < num_runs + 1; r++) {
 
 		initialize_grids();
 
 		// Record start time
-		start = std::chrono::high_resolution_clock::now();
+		std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
 		for (uint32_t stage = 0; stage < num_stages; stage++) {
 
@@ -241,16 +229,16 @@ int main(int argc, char *argv[]) {
 		// Record runtime
 		fputs((std::to_string(millis.count()) + "\n").c_str(), output_stream);
 
-		runtimes_sum += millis.count();
+		run_times_sum += millis.count();
 	}
 
 	// Print average runtime
-	print("\nAverage elapsed time over ", num_runs, " runs: ", runtimes_sum / num_runs, "ms\n");
+	print("\nAverage elapsed time over ", num_runs, " runs: ", run_times_sum / num_runs, "ms\n");
 }
 
 
 
-// Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other.
+// Each Worker computes values in one strip of the grids. The main worker loop does two computations to avoid copying from one grid to the other
 void worker(uint32_t my_id, uint32_t stage) {
 
 	// Set our affinity
@@ -268,7 +256,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 		// Update my points
 		for (uint32_t i = first; i < last; i++) {
-			for (uint32_t j = 2; j < grid_size + 2; j++) {
+			for (uint32_t j = border_size; j < grid_size + border_size; j++) {
 
 				BKS(basic_kernel_small(*(src_grid), *(tgt_grid), i, j);)
 
@@ -297,37 +285,40 @@ void worker(uint32_t my_id, uint32_t stage) {
 // Initialize the grids (grid1 and grid2), set boundaries to 1.0 and interior points to 0.0
 void initialize_grids() {
 
-	grid1.resize(grid_size + 4);
-	grid2.resize(grid_size + 4);
+	grid1.resize(grid_size + (2 * border_size));
+	grid2.resize(grid_size + (2 * border_size));
  
  	// Set all points to 0.0
-	for (uint32_t i = 0; i < grid_size + 4; i++) {
-		grid1[i].resize(grid_size + 4);
-		grid2[i].resize(grid_size + 4);
+	for (uint32_t i = 0; i < grid_size + (2 * border_size); i++) {
+		grid1[i].resize(grid_size + (2 * border_size));
+		grid2[i].resize(grid_size + (2 * border_size));
 
-		for (uint32_t j = 0; j < grid_size + 4; j++) {
-		    grid1[i][j] = 0.0;
-		    grid2[i][j] = 0.0;
-		}
+		std::fill(grid1[i].begin(), grid1[i].end(), 0.0);
+		std::fill(grid2[i].begin(), grid2[i].end(), 0.0);
 	}
 
 	// Set edges to 1.0
-	for (uint32_t i = 0; i < grid_size + 2; i++) {
-		grid1[i][0] = 1.0;
-	    grid1[i][grid_size + 1] = 1.0;
-	    grid2[i][0] = 1.0;
-	    grid2[i][grid_size + 1] = 1.0;
-	}
+	for (uint32_t i = 0; i < grid_size + (2 * border_size); i++) {
 
-  	for (uint32_t j = 0; j < grid_size + 2; j++) {
-	    grid1[0][j] = 1.0;
-	    grid2[0][j] = 1.0;
-	    grid1[grid_size + 1][j] = 1.0;
-	    grid2[grid_size + 1][j] = 1.0;
-  	}
+		if (i < border_size || i > grid_size + border_size - 1) {
+			std::fill(grid1[i].begin(), grid1[i].end(), 1.0);
+			std::fill(grid2[i].begin(), grid2[i].end(), 1.0);
+
+		} else {
+
+			for (uint32_t j = 0; j < border_size; j++) {
+				grid1[i][j] = 1.0;
+				grid1[i][grid_size + (2 * border_size) - j - 1] = 1.0;
+				grid2[i][j] = 1.0;
+				grid2[i][grid_size + (2 * border_size) - j - 1] = 1.0;
+			}
+		}
+	} 		
 }
 
-// Counter barrier
+
+
+// My implementation of a counter barrier
 inline void my_barrier(uint32_t stage) {
 
 	pthread_mutex_lock(&my_barrier_mutex);
@@ -347,11 +338,17 @@ inline void my_barrier(uint32_t stage) {
   	pthread_mutex_unlock(&my_barrier_mutex);
 }
 
+
+
+// Performs the jacobi kernel. Computes the average of the given point's four neighbors in the source grid and stores it in the target grid
 inline void basic_kernel_small(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j) {
 
 	tgt_grid[i][j] = (src_grid[i - 1][j] + src_grid[i + 1][j] + src_grid[i][j - 1] + src_grid[i][j + 1]) * 0.25;
 }
 
+
+
+// Performs a larger version of the jacobi kernel. Computes average of the given point's 5x5 neighborhood in the source grid and stores it in the target grid
 inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j) {
 
 	tgt_grid[i][j]  = (src_grid[i - 2][j + 2] + src_grid[i - 1][j + 2] + src_grid[i][j + 2] + src_grid[i + 1][j + 2] + src_grid[i + 2][j + 2]);
@@ -363,6 +360,9 @@ inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::
 	tgt_grid[i][j] = tgt_grid[i][j] / 24;
 }
 
+
+
+// Executes the relevant kernels set by the experiment parameters
 inline void execute_kernels(uint32_t stage) {
 
 	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
@@ -371,23 +371,23 @@ inline void execute_kernels(uint32_t stage) {
 		RND(local_repeats = local_repeats * ((rand() % 3) + 1);)
 
 		switch(kernels.at(stage).at(k)) {
-			case e_none:
+			case none:
 				break;
 
-			case e_cpu:
+			case cpu:
 				hogcpu(local_repeats);
 				break;
 
-			case e_io:
+			case io:
 				hogio(local_repeats);
 				break;
 
-			case e_vm:
-				hogvm(local_repeats, do_vm_bytes, do_vm_stride, do_vm_hang, do_vm_keep);
+			case vm:
+				hogvm(local_repeats);
 				break;
 
-			case e_hdd:
-				hoghdd(local_repeats, do_hdd_bytes);
+			case hdd:
+				hoghdd(local_repeats);
 				break;
 
 			default:
@@ -397,13 +397,15 @@ inline void execute_kernels(uint32_t stage) {
 	}
 }
 
-// Simulate a convergence test. Compute the maximum difference in my strip and set global variable.
+
+
+// Simulate a convergence test. Computes the maximum difference in given strip and sets the global_max_difference variable
 inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint32_t id) {
 
   	double max_diff = 0.0;
 
 	for (uint32_t i = first; i < last; i++) {
-		for (uint32_t j = 2; j < grid_size + 2; j++) {
+		for (uint32_t j = border_size; j < grid_size + border_size; j++) {
 			uint32_t temp = grid1[i][j] - grid2[i][j];
 
 			if (temp < 0) {
@@ -416,5 +418,5 @@ inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint
 		}
 	}
 
-	max_difference_global[stage][id] = max_diff;
+	global_max_difference[stage][id] = max_diff;
 }

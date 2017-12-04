@@ -4,13 +4,12 @@
 
 
 
-#define NUM_KERNELS 16
+#define NUM_KERNELS 5
 
-std::string kernel_names[NUM_KERNELS] = {"none", "addpd", "mulpd", "sqrt", "compute", "sinus", "idle", "memory_read", "memory_copy", "memory_write", "shared_mem_read_small", "shared_mem_read_large", "cpu", "io", "vm", "hdd"};
+std::string kernel_names[NUM_KERNELS] = {"none", "cpu", "io", "vm", "hdd"};
 
 
-
-// Returns the currrent working directory
+// Returns the current working directory
 std::string get_current_working_dir() {
 
 	char buff[FILENAME_MAX];
@@ -34,8 +33,6 @@ void move_and_copy(std::string prog_dir_name, std::string config_filename) {
 
     // Open the config file before we move so we can copy it later
     std::ifstream src(get_current_working_dir() + "/" + config_filename, std::ios::binary);
-
-    // print("\nConfig file found at:\n", get_current_working_dir() + "/" + config_filename, "\n");
 
     int res;
 
@@ -88,8 +85,6 @@ void move_and_copy(std::string prog_dir_name, std::string config_filename) {
     // Create new config path
     std::string new_config_path = get_current_working_dir() + "/" + config_filename.substr(config_filename.find_last_of("/\\") + 1);
 
-    // print("\nCopying config file to: \n", new_config_path, "\n");
-
     // Open new config file
     std::ofstream dst(new_config_path, std::ios::binary);
 
@@ -103,7 +98,7 @@ void move_and_copy(std::string prog_dir_name, std::string config_filename) {
 
 
 
-// Returns a map of key-value pairsfrom the conifuration file
+// Returns a map of key-value pairs from the configuration file
 std::map<std::string, std::string> parse_config(std::string filename) {
 
 	// Input stream
