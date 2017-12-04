@@ -5,9 +5,16 @@
 trap ctrl_c INT
 
 function ctrl_c() {
-        echo "Trapped CTRL-C, resetting MOTD..."
-        echo 
-        sudo scripts/update-motd.sh ""
+        if [ "$UPDATE_MOTD" = true ] ; then
+            echo "\nTrapped CTRL-C, resetting MOTD..."
+            echo 
+            echo -e "Trapped CTRL-C, resetting MOTD...\n" >> $LOG_FILENAME
+            sudo scripts/update-motd.sh >> $LOG_FILENAME
+        else
+            echo "Trapped CTRL-C"
+            echo -e "Trapped CTRL-C\n" >> $LOG_FILENAME
+        fi
+        
         exit
 }
 
@@ -123,7 +130,7 @@ START=$(date +%s.%N)
 make clean >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
-make flags="-DPTHREADBARRIER -DBASIC_KERNEL_SMALL -DCONVERGE_TEST" main >> $LOG_FILENAME
+make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
 
