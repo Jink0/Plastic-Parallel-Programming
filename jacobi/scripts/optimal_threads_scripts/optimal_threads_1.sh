@@ -11,7 +11,7 @@ function ctrl_c() {
             echo -e "Trapped CTRL-C, resetting MOTD...\n" >> $LOG_FILENAME
             sudo scripts/update-motd.sh >> $LOG_FILENAME
         else
-            echo "Trapped CTRL-C"
+            echo "\nTrapped CTRL-C"
             echo -e "Trapped CTRL-C\n" >> $LOG_FILENAME
         fi
         
@@ -116,22 +116,19 @@ echo -e "Machine: $MACHINE\n\n\n\n" > $LOG_FILENAME
 
 # Start experiments
 
-printf "0.000%%"
-
-if [ "$UPDATE_MOTD" = true ] ; then
-    sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> $LOG_FILENAME
-    echo -e "\n\n\n\n" >> $LOG_FILENAME
-fi
-
 START=$(date +%s.%N)
-
-
 
 make clean >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
 make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
+
+printf "0.000%%"
+if [ "$UPDATE_MOTD" = true ] ; then
+    sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> $LOG_FILENAME
+    echo -e "\n\n\n\n" >> $LOG_FILENAME
+fi
 
 
 
