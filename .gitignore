@@ -12,3 +12,5 @@ doc/*/*.out
 doc/*/*.xml
 doc/*/*.synctex.gz
 doc/*/*.toc
+doc/*/*.bbl
+doc/*/*.blg
