@@ -122,7 +122,7 @@ START=$(date +%s.%N)
 make clean >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
-make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DCONVERGENCE_TEST" main >> $LOG_FILENAME
+make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
 printf "0.000%%"
