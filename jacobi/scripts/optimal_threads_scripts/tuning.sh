@@ -71,6 +71,7 @@ NUM_WORKERS_STEP=1
 if [ "$MACHINE" = "spa" ] ; then
     NUM_WORKERS_MAX=24
     NUM_RUNS=240
+    STRING="0..11 "
     UPDATE_MOTD=false
     FILENAME="configs/spa/tuning.ini"
     LOG_FILENAME="logs/spa/tuning.log"
@@ -79,6 +80,7 @@ fi
 if [ "$MACHINE" = "XXXII" ] ; then
     NUM_WORKERS_MAX=48
     NUM_RUNS=480
+    STRING="0..31 "
     UPDATE_MOTD=true
     FILENAME="configs/XXXII/tuning.ini"
     LOG_FILENAME="logs/XXXII/tuning.log"
@@ -104,9 +106,9 @@ echo "set_pin_bool_0: \"2\"" >> $FILENAME
 echo "kernels_0: \"cpu\"" >> $FILENAME
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "grid_size: \"128\"" >> $FILENAME
-echo "kernel_repeats_0: \"100\"" >> $FILENAME 
+echo "kernel_repeats_0: \"200\"" >> $FILENAME 
 echo "num_workers_0: \"1\"" >> $FILENAME
-echo "pinnings_0: \"0..11 \"" >> $FILENAME
+echo "pinnings_0: \"$STRING\"" >> $FILENAME
 
 # Overwrite log
 echo -e "Machine: $MACHINE\n\n\n\n" > $LOG_FILENAME
@@ -120,7 +122,7 @@ START=$(date +%s.%N)
 make clean >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
-make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
+make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DCONVERGENCE_TEST" main >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
 printf "0.000%%"
@@ -135,8 +137,6 @@ for ((i=$KERNEL_REPEATS_MIN; i<=$KERNEL_REPEATS_MAX; i+=$KERNEL_REPEATS_STEP))
 do
     for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=$NUM_WORKERS_STEP))
     do
-        STRING="0..11 "
-
         FULL_STRING=$STRING
 
         for ((p=1; p<j; p++))
@@ -175,9 +175,9 @@ echo "set_pin_bool_0: \"2\"" >> $FILENAME
 echo "kernels_0: \"vm\"" >> $FILENAME
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "grid_size: \"128\"" >> $FILENAME
-echo "kernel_repeats_0: \"100\"" >> $FILENAME 
+echo "kernel_repeats_0: \"200\"" >> $FILENAME 
 echo "num_workers_0: \"1\"" >> $FILENAME
-echo "pinnings_0: \"0..11 \"" >> $FILENAME
+echo "pinnings_0: \"$STRING\"" >> $FILENAME
 
 
 
@@ -185,10 +185,18 @@ for ((i=$KERNEL_REPEATS_MIN; i<=$KERNEL_REPEATS_MAX; i+=$KERNEL_REPEATS_STEP))
 do
     for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=$NUM_WORKERS_STEP))
     do
-        head -n -2 $FILENAME > temp.ini
+        FULL_STRING=$STRING
 
+        for ((p=1; p<j; p++))
+        do
+            FULL_STRING=${FULL_STRING}${STRING}
+        done
+
+        head -n -3 $FILENAME > temp.ini
+        
         echo "kernel_repeats_0: \"$i\"" >> temp.ini
         echo "num_workers_0: \"$j\"" >> temp.ini
+        echo "pinnings_0: \"$FULL_STRING\"" >> temp.ini
 
         mv temp.ini $FILENAME
 
