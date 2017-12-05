@@ -175,9 +175,15 @@ echo "set_pin_bool_0: \"2\"" >> $FILENAME
 echo "kernels_0: \"vm\"" >> $FILENAME
 echo "kernel_durations_0: \"\"" >> $FILENAME
 echo "grid_size: \"128\"" >> $FILENAME
-echo "kernel_repeats_0: \"200\"" >> $FILENAME 
+echo "kernel_repeats_0: \"1\"" >> $FILENAME 
 echo "num_workers_0: \"1\"" >> $FILENAME
 echo "pinnings_0: \"$STRING\"" >> $FILENAME
+
+
+
+KERNEL_REPEATS_MIN=1
+KERNEL_REPEATS_STEP=1
+KERNEL_REPEATS_MAX=5
 
 
 
