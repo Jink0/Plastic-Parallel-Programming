@@ -1,0 +1,152 @@
+% \documentclass[twoside,openright]{report}
+\documentclass{report}
+
+\usepackage{graphicx}
+\graphicspath{{graphics/}}
+\usepackage[labelfont=bf]{caption}
+\usepackage{placeins}
+
+\let\Oldsection\section
+\renewcommand{\section}{\FloatBarrier\Oldsection}
+\let\Oldsubsection\subsection
+\renewcommand{\subsection}{\FloatBarrier\Oldsubsection}
+\let\Oldsubsubsection\subsubsection
+\renewcommand{\subsubsection}{\FloatBarrier\Oldsubsubsection}
+
+\usepackage{hyperref}
+\usepackage[nottoc,numbib]{tocbibind}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{
+backgroundcolor=\color{lbcolor},
+    tabsize=4,    
+%   rulecolor=,
+    language=[GNU]C++,
+        basicstyle=\scriptsize,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=false,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        numbers=left,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.026,0.112,0.095},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+        numberstyle=\color[rgb]{0.205, 0.142, 0.73},
+%        \lstdefinestyle{C++}{language=C++,style=numbers}’.
+}
+\lstset{
+    backgroundcolor=\color{lbcolor},
+    tabsize=4,
+  language=C++,
+  captionpos=b,
+  tabsize=3,
+  frame=lines,
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  breaklines=true,
+  showstringspaces=false,
+  basicstyle=\footnotesize,
+%  identifierstyle=\color{magenta},
+  keywordstyle=\color[rgb]{0,0,1},
+  commentstyle=\color[rgb]{0,0.5,0},
+  stringstyle=\color{red}
+  }
+
+\usepackage{filecontents}
+
+\usepackage{setspace} 
+
+\newcommand{\specialcell}[2][c]{%
+  \begin{tabular}[#1]{@{}c@{}}#2\end{tabular}}
+
+
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \vspace*{3cm}
+        
+        \Huge
+        Design And Analysis Of A Plastic Parallel Programming System
+        
+        \vspace{1.5cm}
+        
+        \large
+        \textbf{Mark Jenkins}
+        
+        \vspace{2.5cm}
+
+        \includegraphics[width=0.3\textwidth]{university}
+
+        \vspace{2.5cm}
+        
+        \textbf{MInf Project (Part 1) Report}\\
+        Master of Informatics\\
+        School of Informatics\\
+        University of Edinburgh\\
+        2017
+    \end{center}
+\end{titlepage}
+
+\setlength\parskip{1em}
+\setlength\parindent{0pt}
+
+
+
+\begin{singlespacing}
+
+\input{abstract}
+
+\tableofcontents
+
+\newpage
+
+\chapter{Introduction}
+\label{chapter:introduction}
+\input{chapters/introduction}
+
+\chapter{Background}
+\label{chapter:background}
+\input{chapters/background}
+
+\chapter{Design}
+\label{chapter:design}
+\input{chapters/design}
+
+\chapter{Implementation}
+\label{chapter:implementation}
+\input{chapters/implementation}
+
+\chapter{Experimental Methodology And Program}
+\label{chapter:experimental_methodology_and_program}
+\input{chapters/experimental_methodology_and_program}
+
+\chapter{Results}
+\label{chapter:results}
+\input{chapters/results}
+
+\chapter{Future Work And Conclusions}
+\label{chapter:future_work_and_conclusions}
+\input{chapters/future_work_and_conclusions}
+
+\newpage
+
+\bibliographystyle{acm}
+\bibliography{references} 
+
+\end{singlespacing}
+
+\end{document}

@@ -1,0 +1,7 @@
+Total runtime:	27153
+Thread:	0	1	2	3
+Number of tasks completed:	23000	30000	27000	16000
+Time working:	15187	13445	14155	16659
+Time in overhead:	0	0	0	0
+Time mutex blocked:	0	0	0	0
+Time blocked by master thread:	0	0	0	0

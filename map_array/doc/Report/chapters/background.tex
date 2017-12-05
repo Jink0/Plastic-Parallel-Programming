@@ -1,0 +1,95 @@
+%!TEX root = ../Report.tex
+
+In this chapter, we will detail the current approaches to parallel programming. We will then explore the three key ideas requisite to this project, such that we can discuss how they are combined and their implications.
+
+The main new idea in this project is that of dynamic contention aware scheduling and optimization. It has been shown to be an important factor in multiprogramming systems with performance implications \cite{lira}. Plasticity is a technique to respond to this challenge, and take it further. This results in complex code, making it hard to ensure correctness, so we use skeletons to abstract this complexity away from the programmer. It also has the beneficial side effect of dividing the challenge into a pattern-by-pattern basis.
+
+In this project we will produce such skeletons, and investigate the performance implications of these ideas, in order to evaluate whether or not they will have a significant effect.
+
+
+
+\section{Current Solutions}
+
+Current solutions for parallel programming include:
+
+\begin{itemize}
+	\item Pthreads (POSIX Threads \cite{posix_threads})
+	\item MPI 	   (Message Passing Interface \cite{mpi})
+	\item OpenMP   (Open Multi-Processing \cite{openmp_home} \cite{openmp})
+\end{itemize}
+
+These are the more conventional methods of parallel programming.
+
+Pthreads provides the highest level of fine grain control, leaving most of the work to the programmer. As such, some parallel processing techniques may only be possible with Pthreads. It is implemented in the POSIX library, and is well integrated with the standard GNU compiler collection (\textbf{gcc}). Pthreads only makes sense however with shared memory architectures.
+
+MPI is a communication library, and as such mostly details how processes can communicate. It is the dominant model used in the high performance computing industry today \cite{mpi}. It can not only be used for a parallel program running on a single machine, but can also be used to implement a parallel program running on a distributed memory system.
+
+OpenMP is comprised of compiler directives, runtime library routines, and environment variables. It is mostly used for loop parallelization, and is much higher level. It is also not limited to C. Like Pthreads, OpenMP is intended for shared memory architecture as it is thread bound.
+
+Each of these methods has its own way of dealing with the complications introduced with parallel programming, which range from race conditions to limited scalability. These new problems can certainly be overwhelming to a traditionally sequential application programmer, so much so that there are entire books dedicated to the use of each of these particular parallel programming methods. 
+
+
+
+\section{What Is Contention Aware Scheduling?}
+
+It is known that in multiprogramming systems, with many programs running simultaneously, the choice of program to socket mapping significantly affects the performance of the system \cite{lira}. Just considering two programs running on the same socket, we can see from the graph in figure \ref{fig:lira_pairwise_speedup} that certain programs perform differently with others, with some strange cases where programs actually display better performance when running in contention with one another. This problem is called co-scheduling.
+
+So with this evidence, we can see that if we take into account such factors in our scheduler, we may obtain better overall performance. The outcome of the LIRA paper concludes that throughput gains of 3-7\% can be seen. Socket/resource aware scheduling in this manner is called a contention aware scheduler. Adding in the plastic programming idea could make this particularly powerful, because we know and control the specifics of the implementations, and not only can we control what program runs where, we can also adjust the implementation that the program is using.
+
+\begin{figure}
+	\includegraphics[width=\textwidth]{graphics/lira_pairwise_speedup.png}
+	\caption{Taken from the LIRA paper \cite{lira}: Pair-wise speedup of programs, comparing sharing a socket to using separate sockets. Boxes annotated with a $-$ indicate cases where performance decreased, and $+$ where performance increased. In LIRA, this information was used to select which programs, from a given workset, should be scheduled concurrently, in order to maximize performance.}
+	\label{fig:lira_pairwise_speedup}
+\end{figure}
+
+
+
+\section{What Is Plastic Programming?}
+
+When programming an algorithm, there are often many choices about the specific implementation which can greatly affect performance, and the best choice depends on the circumstances of the problem. We tend to have more choices with parallel programs, but this is the case even for sequential programs. As an example, for a sorting problem with a large input size, radix sort would perform best, whereas for a small input size, insertion sort would be better. So naturally, in the interests of performance, we can conceive of a better overall implementation by combining the two approaches, so if the task size is large we would use radix sort, and then once it is reduced (for example, in a recursive algorithm,) we would use insertion sort. 
+
+An example of such a hypothetical situation can be seen in figure \ref{fig:plastic_graph}, which shows three algorithms with different runtime curves, which depend upon the array size. Combining these algorithms would provide an improved algorithm, with D1 and D2 showing the optimal decision points where a plastic programming system should switch algorithms.
+
+Such compositions are commonplace, such as the sorting example discussed in the introduction of the PetaBricks paper \cite{petabricks}. Compared to PetaBricks, our implementation of plastic programming will be somewhat different. With the PetaBricks system, the programmer must specify multiple implementations for the compiler to switch between. In our system, we provide the various implementations in our library, meaning no extra effort is required from the programmer.
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width=\textwidth]{plastic_graph}
+	\caption{A graph showing three algorithms with different runtime curves, which depend upon the array size. Combining these algorithms would provide an improved algorithm, with D1 and D2 showing the optimal decision points where a plastic programming system should switch algorithms}
+	\label{fig:plastic_graph}
+\end{figure}
+
+
+
+\section{What Is Skeleton Programming?}
+\label{section:background_what_is_skeleton_programming}
+
+Skeleton programming is a high-level programming model. Skeletons allow us to abstract away all the complexity involved in parallel programming, plastic programming, and contention aware scheduling. The essence of skeleton programming is that the skeleton provides the core structure of an algorithm, the user provides some code (in our case, a function), which then produces a correct program for the task at hand \cite{patterns_and_frameworks}. The skeleton handles the hard work of providing and optimizing the code (in our case, dealing with parallelism, plasticity, and contention aware scheduling). 
+
+The consequences of this are twofold:
+
+\begin{itemize}
+	\item Errors are reduced substantially, as parallel programming is not easy, even without plasticity and contention aware scheduling.
+	\item We can assess the program's complexity, since we know the algorithmic details of the skeleton.
+\end{itemize}
+
+Typically, multiple skeletons are combined to produce a more complex program, for example, a common combination is map and reduce (specific skeletons will be discussed in section \ref{section:design_skeleton_foundation}.) The ability to combine skeletons makes them a powerful tool, allowing programmers to easily create clean complex programs.
+
+Previous works to make parallel programming simple include:
+
+\begin{itemize}
+	\item SkePU \cite{skepu}
+	\item The M{\"u}nster Skeleton Library Muesli \cite{muesli}
+\end{itemize}
+
+These methods simplify the problem, with both utilizing skeleton programming to do so. The closest thing to our proposed system is SkePU, since each SkePU skeleton has multiple implementations, and SkePU automatically selects the expected fastest implementation variant. In contrast to our system, this selection is not dynamic, i.e. it does not change during runtime. 
+
+
+
+\section{Summary}
+
+In this chapter, we described the three fundamental concepts behind this project, contention aware scheduling, plastic programming, and skeleton programming. With just the addition of contention aware scheduling, we can achieve greater performance \cite{lira}. In this project we will take this idea further, adding plastic programming, so we can adapt the implementation of programs at runtime. This lets us change the implementations to ones which we know work well together. Combining these two ideas results in considerable complexity, so to make it simple for a programmer to use and easier for us to program, we use skeletons to abstract away this complexity. The details of this complexity and how these ideas are combined are described in chapter \ref{chapter:implementation}.
+
+The intent of this project is to explore the degree to which this approach can outperform a contention aware scheduled system which doesn't utilize plasticity. This is the plan for the first year of this MInf project, with the structure of the second year detailed in chapter \ref{chapter:future_work_and_conclusions}.

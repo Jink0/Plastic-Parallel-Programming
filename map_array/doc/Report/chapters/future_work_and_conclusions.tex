@@ -1,0 +1,44 @@
+%!TEX root = ../Report.tex
+
+This chapter discusses further work that could be done to advance this project, and a personal reflection upon the project as a whole. There is a large scope for development here, and as such, we will select a subset of tasks to focus on in the second year. We also discuss possibilities for future applications, and the library's utility beyond simply investigating the nature of the problem.
+
+
+
+\section{Future Development}
+
+Here we provide an overview for possible work to be done in the future. We split the tasks into work for the second phase of this MInf project, and interesting work for successors:
+
+Next year:
+
+\begin{itemize}
+	\item Improved experiment framework, with support for experiments involving multiple programs
+	\item Experiment with different array access patterns, and investigate how they affect performance
+	\item Experiment with different types of task, such as different bottlenecks (CPU bottleneck/Memory bottleneck) 
+	\item Test the library on a variety of hardware and systems
+	\item Make work interruptable, currently, once we have assigned tasks, a worker thread cannot be interrupted. This means that the static schedule, which assigns all tasks at once, cannot be interrupted/switched without manually forcing it to do so
+	\item Currently, we only have the map array pattern. More patterns could be implemented, as a real-world version of our library would provide multiple common patterns of parallel programming, and may even utilize multiple backends allowing for different features (e.g. Standard Pthreads, OpenCL/CUDA for multi-GPU computation).
+	\item Support for different parallel programming backends, possibly utilizing more exotic hardware such as GPUs 
+	\item Implementing some algorithm for automatic parameter tuning. It's feasible that the system could assess both the tasks presented and the environment (e.g. the particulars of the machine, currently running applications), and automatically allocate the resources of the machine so we perform in the most efficient manner.
+	\item Moving away from the virtual machine for experimentation. The VM may introduce variance into our experiments, an limits us to the experiments we can perform. For example, we saw unusually large runtimes with large input arrays. this is because the array was larger than the memory assigned to the VM, meaning it was not entirely kept within memory.
+\end{itemize}
+
+Follow on work:
+
+\begin{itemize}
+	\item Different methods of task distribution could be investigated, such as a distributed bag of tasks or adding task stealing
+	\item The project could be adapted for use in a distributed system, where we may have a variety of hardware, machines, and tasks to contend with. In this scenario, we would have a large amount of input parameters to our scheduler, resulting in a complex problem. We may have programs spread across multiple machines, we need to consider what machine is best to run a particular program on, and what other programs are running on that machine. The system could feasibly be controlled by a single controller application, serving requests from each machine, or it could be distributed across the machines, or we may use a hierarchy, with a controller per machine and a master controller. 
+	\item We currently optimize our library for performance, however the system may also be useful in non-performance orientated applications, for example, we may want to optimize energy usage for mobile applications. We could also optimize for a mix of performance and energy, which, with studies reporting that \textit{the total cost of a server will be primarily a function of the power it consumes} \cite{datacentres}, would be useful in server farms or data centres.
+	\item In deciding what resources to allocate to which program, we could implement a priority system. Both an internal priority system and a user controlled priority system would be useful. In an internal priority system, we would asses attributes of each program, and possibly assign more resources to one than the other (e.g. if one program scales better than another, we may decide to grant it extra CPU cores until it is complete.) A user controlled priority system would deal with cases where some programs are more or less important compared to other programs to the user. We could allow the user to manually control priorities, or possibly even the distribution of resources. 
+\end{itemize}
+
+
+
+\subsection{Personal Reflection}
+
+In this section we provide a personal reflection on the first year of this project, and thoughts for the future.
+
+Working on this project, I have learned much about parallel programming, C++ programming, and managing a large software engineering project. I had not done any of these things prior to this project. Overall I am pleased with the results of the project so far. I've completed,and indeed exceeded, all the goals I set at the start of the year.
+
+Looking back, it is apparent that the project would have benefited from simultaneous development of the report, and the development of more sophisticated testing software. Whilst the current system could be adapted to the requirements of the experiments, this would have made it easier to perform experiments. This will therefore definitely be an improvement undertaken in the next year of this MInf project.
+
+The outcome of this report has provided exciting results for next year, and I'm looking forward to implementing new features, and particularly to further experiments investigating the system. I would also like to again learn new things, particularly programming for GPUs, and more advanced inter-process communication. Hopefully, the project can be further improved, and leave an easy to extend code base for future students.
