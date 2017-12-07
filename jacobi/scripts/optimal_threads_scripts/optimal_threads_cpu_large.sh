@@ -73,8 +73,8 @@ if [ "$MACHINE" = "spa" ] ; then
     NUM_RUNS=144
     STRING="0..11 "
     UPDATE_MOTD=false
-    FILENAME="configs/spa/optimal_threads_cpu_small.ini"
-    LOG_FILENAME="logs/spa/optimal_threads_cpu_small.log"
+    FILENAME="configs/spa/optimal_threads_cpu_large.ini"
+    LOG_FILENAME="logs/spa/optimal_threads_cpu_large.log"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
@@ -83,8 +83,8 @@ if [ "$MACHINE" = "XXXII" ] ; then
     NUM_RUNS=576
     STRING="0..31 "
     UPDATE_MOTD=true
-    FILENAME="configs/XXXII/optimal_threads_cpu_small.ini"
-    LOG_FILENAME="logs/XXXII/optimal_threads_cpu_small.log"
+    FILENAME="configs/XXXII/optimal_threads_cpu_large.ini"
+    LOG_FILENAME="logs/XXXII/optimal_threads_cpu_large.log"
 fi
 
 
@@ -176,11 +176,11 @@ END=$(date +%s.%N)
 DIFF=$(echo "$END - $START" | bc)
 
 if [ "$MACHINE" = "spa" ] ; then
-    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: optimal threads cpu small completed! Time taken: $DIFF seconds"
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: optimal threads cpu large completed! Time taken: $DIFF seconds"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
-    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: optimal threads cpu small completed! Time taken: $DIFF seconds"
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: optimal threads cpu large completed! Time taken: $DIFF seconds"
 fi
 
 if [ "$UPDATE_MOTD" = true ] ; then
