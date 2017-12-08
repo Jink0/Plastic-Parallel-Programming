@@ -38,9 +38,9 @@
 #define BKL( x )
 #endif
 
-#ifdef RANDOMIZE_LOAD
+#ifdef RANDOMISE_KERNEL_LOAD
 #define RND( x ) x
-#pragma message "RANDOMIZE_LOAD ACTIVE"
+#pragma message "RANDOMISE_KERNEL_LOAD ACTIVE"
 #else
 #define RND( x )
 #endif
@@ -368,7 +368,7 @@ inline void execute_kernels(uint32_t stage) {
 	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
 		uint64_t local_repeats = kernel_repeats.at(stage).at(k);
-		RND(local_repeats = local_repeats * ((rand() % 3) + 1);)
+		RND(local_repeats = local_repeats * rand_long_long(1, 3);)
 
 		switch(kernels.at(stage).at(k)) {
 			case none:

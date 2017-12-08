@@ -20,6 +20,7 @@ function ctrl_c() {
 
 DEL_PREV_RUNS=false
 MACHINE="NONE"
+RANDOMISE=false
 
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -35,6 +36,10 @@ case $key in
     MACHINE="$2"
     shift # past argument
     shift # past value
+    ;;
+    -r|--randomise)
+    RANDOMISE=true
+    shift # past argument
     ;;
 esac
 done
@@ -123,7 +128,12 @@ START=$(date +%s.%N)
 make clean >> $LOG_FILENAME
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
-make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
+if [ "$RANDOMISE" = true ] ; then
+    make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DRANDOMISE_KERNEL_LOAD -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
+else
+    make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main >> $LOG_FILENAME
+fi
+
 echo -e "\n\n\n\n" >> $LOG_FILENAME
 
 printf "0.000%%"
