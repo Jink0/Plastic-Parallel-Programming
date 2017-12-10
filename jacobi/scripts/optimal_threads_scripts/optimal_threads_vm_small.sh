@@ -105,13 +105,13 @@ if [ -e $FILENAME ]; then
   rm $FILENAME
 fi
 
-echo "num_runs: \"101\"" > $FILENAME
+echo "num_runs: \"1\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
-echo "num_iterations_0: \"1000\"" >> $FILENAME
+echo "num_iterations_0: \"1\"" >> $FILENAME
 echo "set_pin_bool_0: \"2\"" >> $FILENAME
 echo "kernels_0: \"vm\"" >> $FILENAME
 echo "kernel_durations_0: \"\"" >> $FILENAME
-echo "kernel_repeats_0: \"75\"" >> $FILENAME 
+echo "kernel_repeats_0: \"50\"" >> $FILENAME 
 echo "grid_size: \"32\"" >> $FILENAME
 echo "num_workers_0: \"2\"" >> $FILENAME
 echo "pinnings_0: \"$STRING\"" >> $FILENAME

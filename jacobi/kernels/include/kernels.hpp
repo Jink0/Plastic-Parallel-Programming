@@ -9,7 +9,7 @@ enum kernels_enum {none = 0, cpu = 1, io = 2, vm = 3, hdd = 4};
 static long long const vm_bytes  = 1024 * 1024;
 static long long const vm_stride = 4096;
 static long long const vm_hang   = -1;
-static int       const vm_keep   = 1;
+static int       const vm_keep   = 0;
 
 static long long const hdd_bytes = 1024;
 
