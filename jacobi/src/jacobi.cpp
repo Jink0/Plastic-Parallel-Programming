@@ -77,7 +77,7 @@ inline void basic_kernel_small(std::vector<std::vector<double>>& src_grid, std::
 inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::vector<std::vector<double>>& tgt_grid, uint32_t i, uint32_t j);
 
 // Executes the relevant kernels set by the experiment parameters
-inline void execute_kernels(uint32_t stage);
+inline void execute_kernels(uint32_t stage, uint32_t i, uint32_t j);
 
 // Simulate a convergence test. Computes the maximum difference in given strip and sets the global_max_difference variable
 inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint32_t id);
@@ -262,7 +262,7 @@ void worker(uint32_t my_id, uint32_t stage) {
 
 				BKL(basic_kernel_large(*(src_grid), *(tgt_grid), i, j);)
 
-				EXK(execute_kernels(stage);)
+				EXK(execute_kernels(stage, i, j);)
 			}
 		}
 
@@ -363,11 +363,12 @@ inline void basic_kernel_large(std::vector<std::vector<double>>& src_grid, std::
 
 
 // Executes the relevant kernels set by the experiment parameters
-inline void execute_kernels(uint32_t stage) {
+inline void execute_kernels(uint32_t stage, uint32_t i, uint32_t j) {
 
 	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
 		uint64_t local_repeats = kernel_repeats.at(stage).at(k);
+		print(std::hash<std::uint32_t>{}(stage * i * j), '\n');
 		RND(local_repeats = local_repeats * rand_long_long(1, 3);)
 
 		switch(kernels.at(stage).at(k)) {
