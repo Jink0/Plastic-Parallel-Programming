@@ -38,11 +38,11 @@
 #define BKL( x )
 #endif
 
-#ifdef RANDOMISE_KERNEL_LOAD
-#define RND( x ) x
-#pragma message "RANDOMISE_KERNEL_LOAD ACTIVE"
+#ifdef VARY_KERNEL_LOAD
+#define VRY( x ) x
+#pragma message "VARY_KERNEL_LOAD ACTIVE"
 #else
-#define RND( x )
+#define VRY( x )
 #endif
 
 #ifdef EXECUTE_KERNELS
@@ -368,8 +368,7 @@ inline void execute_kernels(uint32_t stage, uint32_t i, uint32_t j) {
 	for (uint32_t k = 0; k < kernels.at(stage).size(); k++) {
 
 		uint64_t local_repeats = kernel_repeats.at(stage).at(k);
-		print(std::hash<std::uint32_t>{}(stage * i * j), '\n');
-		RND(local_repeats = local_repeats * rand_long_long(1, 3);)
+		VRY(local_repeats = local_repeats * (((stage + 1 * i + 1 * j + 1) % 3) + 1);)
 
 		switch(kernels.at(stage).at(k)) {
 			case none:
