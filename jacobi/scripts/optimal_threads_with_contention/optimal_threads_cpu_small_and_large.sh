@@ -135,7 +135,7 @@ fi
 
 echo "num_runs: \"1\"" > $FILENAME1
 echo "num_stages: \"1\"" >> $FILENAME1
-echo "num_iterations_0: \"1000\"" >> $FILENAME1
+echo "num_iterations_0: \"100\"" >> $FILENAME1
 echo "set_pin_bool_0: \"2\"" >> $FILENAME1
 echo "kernels_0: \"cpu\"" >> $FILENAME1
 echo "kernel_durations_0: \"\"" >> $FILENAME1
@@ -160,7 +160,7 @@ echo "num_iterations_0: \"1\"" >> $FILENAME2
 echo "set_pin_bool_0: \"2\"" >> $FILENAME2
 echo "kernels_0: \"cpu\"" >> $FILENAME2
 echo "kernel_durations_0: \"\"" >> $FILENAME2
-echo "kernel_repeats_0: \"1000\"" >> $FILENAME2 
+echo "kernel_repeats_0: \"100\"" >> $FILENAME2 
 echo "grid_size: \"256\"" >> $FILENAME2
 echo "num_workers_0: \"2\"" >> $FILENAME2
 echo "pinnings_0: \"$STRING\"" >> $FILENAME2
@@ -177,9 +177,9 @@ make clean | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 
 if [ "$VARY" = true ] ; then
-    make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DVARY_KERNEL_LOAD -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+    make flags="-DSYNC_PROCS=2 -DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DVARY_KERNEL_LOAD -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 else
-    make flags="-DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+    make flags="-DSYNC_PROCS=2 -DPTHREAD_BARRIER -DBASIC_KERNEL_SMALL -DEXECUTE_KERNELS -DCONVERGENCE_TEST" main | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 fi
 
 echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
@@ -192,7 +192,7 @@ fi
 
 
 
-NUM_REPEATS=100
+NUM_REPEATS=2
 
 for ((i=$NUM_CORES_MIN; i<=$NUM_CORES_MAX; i+=$NUM_CORES_STEP))
 do
