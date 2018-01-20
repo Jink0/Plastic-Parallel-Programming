@@ -81,4 +81,12 @@ uint32_t check_affinity_set_size();
 // Thread safe version of rand()
 long long rand_long_long(const long long& min, const long long& max);
 
+void init_cross_proc_barrier();
+
+void cross_proc_barrier();
+
+void close_cross_proc_barrier();
+
+void unlink_cross_proc_barrier();
+
 #endif // GENERAL_UTILS_HPP
