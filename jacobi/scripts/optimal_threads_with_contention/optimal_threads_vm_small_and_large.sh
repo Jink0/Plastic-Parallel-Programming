@@ -143,9 +143,9 @@ echo "num_runs: \"1\"" > $FILENAME1
 echo "num_stages: \"1\"" >> $FILENAME1
 echo "num_iterations_0: \"1000\"" >> $FILENAME1
 echo "set_pin_bool_0: \"2\"" >> $FILENAME1
-echo "kernels_0: \"cpu\"" >> $FILENAME1
+echo "kernels_0: \"vm\"" >> $FILENAME1
 echo "kernel_durations_0: \"\"" >> $FILENAME1
-echo "kernel_repeats_0: \"75\"" >> $FILENAME1 
+echo "kernel_repeats_0: \"10\"" >> $FILENAME1 
 echo "grid_size: \"32\"" >> $FILENAME1
 echo "num_workers_0: \"4\"" >> $FILENAME1
 echo "pinnings_0: \"$STRING\"" >> $FILENAME1
@@ -154,7 +154,7 @@ echo "num_runs: \"1\"" > $FILENAME2
 echo "num_stages: \"1\"" >> $FILENAME2
 echo "num_iterations_0: \"1\"" >> $FILENAME2
 echo "set_pin_bool_0: \"2\"" >> $FILENAME2
-echo "kernels_0: \"cpu\"" >> $FILENAME2
+echo "kernels_0: \"vm\"" >> $FILENAME2
 echo "kernel_durations_0: \"\"" >> $FILENAME2
 echo "kernel_repeats_0: \"1000\"" >> $FILENAME2 
 echo "grid_size: \"256\"" >> $FILENAME2

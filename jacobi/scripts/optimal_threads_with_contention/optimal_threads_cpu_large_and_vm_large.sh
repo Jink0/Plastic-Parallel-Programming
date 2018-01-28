@@ -141,12 +141,12 @@ NUM_REPEATS=11
 # Write new configs
 echo "num_runs: \"1\"" > $FILENAME1
 echo "num_stages: \"1\"" >> $FILENAME1
-echo "num_iterations_0: \"1000\"" >> $FILENAME1
+echo "num_iterations_0: \"1\"" >> $FILENAME1
 echo "set_pin_bool_0: \"2\"" >> $FILENAME1
 echo "kernels_0: \"cpu\"" >> $FILENAME1
 echo "kernel_durations_0: \"\"" >> $FILENAME1
-echo "kernel_repeats_0: \"75\"" >> $FILENAME1 
-echo "grid_size: \"32\"" >> $FILENAME1
+echo "kernel_repeats_0: \"1000\"" >> $FILENAME1 
+echo "grid_size: \"256\"" >> $FILENAME1
 echo "num_workers_0: \"4\"" >> $FILENAME1
 echo "pinnings_0: \"$STRING\"" >> $FILENAME1
 
@@ -154,7 +154,7 @@ echo "num_runs: \"1\"" > $FILENAME2
 echo "num_stages: \"1\"" >> $FILENAME2
 echo "num_iterations_0: \"1\"" >> $FILENAME2
 echo "set_pin_bool_0: \"2\"" >> $FILENAME2
-echo "kernels_0: \"cpu\"" >> $FILENAME2
+echo "kernels_0: \"vm\"" >> $FILENAME2
 echo "kernel_durations_0: \"\"" >> $FILENAME2
 echo "kernel_repeats_0: \"1000\"" >> $FILENAME2 
 echo "grid_size: \"256\"" >> $FILENAME2
@@ -241,19 +241,19 @@ do
 
 
                     # Run programs
-                    bin/jacobi $FILENAME1 >> $LOG_FILENAME1 &
+                	bin/jacobi $FILENAME1 >> $LOG_FILENAME1 &
                     bin/jacobi $FILENAME2 >> $LOG_FILENAME2
 
                     echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 
-                    printf "\r%.3f%%" "$TOTAL"
+                	printf "\r%.3f%%" "$TOTAL"
 
                     if [ "$UPDATE_MOTD" = true ] ; then
                         sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
                         echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
                     fi
 
-                    TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+                	TOTAL=$(bc -l <<< "$TOTAL + $STEP")
                 done
             done
         done
