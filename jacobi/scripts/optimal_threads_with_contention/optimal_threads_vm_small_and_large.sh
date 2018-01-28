@@ -268,11 +268,11 @@ END=$(date +%s.%N)
 DIFF=$(echo "$END - $START" | bc)
 
 if [ "$MACHINE" = "spa" ] ; then
-    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: otwc cpu small cpu large completed! Time taken: $DIFF seconds"
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: otwc vm small and vm large completed! Time taken: $DIFF seconds"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
-    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: otwc cpu small cpu large completed! Time taken: $DIFF seconds"
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: otwc vm small and vm large completed! Time taken: $DIFF seconds"
 fi
 
 if [ "$UPDATE_MOTD" = true ] ; then
