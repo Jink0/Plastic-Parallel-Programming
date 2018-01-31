@@ -141,10 +141,15 @@ int main(int argc, char *argv[]) {
 
 	SCP(print("\nRandomised seed:   ", randomised_seed));
 
+	std::string output_folder = "jacobi";
+
+	// Read output folder
+	SCP(output_folder = std::string(argv[3]));
+
 	SCP(init_cross_proc_barrier());
 
 	// Move into relevant folder and copy the config file
-	move_and_copy("jacobi", argv[1]);
+	move_and_copy(output_folder, argv[1]);
 	
 	// Print experiment parameters
 	print_params();

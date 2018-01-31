@@ -78,8 +78,8 @@ if [ "$MACHINE" = "spa" ] ; then
     NUM_RUNS1=36
     STRING="0..11 "
     UPDATE_MOTD=false
-    FILENAME1="configs/spa/otwc_cpu_large.ini"
-    LOG_FILENAME1="logs/spa/otwc_cpu_large.log"
+    FILENAME1="configs/spa/otwc_cpu_small_and_large_1.ini"
+    LOG_FILENAME1="logs/spa/otwc_cpu_small_and_large_1.log"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
@@ -88,8 +88,8 @@ if [ "$MACHINE" = "XXXII" ] ; then
     NUM_RUNS1=144
     STRING="0..31 "
     UPDATE_MOTD=true
-    FILENAME1="configs/spa/otwc_cpu_large.ini"
-    LOG_FILENAME1="logs/spa/otwc_cpu_large.log"
+    FILENAME1="configs/spa/otwc_cpu_small_and_large_1.ini"
+    LOG_FILENAME1="logs/spa/otwc_cpu_small_and_large_1.log"
 fi
 
 if [ "$MACHINE" = "spa" ] ; then
@@ -98,8 +98,8 @@ if [ "$MACHINE" = "spa" ] ; then
     NUM_RUNS2=36
     STRING="0..11 "
     UPDATE_MOTD=false
-    FILENAME2="configs/spa/otwc_vm_large.ini"
-    LOG_FILENAME2="logs/spa/otwc_vm_large.log"
+    FILENAME2="configs/spa/otwc_cpu_small_and_large_2.ini"
+    LOG_FILENAME2="logs/spa/otwc_cpu_small_and_large_2.log"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
@@ -108,8 +108,8 @@ if [ "$MACHINE" = "XXXII" ] ; then
     NUM_RUNS2=144
     STRING="0..31 "
     UPDATE_MOTD=true
-    FILENAME2="configs/spa/otwc_vm_large.ini"
-    LOG_FILENAME2="logs/spa/otwc_vm_large.log"
+    FILENAME2="configs/spa/otwc_cpu_small_and_large_2.ini"
+    LOG_FILENAME2="logs/spa/otwc_cpu_small_and_large_2.log"
 fi
 
 
@@ -137,7 +137,7 @@ if [ -e $LOG_FILENAME2 ]; then
 fi
 
 # Write new configs
-echo "num_runs: \"2\"" > $FILENAME1
+echo "num_runs: \"101\"" > $FILENAME1
 echo "num_stages: \"1\"" >> $FILENAME1
 echo "num_iterations_0: \"1000\"" >> $FILENAME1
 echo "set_pin_bool_0: \"2\"" >> $FILENAME1
@@ -148,7 +148,7 @@ echo "grid_size: \"32\"" >> $FILENAME1
 echo "num_workers_0: \"4\"" >> $FILENAME1
 echo "pinnings_0: \"$STRING\"" >> $FILENAME1
 
-echo "num_runs: \"2\"" > $FILENAME2
+echo "num_runs: \"101\"" > $FILENAME2
 echo "num_stages: \"1\"" >> $FILENAME2
 echo "num_iterations_0: \"1\"" >> $FILENAME2
 echo "set_pin_bool_0: \"2\"" >> $FILENAME2
@@ -187,6 +187,8 @@ if [ "$UPDATE_MOTD" = true ] ; then
 fi
 
 
+
+COUNT=1
 
 # Start experiments
 
@@ -239,8 +241,8 @@ do
                 RAND_VAL=$( bc -l <<< "$i * $j * $k * $l" )
 
                 # Run programs
-                bin/jacobi $FILENAME1 $RAND_VAL >> $LOG_FILENAME1 &
-                bin/jacobi $FILENAME2 $RAND_VAL >> $LOG_FILENAME2
+                bin/jacobi $FILENAME1 $COUNT otwc_cpu_small_and_large_1 >> $LOG_FILENAME1 &
+                bin/jacobi $FILENAME2 $COUNT otwc_cpu_small_and_large_2 >> $LOG_FILENAME2
 
                 echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 
@@ -252,6 +254,7 @@ do
                 fi
 
                 TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+                COUNT=$( bc -l <<< "$COUNT + 1" )
             done
         done
     done

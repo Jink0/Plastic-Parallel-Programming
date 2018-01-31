@@ -48,13 +48,13 @@ void move_and_copy(std::string prog_dir_name, std::string config_filename) {
     }
 
     // Create program directory if it doesn't exist
-    mkdir("jacobi", S_IRWXU | S_IRWXG | S_IRWXO);
+    mkdir(prog_dir_name.c_str(), S_IRWXU | S_IRWXG | S_IRWXO);
 
     // Move into the program directory
-    res = chdir("jacobi");
+    res = chdir(prog_dir_name.c_str());
 
     if (res != 0) {
-    	print("ERROR: Cannot move into jacobi directory");
+    	print("ERROR: Cannot move into ", prog_dir_name, " directory");
     	exit(1);
     }
 
