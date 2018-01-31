@@ -5,6 +5,10 @@
 #include <mutex>
 #include <cxxabi.h> // (gcc only)
 #include <vector>
+#include <string>
+
+extern std::string randomised_seed;
+
 
 
 // Mutexed print function (Note - Templated function must be implemented in the header as the compiler

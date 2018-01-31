@@ -75,7 +75,7 @@ NUM_CORES_STEP=4
 if [ "$MACHINE" = "spa" ] ; then
     NUM_WORKERS_MAX=24
     NUM_CORES_MAX=24
-    NUM_RUNS1=144
+    NUM_RUNS1=36
     STRING="0..11 "
     UPDATE_MOTD=false
     FILENAME1="configs/spa/otwc_cpu_large.ini"
@@ -85,7 +85,7 @@ fi
 if [ "$MACHINE" = "XXXII" ] ; then
     NUM_WORKERS_MAX=48
     NUM_CORES_MAX=48
-    NUM_RUNS1=576
+    NUM_RUNS1=144
     STRING="0..31 "
     UPDATE_MOTD=true
     FILENAME1="configs/spa/otwc_cpu_large.ini"
@@ -95,7 +95,7 @@ fi
 if [ "$MACHINE" = "spa" ] ; then
     NUM_WORKERS_MAX=24
     NUM_CORES_MAX=24
-    NUM_RUNS2=144
+    NUM_RUNS2=36
     STRING="0..11 "
     UPDATE_MOTD=false
     FILENAME2="configs/spa/otwc_vm_large.ini"
@@ -105,7 +105,7 @@ fi
 if [ "$MACHINE" = "XXXII" ] ; then
     NUM_WORKERS_MAX=48
     NUM_CORES_MAX=48
-    NUM_RUNS2=576
+    NUM_RUNS2=144
     STRING="0..31 "
     UPDATE_MOTD=true
     FILENAME2="configs/spa/otwc_vm_large.ini"
@@ -136,10 +136,8 @@ if [ -e $LOG_FILENAME2 ]; then
   rm $LOG_FILENAME2
 fi
 
-NUM_REPEATS=11
-
 # Write new configs
-echo "num_runs: \"1\"" > $FILENAME1
+echo "num_runs: \"2\"" > $FILENAME1
 echo "num_stages: \"1\"" >> $FILENAME1
 echo "num_iterations_0: \"1000\"" >> $FILENAME1
 echo "set_pin_bool_0: \"2\"" >> $FILENAME1
@@ -150,7 +148,7 @@ echo "grid_size: \"32\"" >> $FILENAME1
 echo "num_workers_0: \"4\"" >> $FILENAME1
 echo "pinnings_0: \"$STRING\"" >> $FILENAME1
 
-echo "num_runs: \"1\"" > $FILENAME2
+echo "num_runs: \"2\"" > $FILENAME2
 echo "num_stages: \"1\"" >> $FILENAME2
 echo "num_iterations_0: \"1\"" >> $FILENAME2
 echo "set_pin_bool_0: \"2\"" >> $FILENAME2
@@ -219,48 +217,45 @@ do
         do
             for ((l=$NUM_WORKERS_MIN; l<=$NUM_WORKERS_MAX; l+=$NUM_WORKERS_STEP))
             do
-                for ((r=0; r<$NUM_REPEATS; r+=1))
+                # Setup parameters for program 2
+                STRING="0..$(($k-1)) "
+
+                FULL_STRING=$STRING
+
+                for ((q=1; q<l; q++))
                 do
-                    # Setup parameters for program 2
-                    STRING="0..$(($k-1)) "
-
-                    FULL_STRING=$STRING
-
-                    for ((q=1; q<l; q++))
-                    do
-                        FULL_STRING=${FULL_STRING}${STRING}
-                    done
-
-                    head -n -2 $FILENAME2 > temp.ini
-
-                    echo "num_workers_0: \"$l\"" >> temp.ini
-                    echo "pinnings_0: \"$FULL_STRING\"" >> temp.ini
-
-                    mv temp.ini $FILENAME2
-
-
-
-                    # Run programs
-                    bin/jacobi $FILENAME1 >> $LOG_FILENAME1 &
-                    bin/jacobi $FILENAME2 >> $LOG_FILENAME2
-
-                    echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
-
-                    printf "\r%.3f%%" "$TOTAL"
-
-                    if [ "$UPDATE_MOTD" = true ] ; then
-                        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
-                        echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
-                    fi
-
-                    TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+                    FULL_STRING=${FULL_STRING}${STRING}
                 done
+
+                head -n -2 $FILENAME2 > temp.ini
+
+                echo "num_workers_0: \"$l\"" >> temp.ini
+                echo "pinnings_0: \"$FULL_STRING\"" >> temp.ini
+
+                mv temp.ini $FILENAME2
+
+
+
+                RAND_VAL=$( bc -l <<< "$i * $j * $k * $l" )
+
+                # Run programs
+                bin/jacobi $FILENAME1 $RAND_VAL >> $LOG_FILENAME1 &
+                bin/jacobi $FILENAME2 $RAND_VAL >> $LOG_FILENAME2
+
+                echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+
+                printf "\r%.3f%%" "$TOTAL"
+
+                if [ "$UPDATE_MOTD" = true ] ; then
+                    sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+                    echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+                fi
+
+                TOTAL=$(bc -l <<< "$TOTAL + $STEP")
             done
         done
     done
 done
-
-rm temp.ini
 
 
 

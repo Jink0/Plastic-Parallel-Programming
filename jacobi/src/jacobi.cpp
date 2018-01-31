@@ -91,6 +91,8 @@ inline void convergence_test(uint32_t first, uint32_t last, uint32_t stage, uint
 
 
 
+std::string randomised_seed;
+
 // Set of pthread barriers (one for each stage)
 std::vector<pthread_barrier_t> pthread_barriers;
 
@@ -128,13 +130,18 @@ static uint32_t const border_size = 2;
 
 int main(int argc, char *argv[]) {
 
-	init_cross_proc_barrier();
-
 	// Parse config
 	std::map<std::string, std::string> config = parse_config(std::string(argv[1]));
 
 	// Read config
 	read_config(config);
+
+	// Read randomised seed
+	SCP(randomised_seed = std::string(argv[2]));
+
+	SCP(print("\nRandomised seed:   ", randomised_seed));
+
+	SCP(init_cross_proc_barrier());
 
 	// Move into relevant folder and copy the config file
 	move_and_copy("jacobi", argv[1]);
@@ -245,8 +252,8 @@ int main(int argc, char *argv[]) {
 	print("\nAverage elapsed time over ", num_runs, " runs: ", run_times_sum / num_runs, "ms\n");
 
 	// Close and unlink semaphore
-	close_cross_proc_barrier();
-    unlink_cross_proc_barrier();
+	SCP(close_cross_proc_barrier());
+    SCP(unlink_cross_proc_barrier());
 }
 
 

@@ -116,31 +116,31 @@ long long rand_long_long(const long long& min, const long long& max) {
 
 
 
-char mutex_sem_name[] = "jacobi_mutex_sem";
-char counter_sem_name[] = "jacobi_counter_sem";
-char turnstile1_sem_name[] = "jacobi_turnstile1_sem";
-char turnstile2_sem_name[] = "jacobi_turnstile2_sem";
+std::string mutex_sem_name = "jacobi_mutex_sem_";
+std::string counter_sem_name = "jacobi_counter_sem_";
+std::string turnstile1_sem_name = "jacobi_turnstile1_sem_";
+std::string turnstile2_sem_name = "jacobi_turnstile2_sem_";
 sem_t *mutex_sem, *counter_sem, *turnstile1_sem, *turnstile2_sem;
 
 
 
 void init_cross_proc_barrier() {
-    if ((mutex_sem = sem_open(mutex_sem_name, O_CREAT, 0644, 1)) == SEM_FAILED) {
+    if ((mutex_sem = sem_open((mutex_sem_name + randomised_seed).c_str(), O_CREAT, 0644, 1)) == SEM_FAILED) {
         perror("named semaphore initialization error");
         exit(1);
     }
 
-    if ((counter_sem = sem_open(counter_sem_name, O_CREAT, 0644, 0)) == SEM_FAILED) {
+    if ((counter_sem = sem_open((counter_sem_name + randomised_seed).c_str(), O_CREAT, 0644, 0)) == SEM_FAILED) {
         perror("named semaphore initialization error");
         exit(1);
     }
 
-    if ((turnstile1_sem = sem_open(turnstile1_sem_name, O_CREAT, 0644, 0)) == SEM_FAILED) {
+    if ((turnstile1_sem = sem_open((turnstile1_sem_name + randomised_seed).c_str(), O_CREAT, 0644, 0)) == SEM_FAILED) {
         perror("named semaphore initialization error");
         exit(1);
     }
 
-    if ((turnstile2_sem = sem_open(turnstile2_sem_name, O_CREAT, 0644, 1)) == SEM_FAILED) {
+    if ((turnstile2_sem = sem_open((turnstile2_sem_name + randomised_seed).c_str(), O_CREAT, 0644, 1)) == SEM_FAILED) {
         perror("named semaphore initialization error");
         exit(1);
     }
@@ -148,7 +148,11 @@ void init_cross_proc_barrier() {
 
 
 
+#include <fstream>
+#include <iostream>
+
 void cross_proc_barrier() {
+
     sem_wait(mutex_sem);
 
     sem_post(counter_sem);
@@ -199,8 +203,8 @@ void close_cross_proc_barrier() {
 
 
 void unlink_cross_proc_barrier() {
-    sem_unlink(mutex_sem_name);
-    sem_unlink(counter_sem_name);
-    sem_unlink(turnstile1_sem_name);
-    sem_unlink(turnstile2_sem_name);
+    sem_unlink((mutex_sem_name + randomised_seed).c_str());
+    sem_unlink((counter_sem_name + randomised_seed).c_str());
+    sem_unlink((turnstile1_sem_name + randomised_seed).c_str());
+    sem_unlink((turnstile2_sem_name + randomised_seed).c_str());
 }
