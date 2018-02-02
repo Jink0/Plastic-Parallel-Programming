@@ -14,6 +14,8 @@ function ctrl_c() {
             echo "\nTrapped CTRL-C"
             echo -e "Trapped CTRL-C\n" >> $LOG_FILENAME1
         fi
+
+        rm /dev/shm/*
         
         exit
 }
@@ -72,14 +74,19 @@ NUM_WORKERS_STEP=4
 NUM_CORES_MIN=4
 NUM_CORES_STEP=4
 
+
+
+FILENAME1="configs/spa/$(basename $BASH_SOURCE .sh)_1.ini"
+LOG_FILENAME1="logs/spa/$(basename $BASH_SOURCE .sh)_1.log"
+FILENAME2="configs/spa/$(basename $BASH_SOURCE .sh)_2.ini"
+LOG_FILENAME2="logs/spa/$(basename $BASH_SOURCE .sh)_2.log"
+
 if [ "$MACHINE" = "spa" ] ; then
     NUM_WORKERS_MAX=24
     NUM_CORES_MAX=24
     NUM_RUNS1=36
     STRING="0..11 "
     UPDATE_MOTD=false
-    FILENAME1="configs/spa/otwc_cpu_small_and_large_1.ini"
-    LOG_FILENAME1="logs/spa/otwc_cpu_small_and_large_1.log"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
@@ -88,8 +95,6 @@ if [ "$MACHINE" = "XXXII" ] ; then
     NUM_RUNS1=144
     STRING="0..31 "
     UPDATE_MOTD=true
-    FILENAME1="configs/spa/otwc_cpu_small_and_large_1.ini"
-    LOG_FILENAME1="logs/spa/otwc_cpu_small_and_large_1.log"
 fi
 
 if [ "$MACHINE" = "spa" ] ; then
@@ -98,8 +103,6 @@ if [ "$MACHINE" = "spa" ] ; then
     NUM_RUNS2=36
     STRING="0..11 "
     UPDATE_MOTD=false
-    FILENAME2="configs/spa/otwc_cpu_small_and_large_2.ini"
-    LOG_FILENAME2="logs/spa/otwc_cpu_small_and_large_2.log"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
@@ -108,8 +111,6 @@ if [ "$MACHINE" = "XXXII" ] ; then
     NUM_RUNS2=144
     STRING="0..31 "
     UPDATE_MOTD=true
-    FILENAME2="configs/spa/otwc_cpu_small_and_large_2.ini"
-    LOG_FILENAME2="logs/spa/otwc_cpu_small_and_large_2.log"
 fi
 
 
@@ -119,47 +120,22 @@ TOTAL=$STEP
 
 
 
-# Delete old configs and logs if they exist
-if [ -e $FILENAME1 ]; then
-  rm $FILENAME1
-fi
+# Write new configs
+scripts/config_generation/vm_small.sh $FILENAME1
+scripts/config_generation/vm_large.sh $FILENAME2
 
+
+
+# Delete old logs if they exist
 if [ -e $LOG_FILENAME1 ]; then
   rm $LOG_FILENAME1
-fi
-
-if [ -e $FILENAME2 ]; then
-  rm $FILENAME2
 fi
 
 if [ -e $LOG_FILENAME2 ]; then
   rm $LOG_FILENAME2
 fi
 
-# Write new configs
-echo "num_runs: \"101\"" > $FILENAME1
-echo "num_stages: \"1\"" >> $FILENAME1
-echo "num_iterations_0: \"1000\"" >> $FILENAME1
-echo "set_pin_bool_0: \"2\"" >> $FILENAME1
-echo "kernels_0: \"cpu\"" >> $FILENAME1
-echo "kernel_durations_0: \"\"" >> $FILENAME1
-echo "kernel_repeats_0: \"75\"" >> $FILENAME1 
-echo "grid_size: \"32\"" >> $FILENAME1
-echo "num_workers_0: \"4\"" >> $FILENAME1
-echo "pinnings_0: \"$STRING\"" >> $FILENAME1
-
-echo "num_runs: \"101\"" > $FILENAME2
-echo "num_stages: \"1\"" >> $FILENAME2
-echo "num_iterations_0: \"1\"" >> $FILENAME2
-echo "set_pin_bool_0: \"2\"" >> $FILENAME2
-echo "kernels_0: \"cpu\"" >> $FILENAME2
-echo "kernel_durations_0: \"\"" >> $FILENAME2
-echo "kernel_repeats_0: \"1000\"" >> $FILENAME2 
-echo "grid_size: \"256\"" >> $FILENAME2
-echo "num_workers_0: \"4\"" >> $FILENAME2
-echo "pinnings_0: \"$STRING\"" >> $FILENAME2
-
-# Overwrite log
+# Log the machine we are on
 echo -e "Machine: $MACHINE\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 
 
@@ -241,8 +217,8 @@ do
                 RAND_VAL=$( bc -l <<< "$i * $j * $k * $l" )
 
                 # Run programs
-                bin/jacobi $FILENAME1 $COUNT otwc_cpu_small_and_large_1 >> $LOG_FILENAME1 &
-                bin/jacobi $FILENAME2 $COUNT otwc_cpu_small_and_large_2 >> $LOG_FILENAME2
+                bin/jacobi $FILENAME1 $COUNT "$(basename $BASH_SOURCE .sh)_1" >> $LOG_FILENAME1 &
+                bin/jacobi $FILENAME2 $COUNT "$(basename $BASH_SOURCE .sh)_2" >> $LOG_FILENAME2
 
                 echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 
@@ -266,11 +242,11 @@ END=$(date +%s.%N)
 DIFF=$(echo "$END - $START" | bc)
 
 if [ "$MACHINE" = "spa" ] ; then
-    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: otwc cpu small and cpu large completed! Time taken: $DIFF seconds"
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "spa: experiment complete" -m "spa: $(basename $BASH_SOURCE .sh) completed! Time taken: $DIFF seconds"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
-    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: otwc cpu small and cpu large completed! Time taken: $DIFF seconds"
+    sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "XXXII: experiment complete" -m "XXXII: $(basename $BASH_SOURCE .sh) completed! Time taken: $DIFF seconds"
 fi
 
 if [ "$UPDATE_MOTD" = true ] ; then

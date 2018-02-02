@@ -1,2 +1,3 @@
 #!/bin/bash
-scp -r runs/jacobi/ root@GoldenEye.ydns.eu:/mnt/user/Data
+zip -r runs.zip runs/
+scp -r runs.zip root@GoldenEye.ydns.eu:/mnt/user/Data
