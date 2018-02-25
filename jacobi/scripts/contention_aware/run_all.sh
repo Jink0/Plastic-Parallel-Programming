@@ -1,0 +1,8 @@
+#!/bin/bash
+
+scripts/optimal_threads_with_contention/optimal_threads_cpu_large_and_vm_large.sh -m $1
+scripts/optimal_threads_with_contention/optimal_threads_cpu_small_and_cpu_large.sh -m $1
+scripts/optimal_threads_with_contention/optimal_threads_cpu_small_and_vm_large.sh -m $1
+scripts/optimal_threads_with_contention/optimal_threads_cpu_small_and_vm_small.sh -m $1
+scripts/optimal_threads_with_contention/optimal_threads_vm_small_and_cpu_large.sh -m $1
+scripts/optimal_threads_with_contention/optimal_threads_vm_small_and_vm_large.sh -m $1
