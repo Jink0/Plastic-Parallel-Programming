@@ -68,61 +68,23 @@ fi
 
 
 
-NUM_WORKERS_MIN=4
-NUM_WORKERS_STEP=4
-
-NUM_CORES_MIN=4
-NUM_CORES_STEP=4
-
-
-
 FILENAME1="configs/spa/$(basename $BASH_SOURCE .sh)_1.ini"
 LOG_FILENAME1="logs/spa/$(basename $BASH_SOURCE .sh)_1.log"
 FILENAME2="configs/spa/$(basename $BASH_SOURCE .sh)_2.ini"
 LOG_FILENAME2="logs/spa/$(basename $BASH_SOURCE .sh)_2.log"
 
 if [ "$MACHINE" = "spa" ] ; then
-    NUM_WORKERS_MAX=24
-    NUM_CORES_MAX=24
-    NUM_RUNS1=36
-    STRING="0..11 "
     UPDATE_MOTD=false
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
-    NUM_WORKERS_MAX=48
-    NUM_CORES_MAX=48
-    NUM_RUNS1=144
-    STRING="0..31 "
-    UPDATE_MOTD=true
-fi
-
-if [ "$MACHINE" = "spa" ] ; then
-    NUM_WORKERS_MAX=24
-    NUM_CORES_MAX=24
-    NUM_RUNS2=36
-    STRING="0..11 "
-    UPDATE_MOTD=false
-fi
-
-if [ "$MACHINE" = "XXXII" ] ; then
-    NUM_WORKERS_MAX=48
-    NUM_CORES_MAX=48
-    NUM_RUNS2=144
-    STRING="0..31 "
     UPDATE_MOTD=true
 fi
 
 
 
-STEP=$( bc -l <<< "100 / ($NUM_RUNS1 * $NUM_RUNS2)" )
+STEP=$( bc -l <<< "100 / 1" )
 TOTAL=$STEP
-
-
-
-# Write new configs
-scripts/config_generation/cpu_large.sh $FILENAME1
-scripts/config_generation/vm_large.sh $FILENAME2
 
 
 
@@ -164,77 +126,118 @@ fi
 
 
 
+# Create config files
+
+# Delete old config if it exists
+if [ -e $FILENAME1 ]; then
+  rm $FILENAME1
+fi
+
+# Setup parameters for program 1
+STRING="0..$(($i-1)) "
+
+FULL_STRING=$STRING
+
+for ((p=1; p<NumCoresOne; p++))
+do
+    FULL_STRING=${FULL_STRING}${STRING}
+done
+
+FULL_STRINGOne=$STRING
+
+for ((p=1; p<NumCoresOneOne; p++))
+do
+    FULL_STRINGOne=${FULL_STRINGOne}${STRING}
+done
+
+# CPU Large
+
+echo "num_runs: \"101\"" > $FILENAME1
+echo "num_stages: \"2\"" >> $FILENAME1
+echo "num_iterations_0: \"1\"" >> $FILENAME1
+echo "set_pin_bool_0: \"2\"" >> $FILENAME1
+echo "kernels_0: \"cpu\"" >> $FILENAME1
+echo "kernel_durations_0: \"\"" >> $FILENAME1
+echo "kernel_repeats_0: \"1000\"" >> $FILENAME1 
+echo "grid_size: \"256\"" >> $FILENAME1
+echo "num_workers_0: \"NumWorkersOne\"" >> $FILENAME1
+echo "pinnings_0: \"$FULL_STRING\"" >> $FILENAME1
+
+echo "num_iterations_1: \"1\"" >> $FILENAME1
+echo "set_pin_bool_1: \"2\"" >> $FILENAME1
+echo "kernels_1: \"cpu\"" >> $FILENAME1
+echo "kernel_durations_1: \"\"" >> $FILENAME1
+echo "kernel_repeats_1: \"1000\"" >> $FILENAME1 
+echo "num_workers_1: \"NumWorkersOneOne\"" >> $FILENAME1
+echo "pinnings_1: \"$FULL_STRINGOne\"" >> $FILENAME1
+
+
+
+# Delete old config if it exists
+if [ -e $FILENAME2 ]; then
+  rm $FILENAME2
+fi
+
+# Setup parameters for program 2
+STRING="0..$(($i-1)) "
+
+FULL_STRING=$STRING
+
+for ((p=1; p<NumCoresTwo; p++))
+do
+    FULL_STRING=${FULL_STRING}${STRING}
+done
+
+FULL_STRINGTwo=$STRING
+
+for ((p=1; p<NumCoresTwo; p++))
+do
+    FULL_STRINGTwo=${FULL_STRINGTwo}${STRING}
+done
+
+echo "num_runs: \"101\"" > $FILENAME2
+echo "num_stages: \"2\"" >> $FILENAME2
+echo "num_iterations_0: \"1\"" >> $FILENAME2
+echo "set_pin_bool_0: \"2\"" >> $FILENAME2
+echo "kernels_0: \"vm\"" >> $FILENAME2
+echo "kernel_durations_0: \"\"" >> $FILENAME2
+echo "kernel_repeats_0: \"1000\"" >> $FILENAME2 
+echo "grid_size: \"256\"" >> $FILENAME2
+echo "num_workers_0: \"NumWorkersTwo\"" >> $FILENAME2
+echo "pinnings_0: \"$FULL_STRING\"" >> $FILENAME2
+
+echo "num_iterations_1: \"1\"" >> $FILENAME2
+echo "set_pin_bool_1: \"2\"" >> $FILENAME2
+echo "kernels_1: \"vm\"" >> $FILENAME2
+echo "kernel_durations_1: \"\"" >> $FILENAME2
+echo "kernel_repeats_1: \"1000\"" >> $FILENAME2 
+echo "num_workers_1: \"NumWorkersTwoTwo\"" >> $FILENAME2
+echo "pinnings_1: \"$FULL_STRINGTwo\"" >> $FILENAME2
+
+
+
+
+
+
 COUNT=1
 
 # Start experiments
 
-for ((i=$NUM_CORES_MIN; i<=$NUM_CORES_MAX; i+=$NUM_CORES_STEP))
-do
-    for ((j=$NUM_WORKERS_MIN; j<=$NUM_WORKERS_MAX; j+=$NUM_WORKERS_STEP))
-    do
-        # Setup parameters for program 1
-        STRING="0..$(($i-1)) "
+# Run programs
+bin/jacobi $FILENAME1 $COUNT "$(basename $BASH_SOURCE .sh)_1" >> $LOG_FILENAME1 &
+bin/jacobi $FILENAME2 $COUNT "$(basename $BASH_SOURCE .sh)_2" >> $LOG_FILENAME2
 
-        FULL_STRING=$STRING
+echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
 
-        for ((p=1; p<j; p++))
-        do
-            FULL_STRING=${FULL_STRING}${STRING}
-        done
+printf "\r%.3f%%" "$TOTAL"
 
-        head -n -2 $FILENAME1 > temp.ini
+if [ "$UPDATE_MOTD" = true ] ; then
+    sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+    echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
+fi
 
-        echo "num_workers_0: \"$j\"" >> temp.ini
-        echo "pinnings_0: \"$FULL_STRING\"" >> temp.ini
-
-        mv temp.ini $FILENAME1
-
-
-
-        for ((k=$NUM_CORES_MIN; k<=$NUM_CORES_MAX; k+=$NUM_CORES_STEP))
-        do
-            for ((l=$NUM_WORKERS_MIN; l<=$NUM_WORKERS_MAX; l+=$NUM_WORKERS_STEP))
-            do
-                # Setup parameters for program 2
-                STRING="0..$(($k-1)) "
-
-                FULL_STRING=$STRING
-
-                for ((q=1; q<l; q++))
-                do
-                    FULL_STRING=${FULL_STRING}${STRING}
-                done
-
-                head -n -2 $FILENAME2 > temp.ini
-
-                echo "num_workers_0: \"$l\"" >> temp.ini
-                echo "pinnings_0: \"$FULL_STRING\"" >> temp.ini
-
-                mv temp.ini $FILENAME2
-
-
-
-                RAND_VAL=$( bc -l <<< "$i * $j * $k * $l" )
-
-                # Run programs
-                bin/jacobi $FILENAME1 $COUNT "$(basename $BASH_SOURCE .sh)_1" >> $LOG_FILENAME1 &
-                bin/jacobi $FILENAME2 $COUNT "$(basename $BASH_SOURCE .sh)_2" >> $LOG_FILENAME2
-
-                echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
-
-                printf "\r%.3f%%" "$TOTAL"
-
-                if [ "$UPDATE_MOTD" = true ] ; then
-                    sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
-                    echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 > /dev/null
-                fi
-
-                TOTAL=$(bc -l <<< "$TOTAL + $STEP")
-                COUNT=$( bc -l <<< "$COUNT + 1" )
-            done
-        done
-    done
-done
+TOTAL=$(bc -l <<< "$TOTAL + $STEP")
+COUNT=$( bc -l <<< "$COUNT + 1" )
 
 
 
