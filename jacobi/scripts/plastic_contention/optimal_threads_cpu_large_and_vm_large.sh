@@ -127,6 +127,19 @@ fi
 
 
 # Create config files
+if [ "$MACHINE" = "spa" ] ; then
+    NumCoresOne=24
+    NumCoresOneOne=24
+
+    NumWorkersOne=22
+    NumWorkersOneOne=24
+
+    NumCoresTwo=24
+    NumCoresTwoTwo=24
+
+    NumWorkersTwo=24
+    NumWorkersTwoTwo=24
+fi
 
 # Delete old config if it exists
 if [ -e $FILENAME1 ]; then
@@ -158,7 +171,7 @@ echo "num_iterations_0: \"1\"" >> $FILENAME1
 echo "set_pin_bool_0: \"2\"" >> $FILENAME1
 echo "kernels_0: \"cpu\"" >> $FILENAME1
 echo "kernel_durations_0: \"\"" >> $FILENAME1
-echo "kernel_repeats_0: \"1000\"" >> $FILENAME1 
+echo "kernel_repeats_0: \"500\"" >> $FILENAME1 
 echo "grid_size: \"256\"" >> $FILENAME1
 echo "num_workers_0: \"NumWorkersOne\"" >> $FILENAME1
 echo "pinnings_0: \"$FULL_STRING\"" >> $FILENAME1
@@ -167,7 +180,7 @@ echo "num_iterations_1: \"1\"" >> $FILENAME1
 echo "set_pin_bool_1: \"2\"" >> $FILENAME1
 echo "kernels_1: \"cpu\"" >> $FILENAME1
 echo "kernel_durations_1: \"\"" >> $FILENAME1
-echo "kernel_repeats_1: \"1000\"" >> $FILENAME1 
+echo "kernel_repeats_1: \"500\"" >> $FILENAME1 
 echo "num_workers_1: \"NumWorkersOneOne\"" >> $FILENAME1
 echo "pinnings_1: \"$FULL_STRINGOne\"" >> $FILENAME1
 
@@ -190,7 +203,7 @@ done
 
 FULL_STRINGTwo=$STRING
 
-for ((p=1; p<NumCoresTwo; p++))
+for ((p=1; p<NumCoresTwoTwo; p++))
 do
     FULL_STRINGTwo=${FULL_STRINGTwo}${STRING}
 done
@@ -201,7 +214,7 @@ echo "num_iterations_0: \"1\"" >> $FILENAME2
 echo "set_pin_bool_0: \"2\"" >> $FILENAME2
 echo "kernels_0: \"vm\"" >> $FILENAME2
 echo "kernel_durations_0: \"\"" >> $FILENAME2
-echo "kernel_repeats_0: \"1000\"" >> $FILENAME2 
+echo "kernel_repeats_0: \"500\"" >> $FILENAME2 
 echo "grid_size: \"256\"" >> $FILENAME2
 echo "num_workers_0: \"NumWorkersTwo\"" >> $FILENAME2
 echo "pinnings_0: \"$FULL_STRING\"" >> $FILENAME2
@@ -210,7 +223,7 @@ echo "num_iterations_1: \"1\"" >> $FILENAME2
 echo "set_pin_bool_1: \"2\"" >> $FILENAME2
 echo "kernels_1: \"vm\"" >> $FILENAME2
 echo "kernel_durations_1: \"\"" >> $FILENAME2
-echo "kernel_repeats_1: \"1000\"" >> $FILENAME2 
+echo "kernel_repeats_1: \"500\"" >> $FILENAME2 
 echo "num_workers_1: \"NumWorkersTwoTwo\"" >> $FILENAME2
 echo "pinnings_1: \"$FULL_STRINGTwo\"" >> $FILENAME2
 
