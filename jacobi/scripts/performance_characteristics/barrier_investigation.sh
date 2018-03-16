@@ -57,8 +57,8 @@ fi
 
 
 
-POWERS_MIN=10
-POWERS_MAX=12
+POWERS_MIN=8
+POWERS_MAX=15
 
 NUM_WORKERS_MIN=4
 NUM_WORKERS_STEP=4
@@ -90,9 +90,9 @@ if [ -e $FILENAME ]; then
   rm $FILENAME
 fi
 
-echo "num_runs: \"10\"" > $FILENAME
+echo "num_runs: \"101\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
-echo "num_iterations_0: \"5000\"" >> $FILENAME
+echo "num_iterations_0: \"500\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
 echo "pinnings_0: \"\"" >> $FILENAME
 echo "kernels_0: \"\"" >> $FILENAME
@@ -113,7 +113,7 @@ START=$(date +%s.%N)
 
 
 make clean > /dev/null
-make flags="-DBASIC_KERNEL_SMALL -DCONVERGE_TEST" main > /dev/null
+make flags="-DBASIC_KERNEL_LARGE -DCONVERGE_TEST" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -131,7 +131,7 @@ done
 
 
 make clean > /dev/null
-make flags="-DBASIC_KERNEL_SMALL -DCONVERGE_TEST -DMYBARRIER" main > /dev/null
+make flags="-DBASIC_KERNEL_LARGE -DCONVERGE_TEST -DMYBARRIER" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
@@ -149,7 +149,7 @@ done
 
 
 make clean > /dev/null
-make flags="-DBASIC_KERNEL_SMALL -DCONVERGE_TEST -DPTHREADBARRIER" main > /dev/null
+make flags="-DBASIC_KERNEL_LARGE -DCONVERGE_TEST -DPTHREADBARRIER" main > /dev/null
 
 
 for ((i=$POWERS_MIN; i<=$POWERS_MAX; i++))
