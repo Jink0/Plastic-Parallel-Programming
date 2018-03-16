@@ -13,23 +13,91 @@ function ctrl_c() {
 
 
 
+DEL_PREV_RUNS=false
+MACHINE="NONE"
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+key="$1"
+
+case $key in
+    -d|--delete)
+    DEL_PREV_RUNS=true
+    shift # past argument
+    ;;
+    -m|--machine)
+    MACHINE="$2"
+    shift # past argument
+    shift # past value
+    ;;
+esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+SUPPORTED_MACHINES="spa XXXII"
+
+# Check if we have a valid machine argument
+if [[ " $SUPPORTED_MACHINES " =~ .*\ $MACHINE\ .* ]]; then
+    echo "Machine: $MACHINE"
+    echo
+else
+    echo "Unsupported machine! : $MACHINE"
+    exit 1
+fi
+
+
+
+if [ "$DEL_PREV_RUNS" = true ] ; then
+    echo 'Deleting previous runs...'
+    echo
+    rm -rf runs/
+fi
+
+
+
+
 POWERS_MIN=10
 POWERS_MAX=15
 
 NUM_WORKERS_MIN=4
-NUM_WORKERS_MAX=32
 NUM_WORKERS_STEP=4
 
-# NUM_RUNS=($POWERS_MAX - $POWERS_MIN + 1) * (((NUM_WORKERS_MAX - NUM_WORKERS_MIN) / NUM_WORKERS_STEP) + 1)
-
+NUM_WORKERS_MAX=32
 NUM_RUNS=96
+
+if [ "$MACHINE" = "spa" ] ; then
+    NUM_WORKERS_MAX=12
+	NUM_RUNS=36
+    STRING="0..11 "
+    UPDATE_MOTD=false
+    FILENAME="configs/spa/barrier_investigation.ini"
+fi
+
+if [ "$MACHINE" = "XXXII" ] ; then
+    NUM_WORKERS_MAX=32
+	NUM_RUNS=96
+    STRING="0..31 "
+    UPDATE_MOTD=true
+    FILENAME="configs/XXXII/barrier_investigation.ini"
+fi
+
+
+
+
+
+
+
+
+
+
+
+
 
 STEP=$(bc -l <<< "100 / $NUM_RUNS")
 TOTAL=$STEP
 
 # Create config file
-
-FILENAME="configs/convergence_test_investigation.ini"
 
 if [ -e $FILENAME ]; then
   rm $FILENAME
@@ -49,7 +117,9 @@ echo "num_workers_0: \"4\"" >> $FILENAME
 # Start experiments
 
 printf "0.000%%"
-sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> /dev/null
+if [ "$MACHINE" = "XXXII" ] ; then
+	sudo scripts/update-motd.sh "Experiments running! 0.000% complete -Mark Jenkins (s1309061)" >> /dev/null
+fi
 
 START=$(date +%s.%N)
 
@@ -67,7 +137,6 @@ do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
 		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
-	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
 	done
 done
@@ -86,7 +155,6 @@ do
 		head -n -1 $FILENAME > temp.ini ; echo "num_workers_0: \"$j\"" >> temp.ini ; mv temp.ini $FILENAME
 		bin/jacobi $FILENAME > /dev/null
 		printf "\r%.3f%%" "$TOTAL"
-	        sudo scripts/update-motd.sh "$(printf "Experiments running! %.3f%% complete -Mark Jenkins (s1309061)" "$TOTAL")" >> /dev/null
 		TOTAL=$(bc -l <<< "$TOTAL + $STEP")
 	done
 done
@@ -97,4 +165,6 @@ DIFF=$(echo "$END - $START" | bc)
 
 sh send-encrypted.sh -k qGE5Pn -p Archimedes -s klvlqmhb -t "Experiments complete" -m "Convergence tests have completed! Time taken: $DIFF seconds"
 
-sudo scripts/update-motd.sh "" > /dev/null
+if [ "$MACHINE" = "XXXII" ] ; then
+	sudo scripts/update-motd.sh "" > /dev/null
+fi
