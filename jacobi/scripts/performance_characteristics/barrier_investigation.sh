@@ -90,9 +90,9 @@ if [ -e $FILENAME ]; then
   rm $FILENAME
 fi
 
-echo "num_runs: \"101\"" > $FILENAME
+echo "num_runs: \"10\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
-echo "num_iterations_0: \"500\"" >> $FILENAME
+echo "num_iterations_0: \"5000\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
 echo "pinnings_0: \"\"" >> $FILENAME
 echo "kernels_0: \"\"" >> $FILENAME
