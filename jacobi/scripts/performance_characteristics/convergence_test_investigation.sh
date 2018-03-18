@@ -56,22 +56,20 @@ fi
 
 
 
-
 POWERS_MIN=10
 POWERS_MAX=15
 
 NUM_WORKERS_MIN=4
 NUM_WORKERS_STEP=4
 
-NUM_WORKERS_MAX=32
-NUM_RUNS=96
+
 
 if [ "$MACHINE" = "spa" ] ; then
     NUM_WORKERS_MAX=12
 	NUM_RUNS=36
     STRING="0..11 "
     UPDATE_MOTD=false
-    FILENAME="configs/spa/barrier_investigation.ini"
+    FILENAME="configs/spa/convergence_test_investigation.ini"
 fi
 
 if [ "$MACHINE" = "XXXII" ] ; then
@@ -79,18 +77,8 @@ if [ "$MACHINE" = "XXXII" ] ; then
 	NUM_RUNS=96
     STRING="0..31 "
     UPDATE_MOTD=true
-    FILENAME="configs/XXXII/barrier_investigation.ini"
+    FILENAME="configs/XXXII/convergence_test_investigation.ini"
 fi
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -103,7 +91,7 @@ if [ -e $FILENAME ]; then
   rm $FILENAME
 fi
 
-echo "num_runs: \"10\"" > $FILENAME
+echo "num_runs: \"1\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
 echo "num_iterations_0: \"10\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
