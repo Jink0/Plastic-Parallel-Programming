@@ -66,7 +66,7 @@ LOG_FILENAME3="logs/spa/$(basename $BASH_SOURCE .sh)_3.log"
 if [ "$MACHINE" = "spa" ] ; then
     NUM_WORKERS_MAX=12
     NUM_CORES_MAX=12
-    NUM_RUNS=36
+    NUM_RUNS=729
     STRING="0..11 "
 fi
 
@@ -98,6 +98,10 @@ fi
 
 if [ -e $LOG_FILENAME2 ]; then
   rm $LOG_FILENAME2
+fi
+
+if [ -e $LOG_FILENAME3 ]; then
+  rm $LOG_FILENAME3
 fi
 
 # Log the machine we are on
@@ -179,7 +183,7 @@ do
                 do
                     for ((n=$NUM_WORKERS_MIN; n<=$NUM_WORKERS_MAX; n+=$NUM_WORKERS_STEP))
                     do
-                        # Setup parameters for program 2
+                        # Setup parameters for program 3
                         STRING="0..$(($m-1)) "
 
                         FULL_STRING=$STRING
@@ -194,7 +198,7 @@ do
                         echo "num_workers_0: \"$n\"" >> temp.ini
                         echo "pinnings_0: \"$FULL_STRING\"" >> temp.ini
 
-                        mv temp.ini $FILENAME2
+                        mv temp.ini $FILENAME3
 
 
 
@@ -213,21 +217,6 @@ do
                         COUNT=$( bc -l <<< "$COUNT + 1" )
                     done
                 done
-
-
-
-                RAND_VAL=$( bc -l <<< "$i * $j * $k * $l" )
-
-                # Run programs
-                bin/jacobi $FILENAME1 $COUNT "$(basename $BASH_SOURCE .sh)_1" >> $LOG_FILENAME1 &
-                bin/jacobi $FILENAME2 $COUNT "$(basename $BASH_SOURCE .sh)_2" >> $LOG_FILENAME2
-
-                echo -e "\n\n\n\n" | tee $LOG_FILENAME1 $LOG_FILENAME2 $LOG_FILENAME3 > /dev/null
-
-                printf "\r%.3f%%" "$TOTAL"
-
-                TOTAL=$(bc -l <<< "$TOTAL + $STEP")
-                COUNT=$( bc -l <<< "$COUNT + 1" )
             done
         done
     done
