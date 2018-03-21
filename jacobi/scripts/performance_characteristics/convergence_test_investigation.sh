@@ -56,8 +56,8 @@ fi
 
 
 
-POWERS_MIN=10
-POWERS_MAX=15
+POWERS_MIN=8
+POWERS_MAX=13
 
 NUM_WORKERS_MIN=4
 NUM_WORKERS_STEP=4
@@ -91,7 +91,7 @@ if [ -e $FILENAME ]; then
   rm $FILENAME
 fi
 
-echo "num_runs: \"1\"" > $FILENAME
+echo "num_runs: \"101\"" > $FILENAME
 echo "num_stages: \"1\"" >> $FILENAME
 echo "num_iterations_0: \"10\"" >> $FILENAME
 echo "set_pin_bool_0: \"0\"" >> $FILENAME
