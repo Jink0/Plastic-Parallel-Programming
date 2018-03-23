@@ -7,7 +7,7 @@ if [ -e $1 ]; then
   rm $1
 fi
 
-echo "num_runs: \"1\"" > $1
+echo "num_runs: \"101\"" > $1
 echo "num_stages: \"1\"" >> $1
 echo "num_iterations_0: \"1000\"" >> $1
 echo "set_pin_bool_0: \"2\"" >> $1
