@@ -85,9 +85,9 @@ TOTAL=$STEP
 
 
 # Write new configs
-scripts/config_generation/cpu_small.sh $FILENAME1
-scripts/config_generation/cpu_small.sh $FILENAME2
-scripts/config_generation/cpu_small.sh $FILENAME3
+scripts/config_generation/vm_small.sh $FILENAME1
+scripts/config_generation/vm_small.sh $FILENAME2
+scripts/config_generation/vm_small.sh $FILENAME3
 
 
 
