@@ -1,8 +1,11 @@
 %!TEX root = Report.tex
+
 \begin{abstract}
 
-This is the scond part of an MInf project which has spaned two years. In this project, we investigate the performance implications of plastic parallel programs which adapt to the current state of the host system, and explicitly cooperate to share and optimize the use of system resources.
+In this project, we investigate the performance possibilities of plastic parallel programs, which adapt to the current state of the host system and explicitly cooperate to share and optimise the use of system resources.
 
-In the first year of this project, we created an example of a parallel programming library which implemented these features, and gained some promising preliminary results into it's performance. In this second year, we develop upon this further by investigating a more insteresting parallel pattern...EXPAND
+In the first year of this project, we created an example of a parallel programming library which implemented these features for a single parallel programming pattern, that of map-array. We investigated the overhead incurred by such a system, concluding that it was insignificant, and we produced some promising preliminary results into its performance. 
+
+In this second year of the project, we develop upon this by investigating a less predictable parallel pattern, that of stencil codes, with a focus on potential performance to be gained from plasticity when run in contention with other programs. We designed and implemented a synthetic test stencil program, along with testing scripts and data analysis applications. We then evaluated the synthetic test program with two variants running in contention in a variety of scenarios, designed ultimately to reveal the potential for performance gains attainable by a contention aware plastic parallel programming library over and above the normal performance benefits attained by parallelism. The results of these experiments showed potential speedups from 1.03 to 2.44, compared to a non contention-aware system. We then investigated some more complex scenarios, involving three variants running in contention, which showed speedups from 1.13 to 2.43, compared to a non contention-aware system.
 
 \end{abstract}

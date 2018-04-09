@@ -1,0 +1,184 @@
+%!TEX root = ../Report.tex
+
+In this chapter, we discuss our overarching experimental methodology, as well as the structure and details of each experiment. We start by providing the test machine details, then we describe the software that was created to evaluate our synthetic test program discussed in section \ref{section:implementation:implementation_of_the_synthetic_test_program}. Next, we cover experiment specific details, along with any modifications made to our synthetic test program to facilitate them. Finally, we cover the software produced to analyse the data we collect.
+
+
+
+\section{Machine Details}
+\label{section:experimental_methodology:machine_details}
+
+We perform experiments on two machines, named spa and XXXII, in order to compare and explore performance characteristics across different architectures. Here we give the details of each machine. The main difference we are concerned with is the number of physical and virtual CPU cores each machine possesses, although CPU and RAM speeds will also affect our experiments.
+
+
+
+\subsubsection{spa:}
+
+\begin{itemize}
+    \item GNU/Linux kernel \#1 SMP PREEMPT Fri Jul 15 12:46:41 UTC 2016 (84ae57e), release 4.1.27-27-default
+    \item x\_86\_64 Instruction set
+    \item 2 x Intel(R) Xeon(R) CPU E5-2620 @ 2.00 GHz, giving a total of 12 physical CPU cores, 24 virtual CPU cores
+    \item 16GB RAM
+    \item GCC version 4.8.5 (SUSE Linux), Thread model: posix
+\end{itemize}
+
+
+
+\subsubsection{XXXII:}
+
+\begin{itemize}
+    \item GNU/Linux kernel \#1 SMP Wed Sep 13 07:07:43 UTC 2017 (3e35b20), release 4.4.87-18.29-default
+    \item x\_86\_64 Instruction set
+    \item 4 x Intel(R) Xeon(R) CPU L7555 @ 1.87 GHz, giving a total of 32 physical CPU cores, 64 virtual CPU cores
+    \item 64GB RAM
+    \item GCC version 4.8.5 (SUSE Linux), Thread model: posix
+\end{itemize}
+
+Both of these machines utilise intel chips, which provide some form of hyperthreading. Hyperthreading is Intel's proprietary simultaneous multithreading (SMT) implementation, which is used to improve parallelisation of computations. For each physical CPU core, the operating system addresses two virtual CPU cores, sharing the workload when possible. This allows concurrent scheduling of two processes per core. In addition, two or more processes can use the same resources: if resources for one process are not available, then another process can continue if its resources are available. 
+
+The main function of hyper-threading is to increase the number of independent instructions in the pipeline; it takes advantage of superscalar architecture, in which multiple instructions operate on separate data in parallel. Note that this does not directly add more computing power, but rather, facilitates the use of the existing computing power.
+
+
+
+\section{Experiment Infrastructure}
+\label{section:experimental_methodology:experiment_infrastructure}
+
+In this section, we discuss the general parameters for our experiments, as well as the software produced in order to evaluate our synthetic test program with various parameters.
+
+Our synthetic test program takes a configuration file which specifies the following parameters of a test run:
+
+\begin{itemize}
+    \item[\textbf{num\_runs:}]            The number of times to repeat the experiment. 101 was used for all experiments, 1 run to warm up the cache and 100 for data gathering.
+    
+    \item[\textbf{num\_stages:}]          The number of stages in execution. This lets us plastically change parameters, as we can specify different parameters for each stage. Each field ending with \_n can be specified per stage, with \_0 for the first, \_1 for the second, and so on.
+    
+    \item[\textbf{grid\_size:}]           The size of the grid to use for computation. The data grid is a square grid comprised of doubles, and is initialised with the edges set to 1.0, and interior cells set to 0.0. Typical values range from 32-32768 in experiments.
+    
+    \item[\textbf{kernels:}]              Which computation kernels to use. Several can be specified, and they will be run one after another according to the durations/repeats specified. Options are: cpu, vm, hdd, io.
+    
+    \item[\textbf{num\_iterations\_n:}]   The number of iterations (passes over the data grid) to compute. Typically, this would vary from problem to problem, but for repeatability and comparison purposes we directly control this. Values range from 1-1000 in experiments.
+    
+    \item[\textbf{set\_pin\_bool\_n:}]    Controls which virtual CPU cores each thread can utilise. Values are as follows:
+        \begin{itemize}
+            \item 0: Each thread can access any virtual CPU core.
+            \item 1: Each thread is pinned to the virtual CPU core with the same ID (effectively one virtual CPU core per thread.)
+            \item 2: Each thread can access the virtual CPU cores allocated to it by the pinnings\_n field, allows precise control.
+        \end{itemize}
+    
+    \item[\textbf{kernel\_durations\_n:}] Specifies the duration to execute each computation kernel, in milliseconds. This allows us to generate a workload which will run for a guaranteed amount of time. In practice, this was not used for experiments, for repeatability reasons. Instead, we used the kernel\_repeats\_n parameter.
+    
+    \item[\textbf{kernel\_repeats\_n:}]   Specifies how many times to repeat each computation kernel. For obvious reasons, we can only use this or kernel\_durations\_n, not both. Typical values range from 10-1000 to produce a substantial workload.
+    
+    \item[\textbf{num\_workers\_n:}]      The number of worker threads to use. Values range from 2-48 in experiments.
+    
+    \item[\textbf{pinnings\_n:}]          Specifies the exact virtual CPU cores to which each thread is to be pinned (restricted.)  Example value: ``1..4,8 1..4,8 5..6 7'' restricts thread 0 and 1 to virtual CPU cores 1 through 4 plus 8, thread 2 to 5 and 6, and thread 3 to 7.
+\end{itemize}
+
+This allows us to precisely control each aspect of a test run, and repeat it the desired number of times. However, in order to programmatically test different configurations, we must construct some additional software to execute our synthetic test program with the appropriate settings for our experiments.
+
+To this effect, we created a bash script for each experiment to be carried out. Each script compiles the synthetic test program with the appropriate flags (turning on/off features such as the convergence test or different barrier implementations,) generates the range of config files required, and executes the synthetic test program according to the experiment requirements, logging each action as it goes. For some experiments, multiple instances of the synthetic test program are required to run simultaneously, requiring synchronisation, and separate config and logging files.
+
+Other features of these bash scripts include a completion percentage display, machine specific settings, and a notification of when experiments are completed, and how long they took. The completion percentage is useful as these are shared systems, and writing the percentage complete to the MOTD of the machine allows other users to gauge when the machine will be free. The machine specific settings allows us to execute each experiment on multiple machines with the same scripts. An example of such a script is included in appendix \ref{appendix:experiment_script}.
+
+Before starting each experiment, we ensured that no other process was running which would not be part of the ordinary background of processes present in a system. We did this manually, using top to view the running processes. These experiments were performed on shared machines, making the MOTD update feature of our scripts useful, as it warns other users that experiments are going on, and should not be disturbed.
+
+
+
+\section{Experiment Specific Details}
+\label{section:experimental_methodology:experiment_specific_details}
+
+In this section, we discuss experimental methodology pertinent to specific experiments, as well as the modifications made to our synthetic test program in order to facilitate them.
+
+
+
+\subsection{Performance Characteristics Investigation}
+\label{section:experimental_methodology:performance_characteristics_investigation}
+
+\subsubsection{Barrier Synchronisation}
+\label{section:experimental_methodology:barrier_syncronisation}
+
+In order to compare different barrier options, they must be implemented in the synthetic test program. These options are: no barrier, a custom reusable counter barrier, and a pthreads barrier. Each of these is activated by defining flags used in the preprocessor. This lets us choose which (if any) barrier implementation to use at compile time without so much as an extraneous if statement, which preservers realistic performance. This technique was used for other features for different experiments. These include process synchronisation, convergence test execution, and compute kernel execution.
+
+
+
+\subsubsection{Convergence Checks}
+\label{section:experimental_methodology:convergence_checks}
+
+In order to perform convergence checks, we must add the option of their use to our synthetic test program in a reliable and repeatable manner. In a typical stencil code application, a convergence check is run after each pass/iteration over the data grid, and the computation is halted once the convergence test is positive. This results in the program running for an unspecified number of iterations, which is dependent upon the exact problem instance being computed.
+
+For our synthetic test application, we want our computation to run for a predictable number of iterations. This is for repeatability, and to facilitate fair comparisons between configurations, which otherwise might have a different number of passes over the grid. The way that this is achieved is by modifying our synthetic test program such that it runs for a given number of passes/iterations over the grid, still performing the convergence test, but ignoring the result.
+
+Similar to the barrier synchronisation features, the convergence checks are controlled by defining flags used in the preprocessor.
+
+
+
+\subsection{Finding Interesting Instances}
+\label{section:experimental_methodology:finding_interesting_instances}
+
+In order to find some interesting instances which stress different resources, we need some different elements of computation which stress different resources. To facilitate this, we added many examples of computation kernels to our synthetic test program, which stressed different resources (e.g. CPU, RAM,) using different methods (e.g. repeated use of sqrt() function, sin() function, or malloc() function.)
+
+Many experiments were performed, with few repeats, in the initial search of the ``performance space''. Once we started to come close to the performance characteristics we desired, we took more care, and performed experiments with the usual 101 repeats, in order to properly dial in the best values we could (these results are presented later, in section \ref{section:results:finding_interesting_instances}.) This was done in the name of speed, as we have multiple parameters which affect the performance characteristics (namely grid size, num iterations, kernel, and kernel repeats.)
+
+
+
+\subsection{Optimal Threads Experiments}
+\label{section:experimental_methodology:optimal_threads_experiments}
+
+Recall, as described in section \ref{section:design:optimal_threads}, the optimal threads experiments are designed to evaluate the performance characteristics of each interesting instance, running in isolation. Since we have our interesting instances, all that is required is a more time consuming and thorough investigation, and as such, this does not require modifications to our synthetic test program. 
+
+For this thorough test, we aim to evaluate every possible number of threads for every possible number of virtual CPU cores. This would give us the optimal number of threads to use, for any given number of virtual CPU cores. However, after estimating the runtime of these experiments, to keep them manageable, we increment the number of threads and the number of cores in steps of two. This resulted in a total experimental programme runtime of approximately a week per machine.
+
+
+
+\subsection{Contention Experiments}
+\label{section:experimental_methodology:contention_experiments}
+
+As described in section \ref{section:design:contention_experiments}, the purpose of the contention experiments is to evaluate the performance characteristics of pairs of instances, when run in contention. This requires executing our instances simultaneously. However, as described in section \ref{section:implementation:high_level_plan}, our synthetic test program has a distinct start up phase, and a distinct processing phase, in which we gather our data. So in order to properly test our instances with contention, we must synchronise across them, such that they both enter the processing phase simultaneously. If this is not done, as our programs perform repeats, the processing phases would drastically drift out of synchronisation, as in many circumstances, one program finishes well before the other.
+
+Adding this cross process synchronisation is the most significant modification to our synthetic test program. To implement it, we used named POSIX semaphores, to minimise extraneous library use, and preserve portability across machines. To prevent interference between distinct runs, we use the run number as the name of the semaphore.
+
+Again, as in the optimal threads experiments, we must cut down the number of experiments to perform. For the contention experiments, the size of the parameter space of two programs running simultaneously is $O(N^4)$. This is because both programs have two parameters which can be varied, which are the number of cores to use, and the number of threads to use. Exhaustively testing this space is unrealistic due to time constraints, therefore, we incremented each parameter in steps of four. This kept the total experimental programme runtime to between one and two weeks on spa.
+
+\section{Additional Experiments}
+\label{section:experimental_methodology:additional_experiments}
+
+In this section, we give the experimental methodology for some additional experiments which should provide some further insight into the system. We performed some extended contention experiments, however due to time constrains, we could not perform any plastic experiments.
+
+
+
+\subsection{Extended Contention Experiments}
+\label{section:experimental_methodology:extended_contention_experiments}
+
+We would like to take our contention experiments further, by investigating situations involving three programs. This would provide an interesting insight into more complex situations. Similar to our previous contention experiments, we would need to synchronise all three programs in the start up phase, and prevent interference between runs. 
+
+Another similarity to the previous contention experiments is that we will need to again cut down on the complexity of our experiments. With three programs, we have six variables, giving us a parameter space of $O(N^6)$. More than any other experiment, we must take care to ensure our experiments complete in reasonable time. It transpires that, to achieve this, we incremented each parameter in steps of four, with a limit of twelve. The runtime of these experiments ranged from 5 hours to 5 days on both spa and XXXII.
+
+
+
+\subsection{Plastic Experiments}
+\label{section:experimental_methodology:plastic_experiment}
+
+The intention for these plastic experiments is to demonstrate our synthetic test program plastically changing from sub-optimal to optimal parameters. This involves utilising the plastic capabilities of our synthetic test program, in which we have multiple stages. We start the first stage with the sub-optimal parameters, and then at some point, we move into the second stage, where we use the optimal parameters. We designed and programmed this experiment, however, unfortunately we did not have the time to execute it.
+
+
+
+\section{Data Analysis}
+\label{section:experimental_methodology:data_analysis}
+
+In this section we present the software created to analyse the data produced by our experiments.
+
+For each experiment, we produced a corresponding Jupyter Notebook document \cite{project_jupyter}, which loaded and processed the results obtained. Quoting from the Jupyter Notebook documentation: ``Notebook documents are both human-readable documents containing the analysis description and the results (figures, tables, etc..) as well as executable documents which can be run to perform data analysis'' \cite{what_is_jupyter_notebook}.
+
+We chose to use Jupyter Notebooks with python as the programming language, as the interactive nature of the notebooks as well as the sophisticated scientific computing packages provided by python allow for complex data analysis.
+
+The steps we take in each Jupyter Notebook document are as follows:
+
+\begin{enumerate}
+    \item Select the experiment parameters, such as which machine the data is from. This affects how we label the data, and how we present the data.
+    \item Import and label the raw data from the target location.
+    \item Process the data, computing statistics such as the mean or the variance of each data point.
+    \item Present the data as a graph, and save a copy.
+\end{enumerate}
+
+As discussed in section \ref{section:implementation:implementation}, we discard the first result due to cold cache issues. We then take the mean over one hundered points, and compute 95\% confidence intervals for our graphs.
+
+An example of a notebook we used is included in \ref{appendix:data_analysis_program}.
