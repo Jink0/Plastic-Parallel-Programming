@@ -49,7 +49,7 @@ In the contention aware plastic parallel programming library we presented in the
 \subsection{A More Advanced Controller Application}
 \label{section:conclusion_and_future_work:a_more_advanced_controller_application}
 
-In the previous extension, we would still be using hand written (albeit complex) rules to implement the controller application. It may be of some benefit to use some sort of artificial intelligence to figure out the optimal configuration. To generate the input data, we could use established methods of predicting performance, such as software profiling programs before hand, or hardware monitoring programs during execution. This is a well researched field, and here we present a short overview of these two methods:
+In the previous extension, we would still be using hand written (albeit complex) rules to implement the controller application. It may be of some benefit to use some sort of artificial intelligence to determine the optimal configuration. To generate the input data, we could use established methods of predicting performance, such as software profiling programs before hand, or hardware monitoring programs during execution. This is a well researched field, and here we present a short overview of these two methods:
 
 \begin{itemize}
     \item Software profiling data involves collecting statistics such as the local IPC and L2 cache misses in a simulator. Data such as this can be used to predict the programs performance, and has been used to tune the compilation of a program for greater performance \cite{duesterwald_bala_2000}.
@@ -89,7 +89,7 @@ As another extension, other computing domains could be considered.
 \subsubsection{Mobile Systems}
 \label{section:conclusion_and_future_work:mobile_systems}
 
-The mobile computing domain introduces new challenges. Power efficiency is of key importance, and as such, this means that we can encounter diverse hardware. Many CPU cores is commonplace, as this leads to greater power efficiency. This makes parallel programming of key importance, in order to utilise the hardware efficiently. Another technique is to combine many low power CPU cores with few high power CPU cores, and even low power GPUs, to enable both efficiency and performance when required. Such features, and shifting our focus to power efficiency, would drastically change how we schedule applications.
+The mobile computing domain introduces new challenges. Power efficiency is of key importance, and as such, this means that we can encounter diverse hardware. Devices with many CPU cores is commonplace, as this leads to greater power efficiency. This makes parallel programming of key importance, in order to utilise the hardware efficiently. Another technique is to combine many low power CPU cores with few high power CPU cores, and even low power GPUs, to enable both efficiency and performance when required. Such features, and shifting our focus to power efficiency, would drastically change how we schedule applications.
 
 
 

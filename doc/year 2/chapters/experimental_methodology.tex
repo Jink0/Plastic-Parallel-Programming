@@ -96,7 +96,7 @@ In this section, we discuss experimental methodology pertinent to specific exper
 \subsubsection{Barrier Synchronisation}
 \label{section:experimental_methodology:barrier_syncronisation}
 
-In order to compare different barrier options, they must be implemented in the synthetic test program. These options are: no barrier, a custom reusable counter barrier, and a pthreads barrier. Each of these is activated by defining flags used in the preprocessor. This lets us choose which (if any) barrier implementation to use at compile time without so much as an extraneous if statement, which preservers realistic performance. This technique was used for other features for different experiments. These include process synchronisation, convergence test execution, and compute kernel execution.
+In order to compare different barrier options, they must be implemented in the synthetic test program. These options are: no barrier, a custom reusable counter barrier, and a pthreads barrier. Each of these is activated by defining flags used in the preprocessor. This lets us choose which (if any) barrier implementation to use at compile time without so much as an extraneous if statement, which preserves realistic performance. This technique was used for other features for different experiments. These include process synchronisation, convergence test execution, and compute kernel execution.
 
 
 
@@ -123,9 +123,9 @@ Many experiments were performed, with few repeats, in the initial search of the 
 \subsection{Optimal Threads Experiments}
 \label{section:experimental_methodology:optimal_threads_experiments}
 
-Recall, as described in section \ref{section:design:optimal_threads}, the optimal threads experiments are designed to evaluate the performance characteristics of each interesting instance, running in isolation. Since we have our interesting instances, all that is required is a more time consuming and thorough investigation, and as such, this does not require modifications to our synthetic test program. 
+Recall, as described in section \ref{section:design:optimal_threads}, that the optimal threads experiments are designed to evaluate the performance characteristics of each interesting instance, running in isolation. Since we have our interesting instances, all that is required is a more time consuming and thorough investigation, and as such, this does not require modifications to our synthetic test program. 
 
-For this thorough test, we aim to evaluate every possible number of threads for every possible number of virtual CPU cores. This would give us the optimal number of threads to use, for any given number of virtual CPU cores. However, after estimating the runtime of these experiments, to keep them manageable, we increment the number of threads and the number of cores in steps of two. This resulted in a total experimental programme runtime of approximately a week per machine.
+For this thorough test, we aim to evaluate every possible number of threads for every possible number of virtual CPU cores. This would give us the optimal number of threads to use, for any given number of virtual CPU cores. However, after estimating the runtime of these experiments, to keep them manageable, we incremented the number of threads and the number of cores in steps of two. This resulted in a total experimental programme runtime of approximately one week per machine.
 
 
 
@@ -150,7 +150,7 @@ In this section, we give the experimental methodology for some additional experi
 
 We would like to take our contention experiments further, by investigating situations involving three programs. This would provide an interesting insight into more complex situations. Similar to our previous contention experiments, we would need to synchronise all three programs in the start up phase, and prevent interference between runs. 
 
-Another similarity to the previous contention experiments is that we will need to again cut down on the complexity of our experiments. With three programs, we have six variables, giving us a parameter space of $O(N^6)$ where $N$ is the number of options for each paramater. More than any other experiment, we must take care to ensure our experiments complete in reasonable time. It transpires that, to achieve this, we incremented each parameter in steps of four, with a limit of twelve. The runtime of these experiments ranged from 5 hours to 5 days on both spa and XXXII.
+Another similarity to the previous contention experiments is that we again needed to cut down on the complexity of our experiments. With three programs, we have six variables, giving us a parameter space of $O(N^6)$ where $N$ is the number of options for each parameter. More than any other experiment, it was necessary to take care to ensure that our experiments completed in reasonable time. It transpired that, to achieve this, we incremented each parameter in steps of four, with a limit of twelve. The runtime of these experiments ranged from 5 hours to 5 days on both spa and XXXII.
 
 
 
