@@ -1,11 +1,11 @@
 %!TEX root = ../Report.tex
 
-In this chapter, we cover the current approaches to parallel programming. We then explore the key ideas requisite to this project, in order to discuss how they are combined and their implications. Finally, we review what was done in the previous year of this project \cite{me}, and some lessons we carried forward to this year.
+In this chapter, we cover the current approaches to parallel programming. We then explore the key ideas requisite to this project, in order to discuss how they are combined and their implications. Finally, we review what was done in the previous year of this project \cite{me}, and some of the lessons we carried forward to this year.
 
 \section{Introduction}
 \label{section:background:introduction}
 
-The three pertinent ideas to this project are those of plasticity, contention aware scheduling, and skeleton programming. We briefly cover these ideas here, and provide more detailed explanations later.
+The three pertinent ideas to this project are those of plasticity, contention aware scheduling, and skeleton programming. We briefly cover these here, and provide more detailed explanations later.
 
 A plastic program is a program which can adapt to its current environment. For example, a program may utilise plasticity in order to alter its operations to suit a particular architecture. In our case, the program will alter its implementation in response to the current state of the system, with a focus on which other programs may be active.
 
@@ -22,9 +22,9 @@ The overall aim of this project is to investigate if we can gain performance by 
 
 Writing correct parallel programs is hard \cite{parallel_hard}. It introduces new difficulties such as race conditions and thread safety. Writing efficient parallel applications, where performance matters, is even harder \cite{parallel_hard_perf}. The overhead of parallelism must be kept small enough such that any performance gains will outweigh it. 
 
-Current solutions range from providing the programmer with low level primitives (POSIX Threads \cite{posix_threads}), to abstracting away these primitives, resulting in a higher level language (OpenMP \cite{openmp}.) Other solutions focus on making parallel programming easier, usually employing skeleton code (Intel Threaded Building Blocks \cite{threading_building_blocks_2018}.)
+Current solutions range from providing the programmer with low level primitives (POSIX Threads \cite{posix_threads}), to abstracting away these primitives, resulting in a higher level language (OpenMP \cite{openmp}). Other solutions focus on making parallel programming easier, usually employing skeleton code (Intel Threaded Building Blocks \cite{threading_building_blocks_2018}).
 
-In this project, we are combining the ideas of plasticity and contention aware scheduling with parallel programming, with a focus on efficiency. This, along with the difficulty of parallel programming, makes it hard to ensure correctness, and particularly efficiency. Since the goals of this project will require the cooperation of several programs, it is in our interest to make using these techniques as easy as possible, to encourage their use by programmers. Thus, to abstract this complexity away from the programmer, we employ skeletal programming. It also has the beneficial side effect of dividing the challenge into a pattern-by-pattern basis. 
+In this project, we are combining the ideas of plasticity and contention aware scheduling with parallel programming, with a focus on efficiency. This, along with the difficulty of parallel programming, makes it hard to ensure correctness, and particularly efficiency. Since the goals of this project will require the cooperation of several programs, it is in our interest to make using these techniques as easy as possible, to encourage their use by programmers. Thus, to abstract this complexity away from the programmer, we employ skeletal programming. This also has the beneficial side effect of dividing the challenge into a pattern-by-pattern basis. 
 
 
 
@@ -37,7 +37,7 @@ Since we are investigating the feasibility of a new parallel programming library
 	\item Pthreads (POSIX Threads \cite{posix_threads})
 	\item MPI 	   (Message Passing Interface \cite{mpi})
 	\item OpenMP   (Open Multi-Processing \cite{openmp_home} \cite{openmp})
-	\item Intel TBB (Intel Threading Building Blocks \cite{threading_building_blocks_2018} \cite{contreras_martonosi_2008})
+	\item Intel\textsuperscript{\textregistered} TBB (Intel Threading Building Blocks \cite{threading_building_blocks_2018} \cite{contreras_martonosi_2008})
 	\item SkePU (\cite{skepu} \cite{skepu_2_2018})
 \end{itemize}
 
@@ -58,7 +58,7 @@ Designed to make parallel programs easier to write, it has the advantage of low-
 
 \item[SkePU] is an open-source skeleton programming framework for multicore CPUs and multi-GPU systems. It is a C++ template library with data-parallel and task-parallel skeletons, and support for execution on multi-GPU systems both with CUDA and OpenCL.
 
-Similar to Intel TBB, it attempts to simplify parallel programming through the use of templates (here called skeletons.) However, SkePU adds features such as multiple back ends, including OpenMP, OpenCL, CUDA, and multi-GPU OpenCL and CUDA. It also provides a tuning framework for context-aware implementation selection, allowing it to select the expected fastest implementation at each skeleton call. This differs from our system in that it performs static analysis before the program is run, and as such it cannot react to changes in the system at runtime. It also does not utilise plasticity at a more fine grained level than which language (or hardware) to use.
+Similar to Intel TBB, it attempts to simplify parallel programming through the use of templates (here called skeletons). However, SkePU adds features such as multiple back ends, including OpenMP, OpenCL, CUDA, and multi-GPU OpenCL and CUDA. It also provides a tuning framework for context-aware implementation selection, allowing it to select the expected fastest implementation at each skeleton call. This differs from our system in that it performs static analysis before the program is run, and as such it cannot react to changes in the system at runtime. It also does not utilise plasticity at a more fine grained level than which language (or hardware) to use.
 \end{description}
 
 
@@ -70,7 +70,7 @@ Parallel programming introduces a whole host of complications ranging from race 
 \section{What Is Contention Aware Scheduling?}
 \label{section:background:what_is_contention_aware_scheduling}
 
-We use contention aware scheduling as a means to address a particular problem. In our case, that problem is that programs running simultaneously on the same machine will interfere with each other, as they must compete for resources. This interference is not uniform (as can be seen in figure \ref{fig:lira_pairwise_speedup}), and, in fact, is dependent upon which programs are running, and the overall state of the system. Contention aware scheduling is the practice of taking into account this interference (contention) when scheduling programs, such that programs which work well together are scheduled to run on the same socket, thus reducing the overall contention.
+We use contention aware scheduling as a means to address a particular problem. In our case, the problem is that programs running simultaneously on the same machine will interfere with each other, as they must compete for resources. This interference is not uniform (as can be seen in figure \ref{fig:lira_pairwise_speedup}), and, in fact, is dependent upon which programs are running, as well as the overall state of the system. Contention aware scheduling is the practice of taking into account this interference (contention) when scheduling programs, such that programs which work well together are scheduled to run on the same socket, thus reducing the overall contention.
 
 LIRA \cite{lira} shows that throughput gains of 3-7\% can be seen with this technique. Extending this with plasticity would mean that we can control which program runs where, and the implementation each program uses, allowing us more scope to mitigate contention.
 
@@ -112,7 +112,7 @@ This makes using our library much easier, and means that we can assess the progr
 \section{Review of Previous Year}
 \label{section:background:review_of_previous_year}
 
-The main goal of this two year project is to investigate if we can gain some extra performance in parallel multi-programming systems by exploiting contention aware scheduling and plastic programming. There has been no published previous work on runtime dynamic plastic parallel skeletons, as described in this project.
+The main goal of this two year project is to investigate if we can gain some extra performance in parallel multi-programming systems by exploiting contention aware scheduling and plastic programming. We are not aware of any published previous work on runtime dynamic plastic parallel skeletons, as described in this project.
 
 In the first year of this project \cite{me}, we investigated a basic parallel programming pattern, map-array. We incorporated this into a feasible estimate of a contention aware plastic parallel programming library, and measured the performance, with a focus on understanding and minimising overhead. In this section, we cover the design of this library, and the information gained from its analysis.
 
@@ -129,11 +129,11 @@ In order to make such a library, we needed to make two modifications to a typica
     
         \begin{itemize}
         	\item Thread count - The number of threads we split the tasks between
-        	\item Thread pinnings - The particular CPU core each thread runs on
-        	\item Schedule - How to divide tasks between threads
+        	\item Thread pinnings - The particular CPU cores each thread could utilise
+        	\item Schedule - How we divided tasks between threads
         \end{itemize}
         
-        These are set before any worker threads are spawned. This allowed us to generate several different implementations by altering these parameters.
+        These were set before any worker threads were spawned. This allowed us to generate several different implementations by altering these parameters.
         
         However, this alone did not allow us to dynamically switch implementations during runtime. The simplest way to make this dynamic would be to gracefully kill all worker threads, and restart them with the new parameters. We chose this method to, again, keep it simple. The cost incurred (closing and restarting each thread) would be proportional to how often we want to change parameters, and as such, its overall impact depended upon the frequency of change. We also investigated the impact this method had, finding it to be negligible.
     
@@ -141,13 +141,13 @@ In order to make such a library, we needed to make two modifications to a typica
     
         As discussed previously, we decided upon the use of a centralised controller program, which would communicate with each application running an instance of our library and instruct them what parameters to use.
         
-        When a new instance of the library starts, it registered with the controller program. The controller then continually monitored the system for any changes, and reacted accordingly sending new parameters to each registered program. For our purposes, the controller acted according to a predefined set of instructions, telling it what parameters to send and when. In a more developed system, the controller would monitor the system and send updates programmatically.
+        When a new instance of the library started, it registered with the controller program. The controller then continually monitored the system for any changes, and reacted accordingly sending new parameters to each registered program. For our purposes, the controller acted according to a predefined set of instructions, telling it what parameters to send and when. In a more developed system, the controller would monitor the system and send updates programmatically.
         
-        To allow instances of our library to communicate with the controller, we added a "main" thread, to handle communication operations, and update the worker threads with new parameters. This communication structure is illustrated in figure \ref{fig:old_communication_structure}.
+        To allow instances of our library to communicate with the controller, we added a ``main'' thread, to handle communication operations, and update the worker threads with new parameters. This communication structure is illustrated in figure \ref{fig:old_communication_structure}.
         
         \begin{figure}[H]
             \includegraphics[width=1\textwidth]{graphics/communication_structure.png}
-            \caption{High level communication model of the system, with an arbitrary number of programs, each with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and its worker threads.}
+            \caption{A high level communication model of the system, with an arbitrary number of programs, each with an arbitrary number of threads. Two way communication occurs between the controller and each main thread, and then between each main thread and its worker threads.}
             \label{fig:old_communication_structure}
         \end{figure}
 \end{itemize}
@@ -157,7 +157,7 @@ In order to make such a library, we needed to make two modifications to a typica
 \subsubsection{Results}
 \label{section:background:results}
 
-The two aims of the previous year were:
+The two aims of the project work from the previous year were:
 
 \begin{itemize}
     \item Assess the feasibility and the overhead introduced by a contention aware plastic parallel programming library
@@ -174,6 +174,6 @@ For the second item, we found that whilst the results were promising, the map-ar
 \subsubsection{Lessons to be Carried Forward}
 \label{section:background:lessons_to_be_carried_forward}
 
-The performance results of the previous year showed promise, but further exploration was required, which is our focus this year. We saw some gain in certain circumstances, but we concluded that the map array pattern used was too predictable, and doesn't have much scope for plastic improvement. However, it would still be reasonable to use our library for map array patterns, since other programs on the system may benefit.
+The performance results of the previous year showed promise, but further exploration was required, which is our focus this year. We saw some gain in certain circumstances, but we concluded that the map array pattern used was too predictable, and that it didn't have have much scope for plastic improvement. However, it would still be reasonable to use our library for map array patterns, since other programs on the system may benefit.
 
 This issue is why we decided to focus on the stencil code pattern this year, as it is much more complex to parallelise, with more scope for our decisions to have an impact.

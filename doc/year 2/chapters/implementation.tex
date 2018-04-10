@@ -4,10 +4,10 @@ In this chapter we summarise the implementation of the system produced last year
 
 
 
-\section{Last Year's Implementation}
+\section{Implementation from the Previous Year}
 \label{section:implementation:last_years_implementation}
 
-In this section, we give an overview of the implementation of the system produced last year. The purpose of this is to get a feel of how a contention aware plastic parallel programming library could be implemented, to provide context for this year's investigation.
+In this section, we give an overview of the implementation of the system produced last year. The purpose of this is to get a feel of how a contention aware plastic parallel programming library could be implemented, to provide context for our investigation this year.
 
 We start with our implementation of a basic parallel skeleton, then we cover adding plasticity, and contention aware scheduling. C++ was used for speed, and the parallel backend used was Pthreads due to its wide availability, and fine level of control. 
 
@@ -100,7 +100,7 @@ In order for all the programs to synchronise and agree upon the parameters to us
 
 
 
-When this switching is done and what the new parameters should be is another matter. In this project, we demonstrate how a contention aware plastic parallel programming system might be implemented, that the overhead incurred is acceptable, and we show the potential performance gains. A complete system would calculate when to switch parameters and what they would be, based upon the current state of the machine. However, for last year's investigation, we manually control these things in a synthetic environment, and communicate them to the main thread using the controller application, as this was adequate for our investigation.
+When this switching is done and what the new parameters should be is another matter. In this project, we demonstrate how a contention aware plastic parallel programming system might be implemented, that the overhead incurred is acceptable, and we show the potential performance gains. A complete system would calculate when to switch parameters and what they would be, based upon the current state of the machine. However, for the investigation of the previous year, we manually controled these things in a synthetic environment, and communicated them to the main thread using the controller application, as this was adequate for our investigation.
 
 
 
@@ -116,11 +116,11 @@ In this section we cover the implementation details of the system we produced th
 
 In contrast to the contention aware plastic parallel programming library that we built last year, this year we do not require a controller application. This is because we are not interested in the overhead incurred with the implementation, but rather with assessing the possible gains that could be had, and overall if a contention aware plastic parallel programming library would be valuable.
 
-This changes our focus, meaning that there will be less work to be done on communication and synchronisation, but more care needs to be taken with regards to parallel performance and producing a suitable synthetic stencil workload, particularly with this more complex parallel pattern.
+This changes our focus, meaning that there will be less work to be done on communication and synchronisation, but more on parallel performance and producing a suitable synthetic stencil workload, particularly with this more complex parallel pattern.
 
 We intend our synthetic test program to be a part of a larger experimental framework. The outline of how this should operate is as follows: 
 
-A complete experiment consists of multiple tests of our synthetic test program with varying parameters. Accordingly, we utilise an experiment script, written in bash, which will handle changing the parameters for each test, and niceties such as reporting the progress of the experiment. It will compile and run our synthetic test program, supplying it with appropriate parameters. The synthetic test program will save its output in an appropriate directory, ready for later analysis with a data analysis program tailored to the current experiment. 
+A complete experiment consists of multiple tests of our synthetic test program with varying parameters. Accordingly, we utilise an experiment script, written in bash, which will handle changing the parameters for each test, and niceties such as reporting the progress of the experiment. It will compile and run our synthetic test program, supplying it with appropriate parameters. The synthetic test program will save its output in an appropriate directory, ready for later data analysis by a program tailored to the current experiment. 
 
 Our synthetic test program will have two distinct phases, a setup phase and a processing phase. The high level plan for how our synthetic test program should operate is as follows:
 
@@ -133,7 +133,7 @@ Our synthetic test program will have two distinct phases, a setup phase and a pr
     \item Read configuration and set appropriate parameters
     \item Initialise the data grid with given size
     \item Calculate row allocations to divide said grid between the given number of threads
-    \item Setup data structures for additional features, such arrays for the convergence test, and semaphores for barrier synchronisation (These features are discussed in section \ref{section:design:performance_characteristics_investigation}.)
+    \item Setup data structures for additional features, such arrays for the convergence test, and semaphores for barrier synchronisation (These features are discussed in section \ref{section:design:performance_characteristics_investigation}).
 \end{itemize}
 
 
@@ -157,7 +157,7 @@ In this section we give the specifics of the implementation of our synthetic tes
 
 The synthetic test program is implemented in C++. We chose C++ for its speed, and advanced language features such as templates. The parallel code was implemented using the C++ std::threads library, which provides an improved interface using pthreads as its back end.
 
-Many aspects of the program are tuned for performance, such as minimising function calls the use of appropriate data structures. Also in the name of performance, and of correctness, for features which are switched on and off between tests in an experiment, (such as barrier synchronisation,) we use the C++ preprocessor to include or remove the actual code at compile time, according to compiler flags. This is so that, if a feature is switched off, its code is not even included in the binary file, meaning it has no effect on our performance. An example of how this is done can be found in appendix \ref{appendix:code_snippets}, which shows the preprocessor commands and how they switch features in our worker function.
+Many aspects of the program are tuned for performance, such as minimising function calls the use of appropriate data structures. Also in the name of performance, and of correctness, for features which are switched on and off between tests in an experiment, (such as barrier synchronisation), we use the C++ preprocessor to include or remove the actual code at compile time, according to compiler flags. This is so that, if a feature is switched off, its code is not even included in the binary file, meaning it has no effect on our performance. An example of how this is done can be found in appendix \ref{appendix:code_snippets}, which shows the preprocessor commands and how they switch features in our worker function.
 
 Another consideration which can affect our performance is a cold CPU cache. The CPU cache is a structure which stores data for faster lookup, and is particularly relevant to multiprogramming workloads, as we may encounter synchronisation issues \cite{agarwal_hennessy_horowitz_1988}. However, When we first start our program, the cache will be cold, as it contains no useful data. So our first run by our synthetic test program will be affected by the cold cache, as it loads data into the cache. Subsequent runs would not be affected, as the cache would have ``warmed up''. To combat this, we perform one extra run at the start of our computation, and we disregard its execution time when we are analysing the data from the experiment.
 
@@ -181,13 +181,13 @@ In the final part of the setup phase, we divide the data grid to allocate betwee
 \subsubsection{Processing Phase}
 \label{section:implementation:processing_phase2}
 
-At the start of the processing phase, we record the current time. We go on to start the given number of worker threads, which will perform the main computation (the code for these worker threads can be seen in appendix \ref{appendix:code_snippets}.)
+At the start of the processing phase, we record the current time. We go on to start the given number of worker threads, which will perform the main computation (the code for these worker threads can be seen in appendix \ref{appendix:code_snippets}).
 
-The worker threads then iterate over the grid, performing the basic jacobi computation at each point (that is, compute and record the mean of the points neighbours.) However, we wish to add an additional computation at each point, one that we can control, which can stress different resources and perform a set amount of work. This workload must be predictable (for repeatability,) scalable (for varying performance characteristics,) and efficient with regards to parallelism (for validity.) This is the main section of the processing phase, and is an important part of our synthetic test program. The rest of this section is dedicated to how we went about creating these workloads.
+The worker threads then iterate over the grid, performing the basic Jacobi computation at each point (that is, compute and record the mean of the points neighbours). However, we wish to add an additional computation at each point, one that we can control, which can stress different resources and perform a set amount of work. This workload must be predictable (for repeatability), scalable (for varying performance characteristics), and efficient with regards to parallelism (for validity). This is the main section of the processing phase, and is an important part of our synthetic test program. The rest of this section is dedicated to how we went about creating these workloads.
 
 We want a set of workloads with different performance characteristics, which stress different components. As discussed in \ref{section:design:interesting_instances}, this should make for valuable test cases. Accordingly, we start with workloads which stress different aspects of a system. These include the CPU, virtual memory, hard disk, and low-level I/O. We chose to focus on the most common performance critical resources, the CPU and the memory. We looked at existing parallel performance tests to inform our decisions \cite{hackenberg_ilsche_schone_molka_schmidt_nagel_2013, stress}.
 
-Again, as discussed in section \ref{section:design:interesting_instances}, we target two scenarios for each synthetic stencil workload. One with a small amount of work, meaning the overhead will be more significant, so more threads may not necessarily be a good thing, and one with a large amount of work, which can always use more threads than we have. We can do this simply by changing the grid size, but for more fine grained control, we also wish to vary the complexity of the calculations performed at each point in the grid.
+Again, as discussed in section \ref{section:design:interesting_instances}, we target two scenarios for each synthetic stencil workload. One with a small amount of work, meaning the overhead will be more significant, so more threads may not necessarily be a good thing, and one with a large amount of work, which can always use more threads than we have. We can do this simply by changing the grid size, but for more finely resolved control, we also wish to vary the complexity of the calculations performed at each point in the grid.
 
 To achieve this, all of our synthetic stencil workloads consist of some sort of work, contained in a loop. This loop serves two purposes, it beefs up our workload functions such that they can have a significant effect on runtime, and they provide linear control over the weight of our workload, allowing us to vary it for different experiments.
 
@@ -214,9 +214,9 @@ Our workload is synthetic with no actual effect. As such, it is vulnerable to co
 
 
 
-The first attempt at a fix was to vary the input to sqrt function. If done in an unpredictable way, the compiler wouldn't be able to optimise our workload away. To do this, we thought of storing a random sequence of numbers, and iterating over this to provide input for sqrt. However, this would introduce more memory reads, slowing our computation and corrupting our workload from a purely CPU dependant workload. Also, the compiler may have still optimised away our workload, since we are using precomputed inputs, and we do nothing with the resulting value.
+The first attempt at a fix was to vary the input to the square root (sqrt()) function. If done in an unpredictable way, the compiler would not be able to optimise our workload away. To do this, we thought of storing a random sequence of numbers, and iterating over this to provide input for sqrt. However, this would introduce more memory reads, slowing our computation and corrupting our workload from a purely CPU dependent workload. Also, the compiler may have still optimised away our workload, since we are using precomputed inputs, and we do nothing with the resulting value.
 
-Our second idea was to generate random numbers to use as input to the workload. Moving the random number generation into the workload lets us circumvent any memory use. We can use rand() with a constant seed, since we are not concerned with true randomness, and we want repeatable results.
+Our second idea was to generate random numbers to use as input to the workload. Moving the random number generation into the workload lets us circumvent any memory use. We can use the rand() function with a constant seed, since we are not concerned with true randomness, and we want repeatable results.
 
 In validating this, we found that the workload was not being optimised out, and that we could vary the workload and the time taken would vary accordingly. However, with a more detailed analysis, we came across some confusing results, presented in figure \ref{fig:optimal_threads_1}.
 
@@ -230,9 +230,9 @@ In validating this, we found that the workload was not being optimised out, and 
 
 
 
-As figure \ref{fig:optimal_threads_1} shows, in the case where we utilise two cores (the pink line,) increasing the number of threads above two if anything degrades performance. This is as expected. Moving up to the case with four cores (the orange line,) we see a similar story, going above four threads degrades performance. However, for six cores (the yellow line,) we see something different. Using six threads results in drastically degraded performance. In general, we can see using six threads or more always hurts performance. This might still be expected, but we see that performance doesn't vary much above six threads regardless of how many cores are provided. We also see that using two workers with as many cores as possible is the optimal solution. Both of these facts are inconsistent with what we expect to see.
+As figure \ref{fig:optimal_threads_1} shows, in the case where we utilise two cores (the pink line), increasing the number of threads above two if anything degrades performance. This is as expected. Moving up to the case with four cores (the orange line), we see a similar story, going above four threads degrades performance. However, for six cores (the yellow line), we see something different. Using six threads results in drastically degraded performance. In general, we can see using six threads or more always reduces performance. This might still be expected, but we see that performance doesn't vary much above six threads regardless of how many cores are provided. We also see that using two workers with as many cores as possible is the optimal solution. Both of these facts are inconsistent with what we expect to see.
 
-These results were produced quickly, using no repeats, as an initial investigation. So at first, we reasoned that this could be the result of cold cache issues, resulting in these strange runtimes. We reproduced the same experiment, using ten consecutive repeats. This produced the following graph in figure \ref{fig:optimal_threads_1_(repeats)}:
+These results were produced quickly, using no repeats, as an initial investigation. So at first, we reasoned that this could be the result of cold cache issues, resulting in these strange runtimes. We reproduced the same experiment, using ten consecutive repeats. However, this produced the following graph in figure \ref{fig:optimal_threads_1_(repeats)}:
 
 
 
@@ -244,7 +244,7 @@ These results were produced quickly, using no repeats, as an initial investigati
 
 
 
-Again, a similar story to the previous graph, with similar unexpected features. This rules out cache issues. 
+Again, a similar story to the previous graph, with similar unexpected features. This ruled out cache issues. 
 
 After further diagnosis, we discovered some other strange behaviour. Running the computation with one thread resulted in times of ~500ms, and with two threads we saw ~20,000ms. Not what we would expect at all! Even stranger, when using multiple threads pinned to the same CPU we again saw runtimes in the region of ~500ms. 
 

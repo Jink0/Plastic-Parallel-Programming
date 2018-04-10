@@ -3,9 +3,7 @@
 \section{Summary}
 \label{section:conclusion_and_future_work:conclusion}
 
-Previous work has demonstrated that contention between programs has performance implications, and that by considering their contention when scheduling, we can improve system throughput \cite{lira}. In this project, we have built upon this, by investigating the question: ``Can we gain more performance by exploiting both contention aware scheduling and plastic programming?'' As such, we have laid the groundwork for a contention aware plastic parallel programming library. We have demonstrated how such a library may be implemented, that the overhead incurred is acceptable, and that with two programs run in contention, it is possible to attain substantial gains in performance, with potential speedups from 1.03 to 2.44, compared to a non contention-aware system. We have also demonstrated that, with three programs run in contention, there are potential speedups of 1.13 to 2.43 compared to a non contention-aware system.
-
-% On top of that, we have investigated two parallel programming patterns (map-array and stencil codes,) with a variety of workloads, and different scenarios.
+Previous work has demonstrated that contention between programs has performance implications, and that by considering their contention when scheduling, we can improve system throughput \cite{lira}. In this project, we have built upon this, by investigating the question: ``Can we gain more performance by exploiting both contention aware scheduling and plastic programming?''. As such, we have laid the groundwork for a contention aware plastic parallel programming library. We have demonstrated how such a library may be implemented, that the overhead incurred is acceptable, and that with two programs run in contention, it is possible to attain substantial gains in performance, with potential speedups from 1.03 to 2.44, compared to a non contention-aware system. We have also demonstrated that, with three programs run in contention, there are potential speedups of 1.13 to 2.43 compared to a non contention-aware system.
 
 Our work towards a contention aware plastic parallel programming library shows promise, and provides exciting potential for further research, which are discussed in section \ref{section:conclusion_and_future_work:future_work}.
 
@@ -16,7 +14,7 @@ Our work towards a contention aware plastic parallel programming library shows p
 \section{Future Work}
 \label{section:conclusion_and_future_work:future_work}
 
-In this section, we discuss possible extensions to this project, which could be done by a future student.
+In this section, we discuss possible extensions to this project, which could become elements suitable for further study.
 
 
 
@@ -30,14 +28,14 @@ For many of our experiments, in particular the contention experiments, we had to
 \subsection{More Plasticity}
 \label{section:conclusion_and_future_work:more_plasticity}
 
-Currently, the plasticity provided in the synthetic test program is comprised of the ability to change the number of threads used, as well as the virtual CPU cores they are pinned (restricted) to. One extension could be to add additional plastic features, and to evaluate the gain, if any, that they provide. As long as the program is still correct, (in that it produces the correct output,) any plastic modification could be made. For example, we could vary the data structures used, or the pattern in which data is accessed (currently, just sequential.)
+Currently, the plasticity provided in the synthetic test program is comprised of the ability to change the number of threads used, as well as the virtual CPU cores they are pinned (restricted) to. One extension could be to add additional plastic features, and to evaluate the gain, if any, that they provide. As long as the program is still correct, (in that it produces the correct output), any plastic modification could be made. For example, we could vary the data structures used, or the pattern in which data is accessed (currently, just sequential).
 
 
 
 \subsection{A Complete Contention Aware Plastic Programming Library}
 \label{section:conclusion_and_future_work:a_complete_contention_aware_plastic_parallel_programming_library}
 
-In the first year of this project \cite{me}, we demonstrated how a contention aware plastic programming library could be implemented, as well as showing that the overhead incurred was not significant. However, the pattern we implemented (map-array) did not show much room for improvement. In this second year, we have evaluated a more complex pattern, that of stencil codes, and specifically the jacobi pattern, without integrating it into such a library. One natural extension would be to add this pattern to such a library, and possibly other common parallel programming patterns, such as the pipeline pattern, or a recursive pattern. Another natural extension would be to evaluate more workloads, such as workloads which stress the HDD, or perform many OS calls. A synthetic test program with multiple patterns and workloads could give substantial importent data.
+In the first year of this project \cite{me}, we demonstrated how a contention aware plastic programming library could be implemented, as well as showing that the overhead incurred was not significant. However, the pattern we implemented (map-array) did not show much room for improvement. In this second year, we have evaluated a more complex pattern, that of stencil codes, and specifically the Jacobi pattern, without integrating it into such a library. One natural extension would be to add this pattern to such a library, and possibly other common parallel programming patterns, such as the pipeline pattern, or a recursive pattern. Another natural extension would be to evaluate more workloads, such as workloads which stress the HDD, or perform many OS calls. A synthetic test program with multiple patterns and workloads could give substantial importent data.
 
 
 
@@ -64,9 +62,9 @@ In the previous extension, we would still be using hand written (albeit complex)
 \subsection{Multiple Back-Ends And GPU Support}
 \label{section:conclusion_and_future_work:multiple_backends_and_gpu_support}
 
-Currently, our project is based in C++ and utilises pthreads as the parallel programming model. Additional support could be added for other approaches to parallelism (some of which are described in section \ref{section:background:current_solutions},) and even languages which target GPUs, such as OpenCL and CUDA. Providing this would allow the controller application to switch between them, as effectively another parameter that we can plastically change. The main decision however, would be between the CPU focused and the GPU focused approaches, as this would provide the most dramatic difference, and is dependent upon the characteristics of the workload in question.
+Currently, our project is based in C++ and utilises pthreads as the parallel programming model. Additional support could be added for other approaches to parallelism (some of which are described in section \ref{section:background:current_solutions}), and even languages which target GPUs, such as OpenCL and CUDA. Providing this would allow the controller application to switch between them, as effectively another parameter that we can plastically change. The main decision however, would be between the CPU focused and the GPU focused approaches, as this would provide the most dramatic difference, and is dependent upon the characteristics of the workload in question.
 
-GPUs have lots of compute cores, but with a much simpler architecture compared to a standard CPU core. This makes them powerful for floating point calculations in scientific computing. Utilising GPU oriented parallel programming approaches would introduce new challenges, such as explicitly managing data (copying back and forth from main memory to GPU memory,) and restrictions imposed by the language. For example, in CUDA, device code (to be run on the GPU) must be C only, and cannot be called recursively. Another limitation is the lack of direct control of scheduling. GPUs have separate, efficient, thread managers which schedule threads, typically assigning many more threads than cores.
+GPUs have lots of compute cores, but with a much simpler architecture compared to a standard CPU core. This makes them powerful for floating point calculations in scientific computing. Utilising GPU oriented parallel programming approaches would introduce new challenges, such as explicitly managing data (copying back and forth from main memory to GPU memory), and restrictions imposed by the language. For example, in CUDA, device code (to be run on the GPU) must be C only, and cannot be called recursively. Another limitation is the lack of direct control of scheduling. GPUs have separate, efficient, thread managers which schedule threads, typically assigning many more threads than cores.
 
 
 
